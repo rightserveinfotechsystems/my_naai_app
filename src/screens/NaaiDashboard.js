@@ -24,6 +24,11 @@ const SALONS = [
     waitTime: '25 mins',
     open: true,
     image: require('../assets/naai/naai1.jpeg'),
+    images: [
+      require("../assets/naai/naai1.jpeg"),
+      require('../assets/naai/naai2.jpeg'),
+      require('../assets/naai/naai3.jpeg'),
+    ],
   },
   {
     id: '2',
@@ -32,6 +37,10 @@ const SALONS = [
     waitTime: '40 mins',
     open: true,
     image: require('../assets/naai/naai2.jpeg'),
+    images: [
+      require('../assets/naai/naai2.jpeg'),
+      require('../assets/naai/naai1.jpeg'),
+    ],
   },
   {
     id: '3',
@@ -40,32 +49,12 @@ const SALONS = [
     waitTime: '—',
     open: false,
     image: require('../assets/naai/naai3.jpeg'),
-  },
-  {
-    id: '4',
-    name: 'Brett Gomez Salon',
-    address: '817 Rebeca Lodge, Pune',
-    waitTime: '25 mins',
-    open: true,
-    image: require('../assets/naai/naai1.jpeg'),
-  },
-  {
-    id: '5',
-    name: 'Gimabel Hair Style',
-    address: 'FC Road, Pune',
-    waitTime: '40 mins',
-    open: true,
-    image: require('../assets/naai/naai2.jpeg'),
-  },
-  {
-    id: '6',
-    name: 'Kobike Barber Shop',
-    address: 'MG Road, Pune',
-    waitTime: '—',
-    open: false,
-    image: require('../assets/naai/naai3.jpeg'),
+    images: [
+      require('../assets/naai/naai3.jpeg'),
+    ],
   },
 ];
+
 
 
 const NaaiDashboard = ({ navigation }) => {
@@ -86,7 +75,7 @@ const NaaiDashboard = ({ navigation }) => {
 
         {/* ⏳ Waiting Time */}
         <View style={styles.waitRow}>
-          <Ionicons name="time-outline" size={14} color="#D4AF37" />
+          <Ionicons name="time-outline" size={14} color="#E1B378" />
           <Text style={styles.waitText}>
             {item.open ? ` Waiting: ${item.waitTime}` : ' Closed'}
           </Text>
@@ -95,7 +84,7 @@ const NaaiDashboard = ({ navigation }) => {
         <TouchableOpacity
           style={[
             styles.bookBtn,
-            { backgroundColor: item.open ? '#D4AF37' : '#555' },
+            { backgroundColor: item.open ? '#E1B378' : '#555' },
           ]}
           disabled={!item.open}
           onPress={() =>
@@ -253,7 +242,7 @@ const styles = StyleSheet.create({
   },
   waitText: {
     fontSize: 12,
-    color: '#D4AF37',
+    color: '#E1B378',
     fontWeight: '500',
   },
 

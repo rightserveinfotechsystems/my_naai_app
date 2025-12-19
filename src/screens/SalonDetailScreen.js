@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   ScrollView,
   ImageBackground,
   Alert,
+  Dimensions,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -14,6 +17,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 /* -------------------- DATA -------------------- */
 
 const CATEGORIES = ['Hair', 'Beard', 'Facial', 'Grooming'];
+const { width } = Dimensions.get('window');
 
 const SERVICES = [
   { id: '1', name: 'Classic Haircut', price: 199, category: 'Hair' },
@@ -38,48 +42,61 @@ const SalonDetailScreen = ({ route, navigation }) => {
   const [favorite, setFavorite] = useState(false);
   const [gender, setGender] = useState('Male');
   const [activeCategory, setActiveCategory] = useState('Hair');
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  /* -------------------- IMAGE SAFE HANDLING -------------------- */
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  const bgSource =
-    typeof salon?.image === 'string'
-      ? { uri: salon.image }
-      : salon?.image;
+  const scrollRef = useRef(null);
+  const autoScrollRef = useRef(null);
+
+  /* -------------------- AUTO SLIDER -------------------- */
+
+  useEffect(() => {
+    if (!salon?.images?.length) return;
+
+    autoScrollRef.current = setInterval(() => {
+      setActiveIndex(prev => {
+        const next =
+          prev === salon.images.length - 1 ? 0 : prev + 1;
+
+        scrollRef.current?.scrollTo({
+          x: next * width,
+          animated: true,
+        });
+
+        return next;
+      });
+    }, 3000);
+
+    return () => clearInterval(autoScrollRef.current);
+  }, []);
 
   /* -------------------- FILTER SERVICES -------------------- */
 
-  const filteredServices = useMemo(() => {
-    return SERVICES.filter(s => s.category === activeCategory);
-  }, [activeCategory]);
+  const filteredServices = useMemo(
+    () => SERVICES.filter(s => s.category === activeCategory),
+    [activeCategory]
+  );
 
-  /* -------------------- BOOKING HANDLER -------------------- */
+  /* -------------------- BOOK -------------------- */
 
   const handleBooking = () => {
-  Alert.alert(
-    'Booking Confirmed 🎉',
-    'You have booked the salon successfully.',
-    [
-      {
-        text: 'Cancel',
-        style: 'cancel', // Makes it visually a cancel button
-      },
-      {
-        text: 'OK',
-        onPress: () =>
-          navigation.navigate('Main', { screen: 'Booked Salon' }),
-      },
-    ],
-    { cancelable: false } // Prevents tapping outside to dismiss
-  );
-};
-
-
+    Alert.alert(
+      'Confirm Booking 💈',
+      'Do you want to proceed with this booking?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'OK', onPress: () => navigation.navigate('UserLogin') },
+      ]
+    );
+  };
 
   /* -------------------- UI -------------------- */
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={bgSource} style={styles.bg}>
+      <ImageBackground source={salon.image} style={styles.bg}>
         <View style={styles.overlay}>
           <SafeAreaView style={{ flex: 1 }}>
 
@@ -93,7 +110,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                 <Ionicons
                   name={favorite ? 'heart' : 'heart-outline'}
                   size={26}
-                  color={favorite ? '#D4AF37' : '#fff'}
+                  color={favorite ? '#E1B378' : '#fff'}
                 />
               </TouchableOpacity>
             </View>
@@ -102,15 +119,57 @@ const SalonDetailScreen = ({ route, navigation }) => {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 160 }}
             >
-              {/* Spacer for image */}
-              <View style={{ height: 220 }} />
+              {/* IMAGE SLIDER */}
+              <View style={styles.sliderWrapper}>
+                <ScrollView
+                  ref={scrollRef}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  onMomentumScrollEnd={e => {
+                    const index = Math.round(
+                      e.nativeEvent.contentOffset.x / width
+                    );
+                    setActiveIndex(index);
+                  }}
+                >
+                  {salon.images.map((img, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      activeOpacity={0.9}
+                      onPress={() => {
+                        setSelectedImage(img);
+                        setModalVisible(true);
+                      }}
+                    >
+                      <ImageBackground
+                        source={img}
+                        style={styles.sliderImage}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
 
-              {/* MAIN CARD */}
+                {/* DOTS */}
+                <View style={styles.dotsRow}>
+                  {salon.images.map((_, i) => (
+                    <View
+                      key={i}
+                      style={[
+                        styles.dot,
+                        activeIndex === i && styles.activeDot,
+                      ]}
+                    />
+                  ))}
+                </View>
+              </View>
+
+              {/* DETAILS */}
               <View style={styles.card}>
                 <Text style={styles.name}>{salon.name}</Text>
                 <Text style={styles.address}>{salon.address}</Text>
 
-                {/* GENDER TOGGLE */}
+                {/* GENDER */}
                 <View style={styles.genderRow}>
                   {['Male', 'Female'].map(g => (
                     <TouchableOpacity
@@ -126,7 +185,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                   ))}
                 </View>
 
-                {/* CATEGORY TABS */}
+                {/* CATEGORY */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {CATEGORIES.map(cat => (
                     <TouchableOpacity
@@ -142,7 +201,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                   ))}
                 </ScrollView>
 
-                {/* SERVICES (READ-ONLY LIST) */}
+                {/* SERVICES */}
                 <View style={styles.rowWrap}>
                   {filteredServices.map(service => (
                     <View key={service.id} style={styles.serviceChip}>
@@ -151,7 +210,6 @@ const SalonDetailScreen = ({ route, navigation }) => {
                     </View>
                   ))}
                 </View>
-
               </View>
             </ScrollView>
           </SafeAreaView>
@@ -164,6 +222,24 @@ const SalonDetailScreen = ({ route, navigation }) => {
           <Text style={styles.bookText}>Confirm Booking</Text>
         </TouchableOpacity>
       </View>
+
+      {/* IMAGE MODAL */}
+      <Modal visible={modalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <Pressable
+            style={styles.modalClose}
+            onPress={() => setModalVisible(false)}
+          >
+            <Ionicons name="close" size={32} color="#fff" />
+          </Pressable>
+
+          <ImageBackground
+            source={selectedImage}
+            style={styles.modalImage}
+            resizeMode="contain"
+          />
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -178,7 +254,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.95)',
   },
 
   header: {
@@ -191,29 +267,40 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
 
+  sliderWrapper: { height: 260 },
+  sliderImage: { width, height: 260 },
+
+  dotsRow: {
+    position: 'absolute',
+    bottom: 12,
+    alignSelf: 'center',
+    flexDirection: 'row',
+  },
+
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    marginHorizontal: 4,
+  },
+
+  activeDot: {
+    backgroundColor: '#E1B378',
+    width: 10,
+  },
+
   card: {
     margin: 16,
     padding: 18,
     borderRadius: 24,
     backgroundColor: '#1E1E1E',
-    elevation: 8,
   },
 
-  name: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '700',
-  },
+  name: { color: '#fff', fontSize: 22, fontWeight: '700' },
+  address: { color: '#AAA', marginBottom: 12 },
 
-  address: {
-    color: '#AAA',
-    marginBottom: 12,
-  },
-
-  genderRow: {
-    flexDirection: 'row',
-    marginBottom: 14,
-  },
+  genderRow: { flexDirection: 'row', marginBottom: 14 },
 
   genderBtn: {
     paddingVertical: 6,
@@ -223,14 +310,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
 
-  genderActive: {
-    backgroundColor: '#D4AF37',
-  },
-
-  genderText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
+  genderActive: { backgroundColor: '#E1B378' },
+  genderText: { color: '#fff', fontWeight: '600' },
 
   categoryTab: {
     paddingVertical: 6,
@@ -241,20 +322,10 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
 
-  categoryActive: {
-    backgroundColor: '#D4AF37',
-  },
+  categoryActive: { backgroundColor: '#E1B378' },
+  categoryText: { color: '#fff', fontWeight: '600' },
 
-  categoryText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-
-  rowWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
+  rowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
 
   serviceChip: {
     backgroundColor: '#2A2A2A',
@@ -263,15 +334,8 @@ const styles = StyleSheet.create({
     minWidth: '45%',
   },
 
-  chipText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-
-  price: {
-    color: '#D4AF37',
-    fontSize: 12,
-  },
+  chipText: { color: '#fff', fontWeight: '600' },
+  price: { color: '#E1B378', fontSize: 12 },
 
   bottomBar: {
     position: 'absolute',
@@ -284,15 +348,27 @@ const styles = StyleSheet.create({
   },
 
   bookBtn: {
-    backgroundColor: '#D4AF37',
+    backgroundColor: '#E1B378',
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 30,
   },
 
-  bookText: {
-    color: '#000',
-    fontWeight: '700',
-    fontSize: 16,
+  bookText: { color: '#000', fontWeight: '700', fontSize: 16 },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  modalImage: { width: '100%', height: '80%' },
+
+  modalClose: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
   },
 });
