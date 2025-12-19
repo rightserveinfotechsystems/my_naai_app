@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
   ScrollView,
   Modal,
@@ -13,15 +12,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const TABS = ['FAQ', 'Terms', 'About'];
-const GOLD = '#D4AF37';
+const GOLD = '#E8B97E';
 const DARK = '#121212';
 const CARD = '#1E1E1E';
 
-const AccountScreen = () => {
-  const [activeTab, setActiveTab] = useState('FAQ');
-  const [editVisible, setEditVisible] = useState(false);
+const MENUS = [
+  { label: 'FAQ', screen: 'FAQScreen', icon: 'help-circle-outline' },
+  { label: 'Terms & Conditions', screen: 'TermsScreen', icon: 'document-text-outline' },
+  { label: 'About', screen: 'AboutScreen', icon: 'information-circle-outline' },
+];
 
+const AccountScreen = ({ navigation }) => {
+  const [editVisible, setEditVisible] = useState(false);
   const [name, setName] = useState('Abhishek Tijare');
   const [mobile, setMobile] = useState('8308594231');
 
@@ -31,32 +33,27 @@ const AccountScreen = () => {
       {
         text: 'Logout',
         style: 'destructive',
-        onPress: () => {
-          console.log('User logged out');
-        },
+        onPress: () =>
+          navigation.navigate('Main', { screen: 'Salon Naai' }),
       },
     ]);
   };
 
   const handleNaaiRequest = () => {
-    Alert.alert(
-      'Request Submitted',
-      'Your request to register as a Salon / Naai Owner has been submitted. Our team will contact you shortly.',
-      [{ text: 'OK' }]
-    );
+    // Alert.alert(
+    //   'Request Submitted',
+    //   'Your request to register as a Salon / Naai Owner has been submitted.',
+    //   [{ text: 'OK' }]
+    // );
+     navigation.navigate('NaaiLogin')
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
 
-        {/* 👤 Profile Card */}
+        {/* PROFILE */}
         <View style={styles.profileCard}>
-          <Image
-            source={{ uri: 'https://i.pravatar.cc/150?img=12' }}
-            style={styles.avatar}
-          />
-
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.mobile}>📞 {mobile}</Text>
 
@@ -68,62 +65,42 @@ const AccountScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* 🧾 Register as Salon Owner */}
-        <TouchableOpacity style={styles.naaiBtn} onPress={handleNaaiRequest}>
-          <Ionicons name="storefront-outline" size={18} color="#000" />
-          <Text style={styles.naaiText}>
-            Request to Register as Salon / Naai Owner
-          </Text>
-        </TouchableOpacity>
+       
 
-        {/* 🔖 Tabs */}
-        <View style={styles.tabRow}>
-          {TABS.map(tab => (
+        {/* VERTICAL MENU */}
+        <View style={styles.menuCard}>
+          {MENUS.map(item => (
             <TouchableOpacity
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              style={[
-                styles.tabBtn,
-                activeTab === tab && styles.activeTab,
-              ]}
+              key={item.label}
+              style={styles.menuRow}
+              onPress={() => navigation.navigate(item.screen)}
             >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tab && styles.activeTabText,
-                ]}
-              >
-                {tab}
-              </Text>
+              <View style={styles.menuLeft}>
+                <Ionicons name={item.icon} size={20} color={GOLD} />
+                <Text style={styles.menuText}>{item.label}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#777" />
             </TouchableOpacity>
           ))}
         </View>
+ {/* Login AS NAII */}
+        <TouchableOpacity style={styles.naaiBtn} onPress={handleNaaiRequest}>
+          <Ionicons name="storefront-outline" size={18} color="#000" />
+          <Text style={styles.naaiText}>
+            {/* Request to Register as Salon / Naai Owner */}
+            Login as Salon / Naai Owner
+          </Text>
+        </TouchableOpacity>
+        {/* LOGIN */}
+        <TouchableOpacity
+          style={styles.loginBtn}
+          onPress={() => navigation.navigate('UserLogin')}
+        >
+          <Ionicons name="log-in-outline" size={18} color="#000" />
+          <Text style={styles.loginText}>Login</Text>
+        </TouchableOpacity>
 
-        {/* 📄 Content */}
-        <View style={styles.contentCard}>
-          {activeTab === 'FAQ' && (
-            <>
-              <Text style={styles.itemTitle}>How do I book a salon?</Text>
-              <Text style={styles.itemText}>
-                Choose a salon, select services and confirm your booking.
-              </Text>
-            </>
-          )}
-
-          {activeTab === 'Terms' && (
-            <Text style={styles.itemText}>
-              By using this app, you agree to all salon policies and terms.
-            </Text>
-          )}
-
-          {activeTab === 'About' && (
-            <Text style={styles.itemText}>
-              Naai Salon App helps you find and book trusted salons nearby.
-            </Text>
-          )}
-        </View>
-
-        {/* 🚪 Logout */}
+        {/* LOGOUT */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={18} color="#fff" />
           <Text style={styles.logoutText}>Logout</Text>
@@ -132,7 +109,7 @@ const AccountScreen = () => {
         <Text style={styles.version}>App Version 1.0.0</Text>
       </ScrollView>
 
-      {/* ✏️ Edit Profile Modal */}
+      {/* EDIT PROFILE MODAL */}
       <Modal visible={editVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
@@ -197,19 +174,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 2,
-    borderColor: GOLD,
-  },
-
   name: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
-    marginTop: 10,
   },
 
   mobile: {
@@ -231,7 +199,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  /* 🧾 Naai Owner Button */
   naaiBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -239,7 +206,6 @@ const styles = StyleSheet.create({
     backgroundColor: GOLD,
     borderRadius: 20,
     paddingVertical: 12,
-    paddingHorizontal: 14,
     marginBottom: 20,
   },
 
@@ -250,59 +216,53 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  tabRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-
-  tabBtn: {
-    flex: 1,
-    marginHorizontal: 4,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: CARD,
-    alignItems: 'center',
-  },
-
-  activeTab: {
-    backgroundColor: GOLD,
-  },
-
-  tabText: {
-    color: '#aaa',
-    fontWeight: '600',
-    fontSize: 13,
-  },
-
-  activeTabText: {
-    color: '#000',
-  },
-
-  contentCard: {
+  menuCard: {
     backgroundColor: CARD,
     borderRadius: 20,
-    padding: 16,
     marginBottom: 30,
   },
 
-  itemTitle: {
-    color: GOLD,
-    fontWeight: '700',
-    marginBottom: 4,
-    marginTop: 10,
+  menuRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderColor: '#2A2A2A',
   },
 
-  itemText: {
-    color: '#ccc',
-    fontSize: 13,
-    lineHeight: 20,
+  menuLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  menuText: {
+    color: '#fff',
+    marginLeft: 12,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+
+  loginBtn: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: GOLD,
+    borderRadius: 20,
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+
+  loginText: {
+    color: '#000',
+    marginLeft: 6,
+    fontWeight: '700',
   },
 
   logoutBtn: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#2A2A2A',
     borderRadius: 20,
     paddingVertical: 12,

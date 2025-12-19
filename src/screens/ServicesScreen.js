@@ -67,7 +67,7 @@ const ServicesScreen = () => {
   const renderItem = ({ item }) => {
     const statusColor =
       item.status === 'Upcoming'
-        ? '#D4AF37'
+        ? '#E8B97E'
         : item.status === 'Completed'
         ? '#4CAF50'
         : '#E53935';
@@ -81,7 +81,7 @@ const ServicesScreen = () => {
           <Text style={styles.address}>{item.address}</Text>
 
           <View style={styles.dateRow}>
-            <Ionicons name="calendar-outline" size={14} color="#D4AF37" />
+            <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
             <Text style={styles.dateText}>
               {item.date} • {item.time}
             </Text>
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   },
 
   dateText: {
-    color: '#D4AF37',
+    color: '#E8B97E',
     fontSize: 12,
     marginLeft: 6,
   },
