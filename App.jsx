@@ -13,6 +13,14 @@ import NaaiDashboard from './src/screens/NaaiDashboard';
 import ServicesScreen from './src/screens/ServicesScreen';
 import AccountScreen from './src/screens/AccountScreen';
 import SalonDetailScreen from './src/screens/SalonDetailScreen';
+import UserLogin from './src/components/UserLogin';
+import UserSignup from './src/components/UserSignup';
+import OtpScreen from './src/components/OtpScreen';
+import FAQScreen from './src/pages/FAQScreen';
+import TermsScreen from './src/pages/TermsScreen';
+import AboutScreen from './src/pages/AboutScreen';
+import NaaiLogin from './src/components/NaaiLogin';
+import NaaiRequest from './src/components/NaaiRequest';
 
 
 const Stack = createNativeStackNavigator();
@@ -22,7 +30,7 @@ const navigationRef = React.createRef();
 /* 🎨 Salon Theme Colors */
 const COLORS = {
   primary: '#0F0F0F',   // Black
-  accent: '#D4AF37',    // Gold
+  accent: '#E1B378',    // Gold  E1B378 
   inactive: '#9E9E9E',  // Grey
   background: '#FFFFFF',
 };
@@ -87,11 +95,51 @@ const App = () => {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-  name="SalonDetail"
-  component={SalonDetailScreen}
-  // options={{ title: 'Salon Details' }}
+          name="SalonDetail"
+          component={SalonDetailScreen}
           options={{ headerShown: false }}
-/>
+        />
+        <Stack.Screen
+          name="UserLogin"
+          component={UserLogin}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="UserSignup"
+          component={UserSignup}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="OtpScreen"
+          component={OtpScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="FAQScreen"
+          component={FAQScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="TermsScreen"
+          component={TermsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AboutScreen"
+          component={AboutScreen}
+          options={{ headerShown: false }}
+        />
+        {/*Naai routes  */}
+        <Stack.Screen
+          name="NaaiLogin"
+          component={NaaiLogin}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="NaaiRequest"
+          component={NaaiRequest}
+          options={{ headerShown: false }}
+        />
 
       </Stack.Navigator>
     </NavigationContainer>
