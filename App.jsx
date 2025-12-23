@@ -16,11 +16,16 @@ import SalonDetailScreen from './src/screens/SalonDetailScreen';
 import UserLogin from './src/components/UserLogin';
 import UserSignup from './src/components/UserSignup';
 import OtpScreen from './src/components/OtpScreen';
+import SalonOtpScreen from './src/components/SalonOtpScreen';
 import FAQScreen from './src/pages/FAQScreen';
 import TermsScreen from './src/pages/TermsScreen';
 import AboutScreen from './src/pages/AboutScreen';
 import NaaiLogin from './src/components/NaaiLogin';
 import NaaiRequest from './src/components/NaaiRequest';
+import SalonDashboard from './src/screens/SalonDashboard';
+import SalonBookingHistory from './src/screens/SalonBookingHistory';
+import SalonAccountScreen from './src/screens/SalonAccountScreen';
+import AddOfflineCustomer from './src/components/AddOfflineCustomer';
 
 
 const Stack = createNativeStackNavigator();
@@ -84,6 +89,54 @@ function MainTabs() {
   );
 }
 
+function SalonTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: COLORS.primary,
+          borderTopWidth: 0,
+          height: 70,
+        },
+        tabBarActiveTintColor: COLORS.accent,
+        tabBarInactiveTintColor: COLORS.inactive,
+        tabBarLabelStyle: {
+          fontSize: 13,
+          marginBottom: 6,
+        },
+        tabBarIcon: ({ color, size }) => {
+          let iconName;
+          if (route.name === 'Queue') {
+            iconName = 'list-circle';
+          } else if (route.name === 'Queue History') {
+            iconName = 'cut';
+          } else if (route.name === 'Account') {
+            iconName = 'person';
+          }
+
+          return <Ionicons name={iconName} size={22} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen
+        name="Queue"
+        component={SalonDashboard}
+      />
+
+      <Tab.Screen
+        name="Queue History"
+        component={SalonBookingHistory}
+      />
+
+      <Tab.Screen
+        name="Account"
+        component={SalonAccountScreen}
+      />
+    </Tab.Navigator>
+  );
+}
+
 /* 🔷 Root App */
 const App = () => {
   return (
@@ -92,6 +145,11 @@ const App = () => {
         <Stack.Screen
           name="Main"
           component={MainTabs}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Salon"
+          component={SalonTabs}
           options={{ headerShown: false }}
         />
         <Stack.Screen
@@ -140,6 +198,16 @@ const App = () => {
           component={NaaiRequest}
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="SalonOtpScreen"
+          component={SalonOtpScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+  name="AddOfflineCustomer"
+  component={AddOfflineCustomer}
+/>
+
 
       </Stack.Navigator>
     </NavigationContainer>

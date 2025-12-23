@@ -22,7 +22,7 @@ const MENUS = [
   { label: 'About', screen: 'AboutScreen', icon: 'information-circle-outline' },
 ];
 
-const AccountScreen = ({ navigation }) => {
+const SalonAccountScreen = ({ navigation }) => {
   const [editVisible, setEditVisible] = useState(false);
   const [name, setName] = useState('Abhishek Tijare');
   const [mobile, setMobile] = useState('8308594231');
@@ -40,8 +40,12 @@ const AccountScreen = ({ navigation }) => {
   };
 
   const handleNaaiRequest = () => {
+    // Alert.alert(
+    //   'Request Submitted',
+    //   'Your request to register as a Salon / Naai Owner has been submitted.',
+    //   [{ text: 'OK' }]
+    // );
      navigation.navigate('NaaiLogin')
-    //  navigation.navigate('Salon')
   };
 
   return (
@@ -151,7 +155,7 @@ const AccountScreen = ({ navigation }) => {
   );
 };
 
-export default AccountScreen;
+export default SalonAccountScreen;
 
 /* ---------------- STYLES ---------------- */
 

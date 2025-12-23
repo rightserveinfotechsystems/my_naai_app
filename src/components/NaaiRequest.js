@@ -56,7 +56,7 @@ const NaaiRequest = ({ navigation }) => {
     // 🔔 Simulate API call
     setTimeout(() => {
       setLoading(false);
-      navigation.navigate('OtpScreen', {
+      navigation.navigate('SalonOtpScreen', {
         mobile,
         role: 'NAI_OWNER',
       });

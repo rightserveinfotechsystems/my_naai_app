@@ -38,7 +38,7 @@ const NaaiLogin = ({ navigation }) => {
     // 🔔 Call LOGIN + SEND OTP API here
     setTimeout(() => {
       setLoading(false);
-      navigation.navigate('OtpScreen', { mobile });
+      navigation.navigate('SalonOtpScreen', { mobile });
     }, 1200);
   };
 
