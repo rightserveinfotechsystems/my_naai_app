@@ -8,9 +8,13 @@ import {
   Modal,
   TextInput,
   Alert,
+  Image,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { launchImageLibrary } from 'react-native-image-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const GOLD = '#E8B97E';
 const DARK = '#121212';
@@ -24,17 +28,36 @@ const MENUS = [
 
 const SalonAccountScreen = ({ navigation }) => {
   const [editVisible, setEditVisible] = useState(false);
-
   const [salonOpen, setSalonOpen] = useState(true);
+
   const [salonName, setSalonName] = useState('Golden Scissors Salon');
   const [salonAddress, setSalonAddress] = useState('Nagpur, Maharashtra');
-  const [openTime, setOpenTime] = useState('09:00 AM');
-  const [closeTime, setCloseTime] = useState('09:00 PM');
+  const [salonImage, setSalonImage] = useState(null);
+
+  const [openTime, setOpenTime] = useState(new Date());
+  const [closeTime, setCloseTime] = useState(new Date());
+  const [pickerType, setPickerType] = useState(null); // ✅ FIX
 
   const [barbers, setBarbers] = useState([
-    { id: '1', name: 'Rahul' },
-    { id: '2', name: 'Ritik' },
+    { id: '1', name: 'Rahul', image: null },
+    { id: '2', name: 'Ritik', image: null },
   ]);
+
+  /* ---------------- IMAGE PICKER ---------------- */
+  const pickImage = callback => {
+    launchImageLibrary(
+      { mediaType: 'photo', quality: 0.7 },
+      res => {
+        if (!res.didCancel && res.assets?.length) {
+          callback(res.assets[0].uri);
+        }
+      }
+    );
+  };
+
+  /* ---------------- TIME FORMAT ---------------- */
+  const formatTime = date =>
+    date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -54,6 +77,18 @@ const SalonAccountScreen = ({ navigation }) => {
 
         {/* PROFILE */}
         <View style={styles.profileCard}>
+          <TouchableOpacity onPress={() => pickImage(setSalonImage)}>
+            <Image
+              source={
+                salonImage
+                  ? { uri: salonImage }
+                  : require('../assets/my_naai.jpeg')
+              }
+              style={styles.salonImage}
+            />
+            <Text style={styles.changeImg}>Change Image</Text>
+          </TouchableOpacity>
+
           <Text style={styles.name}>{salonName}</Text>
           <Text style={styles.mobile}>{salonAddress}</Text>
 
@@ -108,10 +143,10 @@ const SalonAccountScreen = ({ navigation }) => {
         <Text style={styles.version}>App Version 1.0.0</Text>
       </ScrollView>
 
-      {/* EDIT SALON MODAL */}
+      {/* EDIT MODAL */}
       <Modal visible={editVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <ScrollView style={styles.modalCard}>
+          <ScrollView style={styles.modalCard} keyboardShouldPersistTaps="handled">
 
             <Text style={styles.modalTitle}>Salon Profile</Text>
 
@@ -131,27 +166,50 @@ const SalonAccountScreen = ({ navigation }) => {
               onChangeText={setSalonAddress}
             />
 
+            {/* TIME PICKERS */}
             <View style={styles.timeRow}>
-              <TextInput
-                style={[styles.input, { flex: 1, marginRight: 6 }]}
-                placeholder="Opening Time"
-                placeholderTextColor="#999"
-                value={openTime}
-                onChangeText={setOpenTime}
-              />
-              <TextInput
-                style={[styles.input, { flex: 1, marginLeft: 6 }]}
-                placeholder="Closing Time"
-                placeholderTextColor="#999"
-                value={closeTime}
-                onChangeText={setCloseTime}
-              />
+              <TouchableOpacity
+                style={styles.timeBtn}
+                onPress={() => setPickerType('open')}
+              >
+                <Text style={styles.timeText}>
+                  Open: {formatTime(openTime)}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.timeBtn}
+                onPress={() => setPickerType('close')}
+              >
+                <Text style={styles.timeText}>
+                  Close: {formatTime(closeTime)}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <Text style={styles.sectionTitle}>Barbers</Text>
 
             {barbers.map((b, index) => (
               <View key={b.id} style={styles.barberRow}>
+                <TouchableOpacity
+                  onPress={() =>
+                    pickImage(uri => {
+                      const updated = [...barbers];
+                      updated[index].image = uri;
+                      setBarbers(updated);
+                    })
+                  }
+                >
+                  <Image
+                    source={
+                      b.image
+                        ? { uri: b.image }
+                        : require('../assets/my_naai.jpeg')
+                    }
+                    style={styles.barberImg}
+                  />
+                </TouchableOpacity>
+
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
                   placeholder="Barber Name"
@@ -163,6 +221,7 @@ const SalonAccountScreen = ({ navigation }) => {
                     setBarbers(updated);
                   }}
                 />
+
                 <TouchableOpacity
                   onPress={() =>
                     setBarbers(barbers.filter(x => x.id !== b.id))
@@ -176,7 +235,10 @@ const SalonAccountScreen = ({ navigation }) => {
             <TouchableOpacity
               style={styles.addBtn}
               onPress={() =>
-                setBarbers([...barbers, { id: Date.now().toString(), name: '' }])
+                setBarbers([
+                  ...barbers,
+                  { id: Date.now().toString(), name: '', image: null },
+                ])
               }
             >
               <Ionicons name="add-circle-outline" size={18} color="#000" />
@@ -202,16 +264,32 @@ const SalonAccountScreen = ({ navigation }) => {
           </ScrollView>
         </View>
       </Modal>
+
+      {/* TIME PICKER (FIXED) */}
+      {pickerType && (
+        <DateTimePicker
+          value={pickerType === 'open' ? openTime : closeTime}
+          mode="time"
+          is24Hour={false}
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={(event, selectedDate) => {
+            if (Platform.OS === 'android') setPickerType(null);
+            if (selectedDate) {
+              pickerType === 'open'
+                ? setOpenTime(selectedDate)
+                : setCloseTime(selectedDate);
+            }
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 };
 
 export default SalonAccountScreen;
 
-
-/* ---------------- STYLES ---------------- */
-
 const styles = StyleSheet.create({
+  /* ---------------- ROOT ---------------- */
   container: {
     flex: 1,
     backgroundColor: DARK,
@@ -225,12 +303,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     marginBottom: 20,
+    elevation: 4,
+  },
+
+  salonImage: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    marginBottom: 8,
+    borderWidth: 2,
+    borderColor: GOLD,
+  },
+
+  changeImg: {
+    color: GOLD,
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 8,
   },
 
   name: {
     color: '#fff',
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '800',
     textAlign: 'center',
   },
 
@@ -244,15 +339,16 @@ const styles = StyleSheet.create({
   editBtn: {
     marginTop: 16,
     backgroundColor: GOLD,
-    paddingHorizontal: 26,
+    paddingHorizontal: 28,
     paddingVertical: 10,
     borderRadius: 30,
   },
 
   editText: {
     color: '#000',
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: 13,
+    letterSpacing: 0.5,
   },
 
   /* ---------------- SALON STATUS ---------------- */
@@ -269,18 +365,18 @@ const styles = StyleSheet.create({
   statusLabel: {
     color: '#fff',
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 
   toggleBtn: {
-    paddingHorizontal: 22,
+    paddingHorizontal: 24,
     paddingVertical: 8,
     borderRadius: 20,
   },
 
   toggleText: {
     color: '#000',
-    fontWeight: '800',
+    fontWeight: '900',
     fontSize: 12,
     letterSpacing: 1,
   },
@@ -290,6 +386,7 @@ const styles = StyleSheet.create({
     backgroundColor: CARD,
     borderRadius: 20,
     marginBottom: 30,
+    overflow: 'hidden',
   },
 
   menuRow: {
@@ -321,13 +418,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#2A2A2A',
     borderRadius: 22,
     paddingVertical: 12,
-    marginBottom: 20,
+    marginBottom: 16,
   },
 
   logoutText: {
     color: '#fff',
     marginLeft: 6,
     fontWeight: '600',
+    fontSize: 14,
   },
 
   version: {
@@ -349,15 +447,16 @@ const styles = StyleSheet.create({
     backgroundColor: CARD,
     borderRadius: 22,
     padding: 18,
-    maxHeight: '90%',
+    maxHeight: '92%',
   },
 
   modalTitle: {
     color: GOLD,
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '900',
     marginBottom: 16,
     textAlign: 'center',
+    letterSpacing: 0.6,
   },
 
   input: {
@@ -370,17 +469,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
+  /* ---------------- TIME PICKER ---------------- */
   timeRow: {
     flexDirection: 'row',
-    marginBottom: 10,
+    gap: 10,
+    marginBottom: 6,
   },
 
+  timeBtn: {
+    flex: 1,
+    backgroundColor: '#2A2A2A',
+    paddingVertical: 12,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+
+  timeText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+
+  /* ---------------- BARBERS ---------------- */
   sectionTitle: {
     color: GOLD,
     fontSize: 15,
-    fontWeight: '700',
-    marginTop: 16,
-    marginBottom: 10,
+    fontWeight: '800',
+    marginVertical: 12,
   },
 
   barberRow: {
@@ -390,32 +504,43 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
+  barberImg: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: GOLD,
+  },
+
+  /* ---------------- ADD BARBER ---------------- */
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: GOLD,
-    borderRadius: 20,
+    borderRadius: 22,
     paddingVertical: 10,
     marginTop: 10,
-    marginBottom: 16,
+    marginBottom: 14,
   },
 
   addText: {
     color: '#000',
-    fontWeight: '700',
+    fontWeight: '800',
     marginLeft: 8,
+    fontSize: 13,
   },
 
+  /* ---------------- MODAL BUTTONS ---------------- */
   modalRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginTop: 14,
   },
 
   cancelBtn: {
     flex: 1,
     paddingVertical: 12,
-    marginRight: 8,
+    marginRight: 6,
     borderRadius: 22,
     backgroundColor: '#333',
     alignItems: 'center',
@@ -424,7 +549,7 @@ const styles = StyleSheet.create({
   saveBtn: {
     flex: 1,
     paddingVertical: 12,
-    marginLeft: 8,
+    marginLeft: 6,
     borderRadius: 22,
     backgroundColor: GOLD,
     alignItems: 'center',
@@ -437,7 +562,7 @@ const styles = StyleSheet.create({
 
   saveText: {
     color: '#000',
-    fontWeight: '800',
+    fontWeight: '900',
   },
 });
 
