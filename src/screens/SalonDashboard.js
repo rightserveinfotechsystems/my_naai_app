@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ImageBackground,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -47,22 +48,37 @@ const SalonDashboard = ({ navigation }) => {
     salon.name.toLowerCase().includes(search.toLowerCase()),
   );
 
- const renderSalon = ({ item }) => (
+const renderSalon = ({ item }) => (
   <View style={styles.card}>
-    <View style={styles.info}>
-      <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.subText}>📞 {item.mobile}</Text>
-      <Text style={styles.subText}>✂️ {item.services}</Text>
+    <View style={styles.infoRow}>
+      
+      {/* LEFT INFO */}
+     <View style={styles.infoLeft}>
+  <Text style={styles.name}>{item.name}</Text>
 
+  <TouchableOpacity
+    onPress={() => Linking.openURL(`tel:${item.mobile}`)}
+  >
+    <Text style={[styles.subText, { textDecorationLine: 'underline' }]}>
+      📞 {item.mobile}
+    </Text>
+  </TouchableOpacity>
+
+  <Text style={styles.subText}>✂️ {item.services}</Text>
+</View>
+
+      {/* RIGHT DONE BUTTON */}
       <TouchableOpacity
         style={styles.doneBtn}
         onPress={() => console.log('Customer Done:', item.id)}
       >
         <Text style={styles.doneText}>Done</Text>
       </TouchableOpacity>
+
     </View>
   </View>
 );
+
 
 
   return (
@@ -160,7 +176,7 @@ const styles = StyleSheet.create({
 
   /* Card */
   card: {
-    flexDirection: 'row',
+    // flexDirection: 'row',
     backgroundColor: '#1E1E1E',
     borderRadius: 16,
     marginBottom: 16,
@@ -271,6 +287,17 @@ doneText: {
   fontSize: 12,
   fontWeight: '600',
 },
+infoRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  padding: 12,
+},
+
+infoLeft: {
+  flex: 1,
+  paddingRight: 10,
+},
+
 
 
 });

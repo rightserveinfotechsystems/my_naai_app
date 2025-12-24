@@ -1,20 +1,3 @@
-// import React from 'react'
-// import { Text, View } from 'react-native';
-
-// const ServicesScreen = () => {
-//   return (
-//     <View>
-//         <Text>
-//             This Services screen in bottom navbar tab
-//         </Text>
-      
-//     </View>
-//   )
-// }
-
-// export default ServicesScreen;
-
-
 import React from 'react';
 import {
   View,
@@ -23,28 +6,27 @@ import {
   Image,
   StyleSheet,
   ImageBackground,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
-/* -------------------- BOOKED DATA -------------------- */
-
 const BOOKED_SALONS = [
   {
     id: '1',
     name: 'Brett Gomez Salon',
-    address: '817 Rebeca Lodge, Pune',
+    address: 'Katol Road, Katol',
     date: '18 Dec 2025',
     time: '11:30 AM',
     status: 'Upcoming',
-    image: require('../assets/naai/naai1.jpeg'),
+    image: require('../assets/naai/naai1.jpg'),
   },
   {
     id: '2',
     name: 'Gimabel Hair Style',
-    address: 'FC Road, Pune',
+    address: 'Katol Road, Katol',
     date: '10 Dec 2025',
     time: '4:00 PM',
     status: 'Completed',
@@ -53,45 +35,50 @@ const BOOKED_SALONS = [
   {
     id: '3',
     name: 'Kobike Barber Shop',
-    address: 'MG Road, Pune',
+    address: 'Katol Road, Katol',
     date: '02 Dec 2025',
     time: '1:00 PM',
     status: 'Completed',
-    image: require('../assets/naai/naai3.jpeg'),
+    image: require('../assets/naai/naai3.jpg'),
   },
 ];
 
-/* -------------------- SCREEN -------------------- */
-
 const ServicesScreen = () => {
   const renderItem = ({ item }) => {
-    const statusColor =
-      item.status === 'Upcoming'
-        ? '#E8B97E'
-        : item.status === 'Completed'
-        ? '#4CAF50'
-        : '#E53935';
+    let btnColor;
+    switch (item.status) {
+      case 'Upcoming':
+        btnColor = '#E1B378'; // gold
+        break;
+      case 'Completed':
+        btnColor = '#4CAF50'; // green
+        break;
+      default:
+        btnColor = '#E53935'; // red
+    }
 
     return (
-      <View style={styles.card}>
+      <TouchableOpacity style={styles.card}>
         <Image source={item.image} style={styles.image} />
 
-        <View style={styles.info}>
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.address}>{item.address}</Text>
+        <View style={styles.infoContainer}>
+          <View style={styles.info}>
+            <Text style={styles.name}>{item.name}</Text>
+            <Text style={styles.address}>{item.address}</Text>
 
-          <View style={styles.dateRow}>
-            <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
-            <Text style={styles.dateText}>
-              {item.date} • {item.time}
-            </Text>
+            <View style={styles.dateRow}>
+              <Ionicons name="calendar-outline" size={14} color="#E1B378" />
+              <Text style={styles.dateText}>
+                {item.date} • {item.time}
+              </Text>
+            </View>
           </View>
 
-          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-            <Text style={styles.statusText}>{item.status}</Text>
-          </View>
+          <TouchableOpacity style={[styles.statusBtn, { backgroundColor: btnColor }]}>
+            <Text style={styles.statusBtnText}>{item.status}</Text>
+          </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -116,83 +103,76 @@ const ServicesScreen = () => {
 
 export default ServicesScreen;
 
-/* -------------------- STYLES -------------------- */
-
 const styles = StyleSheet.create({
   bg: {
     flex: 1,
   },
-
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
   },
-
   container: {
     flex: 1,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
+    paddingTop: 10,
   },
-
   title: {
     color: '#fff',
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
     marginBottom: 16,
-    marginTop: 10,
   },
-
   card: {
     flexDirection: 'row',
     backgroundColor: '#1E1E1E',
-    borderRadius: 16,
+    borderRadius: 20,
     marginBottom: 16,
     overflow: 'hidden',
+    elevation: 2,
   },
-
   image: {
     width: 100,
-    height: '100%',
-    resizeMode: 'cover',
+    height: 100,
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
   },
-
-  info: {
+  infoContainer: {
     flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 12,
   },
-
+  info: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
   name: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
   },
-
   address: {
     color: '#AAA',
     fontSize: 12,
     marginVertical: 4,
   },
-
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 6,
   },
-
   dateText: {
-    color: '#E8B97E',
+    color: '#E1B378',
     fontSize: 12,
     marginLeft: 6,
   },
-
-  statusBadge: {
-    marginTop: 10,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+  statusBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     borderRadius: 20,
   },
-
-  statusText: {
+  statusBtnText: {
     color: '#000',
     fontSize: 12,
     fontWeight: '700',

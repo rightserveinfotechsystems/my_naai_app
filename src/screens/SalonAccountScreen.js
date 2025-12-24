@@ -24,8 +24,17 @@ const MENUS = [
 
 const SalonAccountScreen = ({ navigation }) => {
   const [editVisible, setEditVisible] = useState(false);
-  const [name, setName] = useState('Abhishek Tijare');
-  const [mobile, setMobile] = useState('8308594231');
+
+  const [salonOpen, setSalonOpen] = useState(true);
+  const [salonName, setSalonName] = useState('Golden Scissors Salon');
+  const [salonAddress, setSalonAddress] = useState('Nagpur, Maharashtra');
+  const [openTime, setOpenTime] = useState('09:00 AM');
+  const [closeTime, setCloseTime] = useState('09:00 PM');
+
+  const [barbers, setBarbers] = useState([
+    { id: '1', name: 'Rahul' },
+    { id: '2', name: 'Ritik' },
+  ]);
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -39,35 +48,41 @@ const SalonAccountScreen = ({ navigation }) => {
     ]);
   };
 
-  const handleNaaiRequest = () => {
-    // Alert.alert(
-    //   'Request Submitted',
-    //   'Your request to register as a Salon / Naai Owner has been submitted.',
-    //   [{ text: 'OK' }]
-    // );
-     navigation.navigate('NaaiLogin')
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
 
         {/* PROFILE */}
         <View style={styles.profileCard}>
-          <Text style={styles.name}>{name}</Text>
-          <Text style={styles.mobile}>📞 {mobile}</Text>
+          <Text style={styles.name}>{salonName}</Text>
+          <Text style={styles.mobile}>{salonAddress}</Text>
 
           <TouchableOpacity
             style={styles.editBtn}
             onPress={() => setEditVisible(true)}
           >
-            <Text style={styles.editText}>Edit Profile</Text>
+            <Text style={styles.editText}>Edit Salon Profile</Text>
           </TouchableOpacity>
         </View>
 
-       
+        {/* SALON STATUS */}
+        <View style={styles.statusRow}>
+          <Text style={styles.statusLabel}>Salon Status</Text>
 
-        {/* VERTICAL MENU */}
+          <TouchableOpacity
+            style={[
+              styles.toggleBtn,
+              { backgroundColor: salonOpen ? '#4CAF50' : '#E53935' },
+            ]}
+            onPress={() => setSalonOpen(!salonOpen)}
+          >
+            <Text style={styles.toggleText}>
+              {salonOpen ? 'OPEN' : 'CLOSED'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* MENU */}
         <View style={styles.menuCard}>
           {MENUS.map(item => (
             <TouchableOpacity
@@ -83,22 +98,6 @@ const SalonAccountScreen = ({ navigation }) => {
             </TouchableOpacity>
           ))}
         </View>
- {/* Login AS NAII */}
-        <TouchableOpacity style={styles.naaiBtn} onPress={handleNaaiRequest}>
-          <Ionicons name="storefront-outline" size={18} color="#000" />
-          <Text style={styles.naaiText}>
-            {/* Request to Register as Salon / Naai Owner */}
-            Login as Salon / Naai Owner
-          </Text>
-        </TouchableOpacity>
-        {/* LOGIN */}
-        <TouchableOpacity
-          style={styles.loginBtn}
-          onPress={() => navigation.navigate('UserLogin')}
-        >
-          <Ionicons name="log-in-outline" size={18} color="#000" />
-          <Text style={styles.loginText}>Login</Text>
-        </TouchableOpacity>
 
         {/* LOGOUT */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
@@ -109,29 +108,80 @@ const SalonAccountScreen = ({ navigation }) => {
         <Text style={styles.version}>App Version 1.0.0</Text>
       </ScrollView>
 
-      {/* EDIT PROFILE MODAL */}
+      {/* EDIT SALON MODAL */}
       <Modal visible={editVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Edit Profile</Text>
+          <ScrollView style={styles.modalCard}>
+
+            <Text style={styles.modalTitle}>Salon Profile</Text>
 
             <TextInput
               style={styles.input}
-              placeholder="Name"
+              placeholder="Salon Name"
               placeholderTextColor="#999"
-              value={name}
-              onChangeText={setName}
+              value={salonName}
+              onChangeText={setSalonName}
             />
 
             <TextInput
               style={styles.input}
-              placeholder="Mobile Number"
+              placeholder="Salon Address"
               placeholderTextColor="#999"
-              keyboardType="number-pad"
-              maxLength={10}
-              value={mobile}
-              onChangeText={setMobile}
+              value={salonAddress}
+              onChangeText={setSalonAddress}
             />
+
+            <View style={styles.timeRow}>
+              <TextInput
+                style={[styles.input, { flex: 1, marginRight: 6 }]}
+                placeholder="Opening Time"
+                placeholderTextColor="#999"
+                value={openTime}
+                onChangeText={setOpenTime}
+              />
+              <TextInput
+                style={[styles.input, { flex: 1, marginLeft: 6 }]}
+                placeholder="Closing Time"
+                placeholderTextColor="#999"
+                value={closeTime}
+                onChangeText={setCloseTime}
+              />
+            </View>
+
+            <Text style={styles.sectionTitle}>Barbers</Text>
+
+            {barbers.map((b, index) => (
+              <View key={b.id} style={styles.barberRow}>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Barber Name"
+                  placeholderTextColor="#999"
+                  value={b.name}
+                  onChangeText={text => {
+                    const updated = [...barbers];
+                    updated[index].name = text;
+                    setBarbers(updated);
+                  }}
+                />
+                <TouchableOpacity
+                  onPress={() =>
+                    setBarbers(barbers.filter(x => x.id !== b.id))
+                  }
+                >
+                  <Ionicons name="trash-outline" size={20} color="#E53935" />
+                </TouchableOpacity>
+              </View>
+            ))}
+
+            <TouchableOpacity
+              style={styles.addBtn}
+              onPress={() =>
+                setBarbers([...barbers, { id: Date.now().toString(), name: '' }])
+              }
+            >
+              <Ionicons name="add-circle-outline" size={18} color="#000" />
+              <Text style={styles.addText}>Add Barber</Text>
+            </TouchableOpacity>
 
             <View style={styles.modalRow}>
               <TouchableOpacity
@@ -148,7 +198,8 @@ const SalonAccountScreen = ({ navigation }) => {
                 <Text style={styles.saveText}>Save</Text>
               </TouchableOpacity>
             </View>
-          </View>
+
+          </ScrollView>
         </View>
       </Modal>
     </SafeAreaView>
@@ -156,6 +207,7 @@ const SalonAccountScreen = ({ navigation }) => {
 };
 
 export default SalonAccountScreen;
+
 
 /* ---------------- STYLES ---------------- */
 
@@ -166,6 +218,7 @@ const styles = StyleSheet.create({
     padding: 14,
   },
 
+  /* ---------------- PROFILE CARD ---------------- */
   profileCard: {
     backgroundColor: CARD,
     borderRadius: 20,
@@ -176,46 +229,63 @@ const styles = StyleSheet.create({
 
   name: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
+    textAlign: 'center',
   },
 
   mobile: {
     color: '#aaa',
     fontSize: 13,
-    marginTop: 4,
+    marginTop: 6,
+    textAlign: 'center',
   },
 
   editBtn: {
-    marginTop: 14,
+    marginTop: 16,
     backgroundColor: GOLD,
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 26,
+    paddingVertical: 10,
+    borderRadius: 30,
   },
 
   editText: {
     color: '#000',
     fontWeight: '700',
-  },
-
-  naaiBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: GOLD,
-    borderRadius: 20,
-    paddingVertical: 12,
-    marginBottom: 20,
-  },
-
-  naaiText: {
-    color: '#000',
-    fontWeight: '700',
-    marginLeft: 8,
     fontSize: 13,
   },
 
+  /* ---------------- SALON STATUS ---------------- */
+  statusRow: {
+    backgroundColor: CARD,
+    borderRadius: 18,
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+
+  statusLabel: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+
+  toggleBtn: {
+    paddingHorizontal: 22,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+
+  toggleText: {
+    color: '#000',
+    fontWeight: '800',
+    fontSize: 12,
+    letterSpacing: 1,
+  },
+
+  /* ---------------- MENU ---------------- */
   menuCard: {
     backgroundColor: CARD,
     borderRadius: 20,
@@ -243,28 +313,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  loginBtn: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: GOLD,
-    borderRadius: 20,
-    paddingVertical: 12,
-    marginBottom: 16,
-  },
-
-  loginText: {
-    color: '#000',
-    marginLeft: 6,
-    fontWeight: '700',
-  },
-
+  /* ---------------- LOGOUT ---------------- */
   logoutBtn: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#2A2A2A',
-    borderRadius: 20,
+    borderRadius: 22,
     paddingVertical: 12,
     marginBottom: 20,
   },
@@ -282,32 +337,74 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
 
+  /* ---------------- MODAL ---------------- */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
     justifyContent: 'center',
-    padding: 20,
+    padding: 16,
   },
 
   modalCard: {
     backgroundColor: CARD,
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 22,
+    padding: 18,
+    maxHeight: '90%',
   },
 
   modalTitle: {
     color: GOLD,
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 14,
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 16,
+    textAlign: 'center',
   },
 
   input: {
     backgroundColor: '#2A2A2A',
-    borderRadius: 12,
-    paddingHorizontal: 14,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     color: '#fff',
     marginBottom: 12,
+    fontSize: 14,
+  },
+
+  timeRow: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+
+  sectionTitle: {
+    color: GOLD,
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 16,
+    marginBottom: 10,
+  },
+
+  barberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+
+  addBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: GOLD,
+    borderRadius: 20,
+    paddingVertical: 10,
+    marginTop: 10,
+    marginBottom: 16,
+  },
+
+  addText: {
+    color: '#000',
+    fontWeight: '700',
+    marginLeft: 8,
   },
 
   modalRow: {
@@ -317,18 +414,18 @@ const styles = StyleSheet.create({
 
   cancelBtn: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     marginRight: 8,
-    borderRadius: 20,
+    borderRadius: 22,
     backgroundColor: '#333',
     alignItems: 'center',
   },
 
   saveBtn: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     marginLeft: 8,
-    borderRadius: 20,
+    borderRadius: 22,
     backgroundColor: GOLD,
     alignItems: 'center',
   },
@@ -340,6 +437,7 @@ const styles = StyleSheet.create({
 
   saveText: {
     color: '#000',
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });
+

@@ -5,6 +5,8 @@ import {
   FlatList,
   StyleSheet,
   ImageBackground,
+  TouchableOpacity,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -18,6 +20,7 @@ const CUSTOMER_BOOKINGS = [
   {
     id: '1',
     customerName: 'Brett Gomez',
+    barberName: 'Rahul',
     mobile: '9876543210',
     services: 'Haircut, Beard',
     date: '2025-12-20',
@@ -27,6 +30,7 @@ const CUSTOMER_BOOKINGS = [
   {
     id: '2',
     customerName: 'Salman Khan',
+    barberName: 'Ritik',
     mobile: '9123456789',
     services: 'Hair Spa',
     date: '2025-12-19',
@@ -36,6 +40,7 @@ const CUSTOMER_BOOKINGS = [
   {
     id: '3',
     customerName: 'Shahrukh Khan',
+    barberName: 'Rajwal',
     mobile: '9988776655',
     services: 'Haircut',
     date: '2025-12-10',
@@ -61,43 +66,65 @@ const WEEKLY_CUSTOMERS = CUSTOMER_BOOKINGS.filter(item =>
 /* -------------------- SCREEN -------------------- */
 
 const CustomerBookingHistory = () => {
-  const renderItem = ({ item }) => {
-    const statusColor =
-      item.status === 'Completed'
-        ? '#4CAF50'
-        : item.status === 'Cancelled'
-        ? '#E53935'
-        : '#E8B97E';
+const renderItem = ({ item }) => {
+  const statusColor =
+    item.status === 'Completed'
+      ? '#4CAF50'
+      : item.status === 'Cancelled'
+      ? '#E53935'
+      : '#E8B97E';
 
-    return (
-      <View style={styles.card}>
-        <View style={styles.info}>
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardRow}>
+
+        {/* LEFT INFO */}
+        <View style={styles.infoLeft}>
           <Text style={styles.name}>{item.customerName}</Text>
+          <Text style={styles.barber}>✂️ Barber: {item.barberName}</Text>
 
-          <View style={styles.row}>
+          {/* MOBILE NUMBER (CLICKABLE) */}
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => Linking.openURL(`tel:${item.mobile}`)}
+          >
             <Ionicons name="call-outline" size={14} color="#E8B97E" />
-            <Text style={styles.subText}>{item.mobile}</Text>
-          </View>
+            <Text
+              style={[
+                styles.subText,
+                { textDecorationLine: 'underline' },
+              ]}
+            >
+              {item.mobile}
+            </Text>
+          </TouchableOpacity>
 
+          {/* SERVICES */}
           <View style={styles.row}>
             <Ionicons name="cut-outline" size={14} color="#E8B97E" />
             <Text style={styles.subText}>{item.services}</Text>
           </View>
 
+          {/* DATE & TIME */}
           <View style={styles.row}>
             <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
             <Text style={styles.subText}>
               {item.date} • {item.time}
             </Text>
           </View>
-
-          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-            <Text style={styles.statusText}>{item.status}</Text>
-          </View>
         </View>
+
+        {/* RIGHT STATUS */}
+        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+          <Text style={styles.statusText}>{item.status}</Text>
+        </View>
+
       </View>
-    );
-  };
+    </View>
+  );
+};
+
+
 
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg} resizeMode="cover">
@@ -211,4 +238,22 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
   },
+  cardRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  padding: 14,
+},
+
+infoLeft: {
+  flex: 1,
+  paddingRight: 10,
+},
+
+barber: {
+  color: '#E8B97E',
+  fontSize: 13,
+  marginBottom: 6,
+  fontWeight: '600',
+},
+
 });
