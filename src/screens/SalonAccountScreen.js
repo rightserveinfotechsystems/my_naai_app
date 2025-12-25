@@ -20,6 +20,8 @@ const GOLD = '#E8B97E';
 const DARK = '#121212';
 const CARD = '#1E1E1E';
 
+const MAX_IMAGE_MB = 2;
+
 const MENUS = [
   { label: 'FAQ', screen: 'FAQScreen', icon: 'help-circle-outline' },
   { label: 'Terms & Conditions', screen: 'TermsScreen', icon: 'document-text-outline' },
@@ -31,26 +33,37 @@ const SalonAccountScreen = ({ navigation }) => {
   const [salonOpen, setSalonOpen] = useState(true);
 
   const [salonName, setSalonName] = useState('Golden Scissors Salon');
-  const [salonAddress, setSalonAddress] = useState('Nagpur, Maharashtra');
+  const [salonAddress, setSalonAddress] = useState('Katol, Maharashtra');
   const [salonImage, setSalonImage] = useState(null);
 
   const [openTime, setOpenTime] = useState(new Date());
   const [closeTime, setCloseTime] = useState(new Date());
-  const [pickerType, setPickerType] = useState(null); // ✅ FIX
+  const [pickerType, setPickerType] = useState(null);
 
   const [barbers, setBarbers] = useState([
     { id: '1', name: 'Rahul', image: null },
     { id: '2', name: 'Ritik', image: null },
   ]);
 
-  /* ---------------- IMAGE PICKER ---------------- */
+  /* ---------------- IMAGE PICKER WITH SIZE VALIDATION ---------------- */
   const pickImage = callback => {
     launchImageLibrary(
-      { mediaType: 'photo', quality: 0.7 },
+      { mediaType: 'photo', quality: 0.8 },
       res => {
-        if (!res.didCancel && res.assets?.length) {
-          callback(res.assets[0].uri);
+        if (res.didCancel || !res.assets?.length) return;
+
+        const asset = res.assets[0];
+        const sizeMB = asset.fileSize / (1024 * 1024);
+
+        if (sizeMB > MAX_IMAGE_MB) {
+          Alert.alert(
+            'Image Too Large',
+            'Please select an image smaller than 2MB'
+          );
+          return;
         }
+
+        callback(asset.uri);
       }
     );
   };
@@ -59,6 +72,7 @@ const SalonAccountScreen = ({ navigation }) => {
   const formatTime = date =>
     date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+  /* ---------------- LOGOUT ---------------- */
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel' },
@@ -69,6 +83,24 @@ const SalonAccountScreen = ({ navigation }) => {
           navigation.navigate('Main', { screen: 'Salon Naai' }),
       },
     ]);
+  };
+
+  /* ---------------- SALON TOGGLE ---------------- */
+  const handleToggleSalon = () => {
+    Alert.alert(
+      salonOpen ? 'Close Salon?' : 'Open Salon?',
+      salonOpen
+        ? 'Customers will not be able to book.'
+        : 'Customers can start booking.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: salonOpen ? 'Close' : 'Open',
+          style: 'destructive',
+          onPress: () => setSalonOpen(!salonOpen),
+        },
+      ]
+    );
   };
 
   return (
@@ -100,7 +132,7 @@ const SalonAccountScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* SALON STATUS */}
+        {/* STATUS */}
         <View style={styles.statusRow}>
           <Text style={styles.statusLabel}>Salon Status</Text>
 
@@ -109,7 +141,7 @@ const SalonAccountScreen = ({ navigation }) => {
               styles.toggleBtn,
               { backgroundColor: salonOpen ? '#4CAF50' : '#E53935' },
             ]}
-            onPress={() => setSalonOpen(!salonOpen)}
+            onPress={handleToggleSalon}
           >
             <Text style={styles.toggleText}>
               {salonOpen ? 'OPEN' : 'CLOSED'}
@@ -166,7 +198,7 @@ const SalonAccountScreen = ({ navigation }) => {
               onChangeText={setSalonAddress}
             />
 
-            {/* TIME PICKERS */}
+            {/* TIME */}
             <View style={styles.timeRow}>
               <TouchableOpacity
                 style={styles.timeBtn}
@@ -187,6 +219,7 @@ const SalonAccountScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
+            {/* BARBERS */}
             <Text style={styles.sectionTitle}>Barbers</Text>
 
             {barbers.map((b, index) => (
@@ -265,19 +298,18 @@ const SalonAccountScreen = ({ navigation }) => {
         </View>
       </Modal>
 
-      {/* TIME PICKER (FIXED) */}
+      {/* TIME PICKER */}
       {pickerType && (
         <DateTimePicker
           value={pickerType === 'open' ? openTime : closeTime}
           mode="time"
-          is24Hour={false}
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(event, selectedDate) => {
+          onChange={(e, date) => {
             if (Platform.OS === 'android') setPickerType(null);
-            if (selectedDate) {
+            if (date) {
               pickerType === 'open'
-                ? setOpenTime(selectedDate)
-                : setCloseTime(selectedDate);
+                ? setOpenTime(date)
+                : setCloseTime(date);
             }
           }}
         />

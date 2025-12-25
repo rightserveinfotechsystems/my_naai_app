@@ -9,11 +9,16 @@ import {
   StyleSheet,
   ImageBackground,
   Pressable,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const AD_WIDTH = SCREEN_WIDTH - 28; // 14 padding left + 14 right
+
 
 /* -------------------- ADS -------------------- */
 const ADS = [
@@ -89,7 +94,7 @@ const SALONS = [
 ];
 
 
-const AD_WIDTH = 292;
+// const AD_WIDTH = 292;
 
 const NaaiDashboard = ({ navigation }) => {
   const [search, setSearch] = useState('');
@@ -221,7 +226,11 @@ const NaaiDashboard = ({ navigation }) => {
               ref={adRef}
               data={ADS}
               horizontal
+              // pagingEnabled
               pagingEnabled
+snapToInterval={AD_WIDTH}
+decelerationRate="fast"
+
               showsHorizontalScrollIndicator={false}
               keyExtractor={(_, i) => i.toString()}
               style={styles.adSlider}
@@ -271,7 +280,7 @@ export default NaaiDashboard;
 
 /* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
-  bg: { flex: 1 },
+  bg: { flex: 1},
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)' },
   container: { flex: 1, paddingHorizontal: 14 },
 
@@ -322,12 +331,12 @@ const styles = StyleSheet.create({
   },
 
   adSlider: { marginBottom: 6 },
-  adImage: {
-    width: 280,
-    height: 140,
-    borderRadius: 16,
-    marginRight: 12,
-  },
+ adImage: {
+  width: AD_WIDTH,
+  height: 140,
+  borderRadius: 16,
+},
+
 
   dotsContainer: {
     flexDirection: 'row',

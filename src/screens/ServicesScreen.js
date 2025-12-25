@@ -18,6 +18,7 @@ const BOOKED_SALONS = [
     id: '1',
     name: 'Brett Gomez Salon',
     address: 'Katol Road, Katol',
+    barber: 'Rahul Sharma',
     date: '18 Dec 2025',
     time: '11:30 AM',
     status: 'Upcoming',
@@ -27,6 +28,7 @@ const BOOKED_SALONS = [
     id: '2',
     name: 'Gimabel Hair Style',
     address: 'Katol Road, Katol',
+    barber: 'Amit',
     date: '10 Dec 2025',
     time: '4:00 PM',
     status: 'Completed',
@@ -36,12 +38,14 @@ const BOOKED_SALONS = [
     id: '3',
     name: 'Kobike Barber Shop',
     address: 'Katol Road, Katol',
+    barber: 'Suresh',
     date: '02 Dec 2025',
     time: '1:00 PM',
     status: 'Completed',
     image: require('../assets/naai/naai3.jpg'),
   },
 ];
+
 
 const ServicesScreen = () => {
   const renderItem = ({ item }) => {
@@ -63,16 +67,25 @@ const ServicesScreen = () => {
 
         <View style={styles.infoContainer}>
           <View style={styles.info}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.address}>{item.address}</Text>
+  <Text style={styles.name}>{item.name}</Text>
+  <Text style={styles.address}>{item.address}</Text>
 
-            <View style={styles.dateRow}>
-              <Ionicons name="calendar-outline" size={14} color="#E1B378" />
-              <Text style={styles.dateText}>
-                {item.date} • {item.time}
-              </Text>
-            </View>
-          </View>
+  {/* BARBER */}
+  <View style={styles.barberRow}>
+    <Ionicons name="person-outline" size={14} color="#aaa" />
+    <Text style={styles.barberText}>
+      Barber: {item.barber}
+    </Text>
+  </View>
+
+  <View style={styles.dateRow}>
+    <Ionicons name="calendar-outline" size={14} color="#E1B378" />
+    <Text style={styles.dateText}>
+      {item.date} • {item.time}
+    </Text>
+  </View>
+</View>
+
 
           <TouchableOpacity style={[styles.statusBtn, { backgroundColor: btnColor }]}>
             <Text style={styles.statusBtnText}>{item.status}</Text>
@@ -177,4 +190,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
+  barberRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginTop: 4,
+},
+
+barberText: {
+  color: '#bbb',
+  fontSize: 12,
+  marginLeft: 6,
+},
+
 });
