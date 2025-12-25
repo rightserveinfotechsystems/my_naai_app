@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 const { width } = Dimensions.get('window');
 
 const CATEGORIES = ['Hair', 'Beard', 'Facial', 'Grooming'];
@@ -75,7 +76,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalImage, setModalImage] = useState(null);
-const [selectedService, setSelectedService] = useState(null);
+  const [selectedService, setSelectedService] = useState(null);
 
   const scrollRef = useRef(null);
 
@@ -105,37 +106,37 @@ const [selectedService, setSelectedService] = useState(null);
     Linking.openURL(`tel:${salon.phone}`);
   };
 
-const handleBooking = () => {
-  if (!selectedService) {
-    Alert.alert('Missing Service', 'Please select a service');
-    return;
-  }
+  const handleBooking = () => {
+    if (!selectedService) {
+      Alert.alert('Missing Service', 'Please select a service');
+      return;
+    }
 
-  if (!selectedBarber) {
-    Alert.alert('Missing Barber', 'Please select a barber');
-    return;
-  }
+    if (!selectedBarber) {
+      Alert.alert('Missing Barber', 'Please select a barber');
+      return;
+    }
 
-  if (!selectedSlot) {
-    Alert.alert('Missing Time Slot', 'Please select a time slot');
-    return;
-  }
+    if (!selectedSlot) {
+      Alert.alert('Missing Time Slot', 'Please select a time slot');
+      return;
+    }
 
-  Alert.alert(
-    'Booking Confirmed 🎉',
-    `Service: ${selectedService.name}\nBarber: ${selectedBarber.name}\nSlot: ${selectedSlot}`,
-    [
-      {
-        text: 'OK',
-        onPress: () => {
-          navigation.navigate('Main', {
-            screen: 'Booked Salon', // or "My Bookings" screen name
-          });
+    Alert.alert(
+      'Booking Confirmed 🎉',
+      `Service: ${selectedService.name}\nBarber: ${selectedBarber.name}\nSlot: ${selectedSlot}`,
+      [
+        {
+          text: 'OK',
+          onPress: () => {
+            navigation.navigate('Main', {
+              screen: 'Booked Salon', // or "My Bookings" screen name
+            });
+          },
         },
-      },
-    ]
-  );
-};
+      ]
+    );
+  };
 
 
   const openModal = img => {
@@ -146,7 +147,7 @@ const handleBooking = () => {
   /* -------------------- UI -------------------- */
   return (
     <View style={styles.container}>
-      <ImageBackground source={salon.image} style={styles.bg}>
+      <ImageBackground source={BG_IMAGE} style={styles.bg}>
         <View style={styles.overlay}>
           <SafeAreaView style={{ flex: 1 }}>
             {/* HEADER */}
@@ -343,7 +344,7 @@ export default SalonDetailScreen;
 const styles = StyleSheet.create({
   container: { flex: 1 },
   bg: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)' },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.80)' },
 
   header: {
     position: 'absolute',

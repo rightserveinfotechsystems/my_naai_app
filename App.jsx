@@ -9,6 +9,7 @@ enableScreens();
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Screens
+import SplashScreen from './src/screens/SplashScreen';
 import NaaiDashboard from './src/screens/NaaiDashboard';
 import ServicesScreen from './src/screens/ServicesScreen';
 import AccountScreen from './src/screens/AccountScreen';
@@ -143,6 +144,11 @@ const App = () => {
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator>
         <Stack.Screen
+          name="SplashScreen"
+          component={SplashScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="Main"
           component={MainTabs}
           options={{ headerShown: false }}
@@ -204,9 +210,9 @@ const App = () => {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-  name="AddOfflineCustomer"
-  component={AddOfflineCustomer}
-/>
+          name="AddOfflineCustomer"
+          component={AddOfflineCustomer}
+        />
 
 
       </Stack.Navigator>

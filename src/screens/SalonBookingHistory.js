@@ -66,63 +66,63 @@ const WEEKLY_CUSTOMERS = CUSTOMER_BOOKINGS.filter(item =>
 /* -------------------- SCREEN -------------------- */
 
 const CustomerBookingHistory = () => {
-const renderItem = ({ item }) => {
-  const statusColor =
-    item.status === 'Completed'
-      ? '#4CAF50'
-      : item.status === 'Cancelled'
-      ? '#E53935'
-      : '#E8B97E';
+  const renderItem = ({ item }) => {
+    const statusColor =
+      item.status === 'Completed'
+        ? '#4CAF50'
+        : item.status === 'Cancelled'
+          ? '#E53935'
+          : '#E8B97E';
 
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardRow}>
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardRow}>
 
-        {/* LEFT INFO */}
-        <View style={styles.infoLeft}>
-          <Text style={styles.name}>{item.customerName}</Text>
-          <Text style={styles.barber}>✂️ Barber: {item.barberName}</Text>
+          {/* LEFT INFO */}
+          <View style={styles.infoLeft}>
+            <Text style={styles.name}>{item.customerName}</Text>
+            <Text style={styles.barber}>✂️ Barber: {item.barberName}</Text>
 
-          {/* MOBILE NUMBER (CLICKABLE) */}
-          <TouchableOpacity
-            style={styles.row}
-            onPress={() => Linking.openURL(`tel:${item.mobile}`)}
-          >
-            <Ionicons name="call-outline" size={14} color="#E8B97E" />
-            <Text
-              style={[
-                styles.subText,
-                { textDecorationLine: 'underline' },
-              ]}
+            {/* MOBILE NUMBER (CLICKABLE) */}
+            <TouchableOpacity
+              style={styles.row}
+              onPress={() => Linking.openURL(`tel:${item.mobile}`)}
             >
-              {item.mobile}
-            </Text>
-          </TouchableOpacity>
+              <Ionicons name="call-outline" size={14} color="#E8B97E" />
+              <Text
+                style={[
+                  styles.subText,
+                  { textDecorationLine: 'underline' },
+                ]}
+              >
+                {item.mobile}
+              </Text>
+            </TouchableOpacity>
 
-          {/* SERVICES */}
-          <View style={styles.row}>
-            <Ionicons name="cut-outline" size={14} color="#E8B97E" />
-            <Text style={styles.subText}>{item.services}</Text>
+            {/* SERVICES */}
+            <View style={styles.row}>
+              <Ionicons name="cut-outline" size={14} color="#E8B97E" />
+              <Text style={styles.subText}>{item.services}</Text>
+            </View>
+
+            {/* DATE & TIME */}
+            <View style={styles.row}>
+              <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
+              <Text style={styles.subText}>
+                {item.date} • {item.time}
+              </Text>
+            </View>
           </View>
 
-          {/* DATE & TIME */}
-          <View style={styles.row}>
-            <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
-            <Text style={styles.subText}>
-              {item.date} • {item.time}
-            </Text>
+          {/* RIGHT STATUS */}
+          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+            <Text style={styles.statusText}>{item.status}</Text>
           </View>
-        </View>
 
-        {/* RIGHT STATUS */}
-        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-          <Text style={styles.statusText}>{item.status}</Text>
         </View>
-
       </View>
-    </View>
-  );
-};
+    );
+  };
 
 
 
@@ -239,21 +239,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   cardRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  padding: 14,
-},
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 14,
+  },
 
-infoLeft: {
-  flex: 1,
-  paddingRight: 10,
-},
+  infoLeft: {
+    flex: 1,
+    paddingRight: 10,
+  },
 
-barber: {
-  color: '#E8B97E',
-  fontSize: 13,
-  marginBottom: 6,
-  fontWeight: '600',
-},
+  barber: {
+    color: '#E8B97E',
+    fontSize: 13,
+    marginBottom: 6,
+    fontWeight: '600',
+  },
 
 });

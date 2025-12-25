@@ -48,42 +48,42 @@ const SalonDashboard = ({ navigation }) => {
     salon.name.toLowerCase().includes(search.toLowerCase()),
   );
 
-const renderSalon = ({ item }) => (
-  <View style={styles.card}>
-    <View style={styles.infoRow}>
-      
-      {/* LEFT INFO */}
-     <View style={styles.infoLeft}>
-  <Text style={styles.name}>{item.name}</Text>
+  const renderSalon = ({ item }) => (
+    <View style={styles.card}>
+      <View style={styles.infoRow}>
 
-  <TouchableOpacity
-    onPress={() => Linking.openURL(`tel:${item.mobile}`)}
-  >
-    <Text style={[styles.subText, { textDecorationLine: 'underline' }]}>
-      📞 {item.mobile}
-    </Text>
-  </TouchableOpacity>
+        {/* LEFT INFO */}
+        <View style={styles.infoLeft}>
+          <Text style={styles.name}>{item.name}</Text>
 
-  <Text style={styles.subText}>✂️ {item.services}</Text>
-</View>
+          <TouchableOpacity
+            onPress={() => Linking.openURL(`tel:${item.mobile}`)}
+          >
+            <Text style={[styles.subText, { textDecorationLine: 'underline' }]}>
+              📞 {item.mobile}
+            </Text>
+          </TouchableOpacity>
 
-      {/* RIGHT DONE BUTTON */}
-      <TouchableOpacity
-        style={styles.doneBtn}
-        onPress={() => console.log('Customer Done:', item.id)}
-      >
-        <Text style={styles.doneText}>Done</Text>
-      </TouchableOpacity>
+          <Text style={styles.subText}>✂️ {item.services}</Text>
+        </View>
 
+        {/* RIGHT DONE BUTTON */}
+        <TouchableOpacity
+          style={styles.doneBtn}
+          onPress={() => console.log('Customer Done:', item.id)}
+        >
+          <Text style={styles.doneText}>Done</Text>
+        </TouchableOpacity>
+
+      </View>
     </View>
-  </View>
-);
+  );
 
 
 
   return (
     <ImageBackground
-     source={BG_IMAGE}
+      source={BG_IMAGE}
       style={styles.bg}
       resizeMode="cover"
     >
@@ -91,22 +91,22 @@ const renderSalon = ({ item }) => (
       <View style={styles.overlay}>
         <SafeAreaView style={styles.container}>
           {/* 🔝 Top Right Actions */}
-<View style={styles.topBar}>
-  <Text style={styles.title}>Customer Queue</Text>
+          <View style={styles.topBar}>
+            <Text style={styles.title}>Customer Queue</Text>
 
-  <View style={styles.actions}>
-    <TouchableOpacity
-      style={styles.iconBtn}
-      onPress={() => navigation.navigate('AddOfflineCustomer')}
-    >
-      <Ionicons name="add" size={22} color="#000" />
-    </TouchableOpacity>
+            <View style={styles.actions}>
+              <TouchableOpacity
+                style={styles.iconBtn}
+                onPress={() => navigation.navigate('AddOfflineCustomer')}
+              >
+                <Ionicons name="add" size={22} color="#000" />
+              </TouchableOpacity>
 
-    <TouchableOpacity style={styles.iconBtn}>
-      <Ionicons name="notifications-outline" size={20} color="#000" />
-    </TouchableOpacity>
-  </View>
-</View>
+              <TouchableOpacity style={styles.iconBtn}>
+                <Ionicons name="notifications-outline" size={20} color="#000" />
+              </TouchableOpacity>
+            </View>
+          </View>
 
           {/* 🔍 Search */}
           <View style={styles.searchBox}>
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)', // blackish overlay
+    backgroundColor: 'rgba(0, 0, 0, 0.80)', // blackish overlay
   },
 
   container: {
@@ -243,60 +243,60 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   topBar: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginBottom: 14,
-},
-title: {
-  color: '#fff',
-  fontSize: 22,
-  fontWeight: '700',
-},
-actions: {
-  flexDirection: 'row',
-},
-iconBtn: {
-  backgroundColor: '#E1B378',
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginLeft: 10,
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  title: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  actions: {
+    flexDirection: 'row',
+  },
+  iconBtn: {
+    backgroundColor: '#E1B378',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
+  },
 
-subText: {
-  color: '#AAA',
-  fontSize: 13,
-  marginTop: 4,
-},
+  subText: {
+    color: '#AAA',
+    fontSize: 13,
+    marginTop: 4,
+  },
 
-doneBtn: {
-  marginTop: 10,
-  // backgroundColor: '#4CAF50',
-  backgroundColor: '#E1B378',
-  paddingVertical: 6,
-  borderRadius: 20,
-  alignItems: 'center',
-  width: 80,
-},
-doneText: {
-  // color: '#fff',
-  color: '#000',
-  fontSize: 12,
-  fontWeight: '600',
-},
-infoRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  padding: 12,
-},
+  doneBtn: {
+    marginTop: 10,
+    // backgroundColor: '#4CAF50',
+    backgroundColor: '#E1B378',
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignItems: 'center',
+    width: 80,
+  },
+  doneText: {
+    // color: '#fff',
+    color: '#000',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+  },
 
-infoLeft: {
-  flex: 1,
-  paddingRight: 10,
-},
+  infoLeft: {
+    flex: 1,
+    paddingRight: 10,
+  },
 
 
 

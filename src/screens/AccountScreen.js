@@ -40,7 +40,7 @@ const AccountScreen = ({ navigation }) => {
   };
 
   const handleNaaiRequest = () => {
-     navigation.navigate('NaaiLogin')
+    navigation.navigate('NaaiLogin')
     //  navigation.navigate('Salon')
   };
 
@@ -61,7 +61,7 @@ const AccountScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-       
+
 
         {/* VERTICAL MENU */}
         <View style={styles.menuCard}>
@@ -79,7 +79,7 @@ const AccountScreen = ({ navigation }) => {
             </TouchableOpacity>
           ))}
         </View>
- {/* Login AS NAII */}
+        {/* Login AS NAII */}
         <TouchableOpacity style={styles.naaiBtn} onPress={handleNaaiRequest}>
           <Ionicons name="storefront-outline" size={18} color="#000" />
           <Text style={styles.naaiText}>

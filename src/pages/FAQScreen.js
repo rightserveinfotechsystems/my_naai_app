@@ -16,7 +16,7 @@ const CARD = '#1E1E1E';
 const FAQScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
-      
+
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>

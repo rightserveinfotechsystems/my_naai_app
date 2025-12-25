@@ -67,24 +67,24 @@ const ServicesScreen = () => {
 
         <View style={styles.infoContainer}>
           <View style={styles.info}>
-  <Text style={styles.name}>{item.name}</Text>
-  <Text style={styles.address}>{item.address}</Text>
+            <Text style={styles.name}>{item.name}</Text>
+            <Text style={styles.address}>{item.address}</Text>
 
-  {/* BARBER */}
-  <View style={styles.barberRow}>
-    <Ionicons name="person-outline" size={14} color="#aaa" />
-    <Text style={styles.barberText}>
-      Barber: {item.barber}
-    </Text>
-  </View>
+            {/* BARBER */}
+            <View style={styles.barberRow}>
+              <Ionicons name="person-outline" size={14} color="#aaa" />
+              <Text style={styles.barberText}>
+                Barber: {item.barber}
+              </Text>
+            </View>
 
-  <View style={styles.dateRow}>
-    <Ionicons name="calendar-outline" size={14} color="#E1B378" />
-    <Text style={styles.dateText}>
-      {item.date} • {item.time}
-    </Text>
-  </View>
-</View>
+            <View style={styles.dateRow}>
+              <Ionicons name="calendar-outline" size={14} color="#E1B378" />
+              <Text style={styles.dateText}>
+                {item.date} • {item.time}
+              </Text>
+            </View>
+          </View>
 
 
           <TouchableOpacity style={[styles.statusBtn, { backgroundColor: btnColor }]}>
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
+    backgroundColor: 'rgba(0,0,0,0.80)',
   },
   container: {
     flex: 1,
@@ -154,7 +154,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
   },
   info: {
     flex: 1,
@@ -191,15 +192,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   barberRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginTop: 4,
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 1,
+  },
 
-barberText: {
-  color: '#bbb',
-  fontSize: 12,
-  marginLeft: 6,
-},
+  barberText: {
+    color: '#bbb',
+    fontSize: 12,
+    marginLeft: 6,
+  },
 
 });

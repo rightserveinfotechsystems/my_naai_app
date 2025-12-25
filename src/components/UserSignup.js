@@ -49,11 +49,11 @@ const UserSignup = ({ navigation }) => {
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
         <SafeAreaView style={{ flex: 1 }}>
-             <View style={styles.header}>
-                        <TouchableOpacity onPress={() => navigation.goBack()}>
-                          <Ionicons name="arrow-back" size={24} color="#fff" />
-                        </TouchableOpacity>
-                      </View>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.container}
@@ -123,14 +123,14 @@ export default UserSignup;
 
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)' },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)' },
   container: {
     flex: 1,
     paddingHorizontal: 24,
     // paddingTop: 50,
     justifyContent: 'center',
   },
-    header: {
+  header: {
     position: 'absolute',
     top: 50,
     left: 16,

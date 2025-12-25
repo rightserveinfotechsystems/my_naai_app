@@ -132,7 +132,7 @@ const NaaiDashboard = ({ navigation }) => {
 
   /* -------- SALON CARD -------- */
   const renderSalon = ({ item }) => (
-    <TouchableOpacity style={styles.card} onPress={()=> navigation.navigate('SalonDetail', { salon: item })}>
+    <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('SalonDetail', { salon: item })}>
       <Image source={item.image} style={styles.image} />
 
       <View style={styles.cardContent}>
@@ -228,8 +228,8 @@ const NaaiDashboard = ({ navigation }) => {
               horizontal
               // pagingEnabled
               pagingEnabled
-snapToInterval={AD_WIDTH}
-decelerationRate="fast"
+              snapToInterval={AD_WIDTH}
+              decelerationRate="fast"
 
               showsHorizontalScrollIndicator={false}
               keyExtractor={(_, i) => i.toString()}
@@ -280,8 +280,8 @@ export default NaaiDashboard;
 
 /* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
-  bg: { flex: 1},
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)' },
+  bg: { flex: 1 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.80)' },
   container: { flex: 1, paddingHorizontal: 14 },
 
   greeting: {
@@ -331,11 +331,11 @@ const styles = StyleSheet.create({
   },
 
   adSlider: { marginBottom: 6 },
- adImage: {
-  width: AD_WIDTH,
-  height: 140,
-  borderRadius: 16,
-},
+  adImage: {
+    width: AD_WIDTH,
+    height: 140,
+    borderRadius: 16,
+  },
 
 
   dotsContainer: {
