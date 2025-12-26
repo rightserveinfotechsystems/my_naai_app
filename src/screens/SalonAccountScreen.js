@@ -19,7 +19,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 const GOLD = '#E8B97E';
 const DARK = '#121212';
 const CARD = '#1E1E1E';
-
 const MAX_IMAGE_MB = 2;
 
 const MENUS = [
@@ -40,39 +39,14 @@ const SalonAccountScreen = ({ navigation }) => {
   const [closeTime, setCloseTime] = useState(new Date());
   const [pickerType, setPickerType] = useState(null);
 
+  const [holidays, setHolidays] = useState([]);
+  const [holidayPickerVisible, setHolidayPickerVisible] = useState(false);
+
   const [barbers, setBarbers] = useState([
-    { id: '1', name: 'Rahul', image: null },
-    { id: '2', name: 'Ritik', image: null },
+    { id: '1', name: 'Rahul', image: null, status: 'available' },
+    { id: '2', name: 'Ritik', image: null, status: 'available' },
   ]);
 
-  /* ---------------- IMAGE PICKER WITH SIZE VALIDATION ---------------- */
-  const pickImage = callback => {
-    launchImageLibrary(
-      { mediaType: 'photo', quality: 0.8 },
-      res => {
-        if (res.didCancel || !res.assets?.length) return;
-
-        const asset = res.assets[0];
-        const sizeMB = asset.fileSize / (1024 * 1024);
-
-        if (sizeMB > MAX_IMAGE_MB) {
-          Alert.alert(
-            'Image Too Large',
-            'Please select an image smaller than 2MB'
-          );
-          return;
-        }
-
-        callback(asset.uri);
-      }
-    );
-  };
-
-  /* ---------------- TIME FORMAT ---------------- */
-  const formatTime = date =>
-    date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-  /* ---------------- LOGOUT ---------------- */
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel' },
@@ -80,9 +54,29 @@ const SalonAccountScreen = ({ navigation }) => {
         text: 'Logout',
         style: 'destructive',
         onPress: () =>
-          navigation.navigate('Main', { screen: 'Salon Naai' }),
+          // navigation.navigate('Main', { screen: 'Salon Naai' }),
+          navigation.navigate('UserLogin'),
       },
     ]);
+  };
+
+  /* ---------------- HELPERS ---------------- */
+  const formatTime = date =>
+    date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const formatDate = date => date.toISOString().split('T')[0];
+
+  /* ---------------- IMAGE PICKER ---------------- */
+  const pickImage = callback => {
+    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, res => {
+      if (res.didCancel || !res.assets?.length) return;
+      const asset = res.assets[0];
+      if (asset.fileSize / (1024 * 1024) > MAX_IMAGE_MB) {
+        Alert.alert('Image Too Large', 'Select image below 2MB');
+        return;
+      }
+      callback(asset.uri);
+    });
   };
 
   /* ---------------- SALON TOGGLE ---------------- */
@@ -93,10 +87,9 @@ const SalonAccountScreen = ({ navigation }) => {
         ? 'Customers will not be able to book.'
         : 'Customers can start booking.',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Cancel' },
         {
           text: salonOpen ? 'Close' : 'Open',
-          style: 'destructive',
           onPress: () => setSalonOpen(!salonOpen),
         },
       ]
@@ -105,7 +98,7 @@ const SalonAccountScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView>
 
         {/* PROFILE */}
         <View style={styles.profileCard}>
@@ -135,7 +128,6 @@ const SalonAccountScreen = ({ navigation }) => {
         {/* STATUS */}
         <View style={styles.statusRow}>
           <Text style={styles.statusLabel}>Salon Status</Text>
-
           <TouchableOpacity
             style={[
               styles.toggleBtn,
@@ -165,37 +157,37 @@ const SalonAccountScreen = ({ navigation }) => {
             </TouchableOpacity>
           ))}
         </View>
-
         {/* LOGOUT */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={18} color="#fff" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>App Version 1.0.0</Text>
+        <Text style={styles.version}>App Version 1.0.1</Text>
+
       </ScrollView>
 
       {/* EDIT MODAL */}
-      <Modal visible={editVisible} animationType="slide" transparent>
+      <Modal visible={editVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <ScrollView style={styles.modalCard} keyboardShouldPersistTaps="handled">
+          <ScrollView style={styles.modalCard}>
 
-            <Text style={styles.modalTitle}>Salon Profile</Text>
+            <Text style={styles.modalTitle}>Salon Settings</Text>
 
             <TextInput
               style={styles.input}
-              placeholder="Salon Name"
-              placeholderTextColor="#999"
               value={salonName}
               onChangeText={setSalonName}
+              placeholder="Salon Name"
+              placeholderTextColor="#999"
             />
 
             <TextInput
               style={styles.input}
-              placeholder="Salon Address"
-              placeholderTextColor="#999"
               value={salonAddress}
               onChangeText={setSalonAddress}
+              placeholder="Salon Address"
+              placeholderTextColor="#999"
             />
 
             {/* TIME */}
@@ -218,6 +210,29 @@ const SalonAccountScreen = ({ navigation }) => {
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {/* HOLIDAYS */}
+            <Text style={styles.sectionTitle}>Holidays</Text>
+
+            <TouchableOpacity
+              style={styles.timeBtn}
+              onPress={() => setHolidayPickerVisible(true)}
+            >
+              <Text style={styles.timeText}>Add Holiday</Text>
+            </TouchableOpacity>
+
+            {holidays.map(date => (
+              <View key={date} style={styles.holidayRow}>
+                <Text style={styles.holidayText}>{date}</Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    setHolidays(holidays.filter(d => d !== date))
+                  }
+                >
+                  <Ionicons name="close-circle" size={20} color="#E53935" />
+                </TouchableOpacity>
+              </View>
+            ))}
 
             {/* BARBERS */}
             <Text style={styles.sectionTitle}>Barbers</Text>
@@ -245,8 +260,6 @@ const SalonAccountScreen = ({ navigation }) => {
 
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
-                  placeholder="Barber Name"
-                  placeholderTextColor="#999"
                   value={b.name}
                   onChangeText={text => {
                     const updated = [...barbers];
@@ -255,13 +268,35 @@ const SalonAccountScreen = ({ navigation }) => {
                   }}
                 />
 
-                <TouchableOpacity
-                  onPress={() =>
-                    setBarbers(barbers.filter(x => x.id !== b.id))
-                  }
-                >
-                  <Ionicons name="trash-outline" size={20} color="#E53935" />
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {['available', 'busy', 'leave'].map(s => (
+                    <TouchableOpacity
+                      key={s}
+                      style={[
+                        styles.statusPill,
+                        {
+                          backgroundColor:
+                            b.status === s
+                              ? s === 'available'
+                                ? '#4CAF50'
+                                : s === 'busy'
+                                  ? '#FFC107'
+                                  : '#E53935'
+                              : '#333',
+                        },
+                      ]}
+                      onPress={() => {
+                        const updated = [...barbers];
+                        updated[index].status = s;
+                        setBarbers(updated);
+                      }}
+                    >
+                      <Text style={styles.statusPillText}>
+                        {s.toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             ))}
 
@@ -270,14 +305,19 @@ const SalonAccountScreen = ({ navigation }) => {
               onPress={() =>
                 setBarbers([
                   ...barbers,
-                  { id: Date.now().toString(), name: '', image: null },
+                  {
+                    id: Date.now().toString(),
+                    name: '',
+                    image: null,
+                    status: 'available',
+                  },
                 ])
               }
             >
-              <Ionicons name="add-circle-outline" size={18} color="#000" />
-              <Text style={styles.addText}>Add Barber</Text>
+              <Text style={styles.addText}>+ Add Barber</Text>
             </TouchableOpacity>
 
+            {/* SAVE */}
             <View style={styles.modalRow}>
               <TouchableOpacity
                 style={styles.cancelBtn}
@@ -298,18 +338,27 @@ const SalonAccountScreen = ({ navigation }) => {
         </View>
       </Modal>
 
-      {/* TIME PICKER */}
+      {/* TIME PICKERS */}
       {pickerType && (
         <DateTimePicker
           value={pickerType === 'open' ? openTime : closeTime}
           mode="time"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(e, date) => {
-            if (Platform.OS === 'android') setPickerType(null);
-            if (date) {
-              pickerType === 'open'
-                ? setOpenTime(date)
-                : setCloseTime(date);
+          onChange={(e, d) => {
+            setPickerType(null);
+            if (d) pickerType === 'open' ? setOpenTime(d) : setCloseTime(d);
+          }}
+        />
+      )}
+
+      {holidayPickerVisible && (
+        <DateTimePicker
+          value={new Date()}
+          mode="date"
+          onChange={(e, d) => {
+            setHolidayPickerVisible(false);
+            if (d) {
+              const f = formatDate(d);
+              if (!holidays.includes(f)) setHolidays([...holidays, f]);
             }
           }}
         />
@@ -319,16 +368,15 @@ const SalonAccountScreen = ({ navigation }) => {
 };
 
 export default SalonAccountScreen;
-
 const styles = StyleSheet.create({
-  /* ---------------- ROOT ---------------- */
+  /* ================= ROOT ================= */
   container: {
     flex: 1,
     backgroundColor: DARK,
     padding: 14,
   },
 
-  /* ---------------- PROFILE CARD ---------------- */
+  /* ================= PROFILE CARD ================= */
   profileCard: {
     backgroundColor: CARD,
     borderRadius: 20,
@@ -352,6 +400,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     marginBottom: 8,
+    fontWeight: '600',
   },
 
   name: {
@@ -383,7 +432,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  /* ---------------- SALON STATUS ---------------- */
+  /* ================= SALON STATUS ================= */
   statusRow: {
     backgroundColor: CARD,
     borderRadius: 18,
@@ -413,7 +462,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  /* ---------------- MENU ---------------- */
+  /* ================= MENU ================= */
   menuCard: {
     backgroundColor: CARD,
     borderRadius: 20,
@@ -442,32 +491,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  /* ---------------- LOGOUT ---------------- */
-  logoutBtn: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#2A2A2A',
-    borderRadius: 22,
-    paddingVertical: 12,
-    marginBottom: 16,
-  },
-
-  logoutText: {
-    color: '#fff',
-    marginLeft: 6,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-
-  version: {
-    textAlign: 'center',
-    color: '#777',
-    fontSize: 12,
-    marginBottom: 30,
-  },
-
-  /* ---------------- MODAL ---------------- */
+  /* ================= MODAL ================= */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',
@@ -501,7 +525,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  /* ---------------- TIME PICKER ---------------- */
+  /* ================= TIME PICKER ================= */
   timeRow: {
     flexDirection: 'row',
     gap: 10,
@@ -514,14 +538,16 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 14,
     alignItems: 'center',
+    marginBottom: 8,
   },
 
   timeText: {
     color: '#fff',
     fontWeight: '600',
+    fontSize: 13,
   },
 
-  /* ---------------- BARBERS ---------------- */
+  /* ================= SECTIONS ================= */
   sectionTitle: {
     color: GOLD,
     fontSize: 15,
@@ -529,6 +555,24 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
 
+  /* ================= HOLIDAYS ================= */
+  holidayRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    padding: 10,
+    borderRadius: 12,
+    marginTop: 6,
+  },
+
+  holidayText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  /* ================= BARBERS ================= */
   barberRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -544,7 +588,22 @@ const styles = StyleSheet.create({
     borderColor: GOLD,
   },
 
-  /* ---------------- ADD BARBER ---------------- */
+  /* ================= BARBER STATUS ================= */
+  statusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  statusPillText: {
+    color: '#000',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+
+  /* ================= ADD BARBER ================= */
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -563,7 +622,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  /* ---------------- MODAL BUTTONS ---------------- */
+  /* ================= MODAL BUTTONS ================= */
   modalRow: {
     flexDirection: 'row',
     marginTop: 14,
@@ -590,11 +649,34 @@ const styles = StyleSheet.create({
   cancelText: {
     color: '#fff',
     fontWeight: '600',
+    fontSize: 14,
   },
 
   saveText: {
     color: '#000',
     fontWeight: '900',
+    fontSize: 14,
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 20,
+    paddingVertical: 12,
+    marginBottom: 20,
+  },
+
+  logoutText: {
+    color: '#fff',
+    marginLeft: 6,
+    fontWeight: '600',
+  },
+
+  version: {
+    textAlign: 'center',
+    color: '#777',
+    fontSize: 12,
+    marginBottom: 30,
   },
 });
-

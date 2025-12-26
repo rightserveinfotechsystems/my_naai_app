@@ -26,6 +26,7 @@ import NaaiLogin from './src/components/NaaiLogin';
 import NaaiRequest from './src/components/NaaiRequest';
 import SalonDashboard from './src/screens/SalonDashboard';
 import SalonBookingHistory from './src/screens/SalonBookingHistory';
+import SalonProduct from './src/screens/SalonProduct';
 import SalonAccountScreen from './src/screens/SalonAccountScreen';
 import AddOfflineCustomer from './src/components/AddOfflineCustomer';
 
@@ -113,6 +114,8 @@ function SalonTabs() {
             iconName = 'list-circle';
           } else if (route.name === 'Queue History') {
             iconName = 'cut';
+          } else if (route.name === 'Product') {
+            iconName = 'storefront-outline';
           } else if (route.name === 'Account') {
             iconName = 'person';
           }
@@ -129,6 +132,10 @@ function SalonTabs() {
       <Tab.Screen
         name="Queue History"
         component={SalonBookingHistory}
+      />
+      <Tab.Screen
+        name="Product"
+        component={SalonProduct}
       />
 
       <Tab.Screen

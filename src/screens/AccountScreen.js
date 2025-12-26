@@ -34,7 +34,8 @@ const AccountScreen = ({ navigation }) => {
         text: 'Logout',
         style: 'destructive',
         onPress: () =>
-          navigation.navigate('Main', { screen: 'Salon Naai' }),
+          // navigation.navigate('Main', { screen: 'Salon Naai' }),
+          navigation.navigate('UserLogin'),
       },
     ]);
   };
