@@ -14,6 +14,7 @@ import NaaiDashboard from './src/screens/NaaiDashboard';
 import ServicesScreen from './src/screens/ServicesScreen';
 import AccountScreen from './src/screens/AccountScreen';
 import SalonDetailScreen from './src/screens/SalonDetailScreen';
+import BookingSchedule from './src/screens/BookingSchedule';
 import UserLogin from './src/components/UserLogin';
 import UserSignup from './src/components/UserSignup';
 import OtpScreen from './src/components/OtpScreen';
@@ -161,6 +162,11 @@ const App = () => {
         <Stack.Screen
           name="SalonDetail"
           component={SalonDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="BookingSchedule"
+          component={BookingSchedule}
           options={{ headerShown: false }}
         />
         <Stack.Screen

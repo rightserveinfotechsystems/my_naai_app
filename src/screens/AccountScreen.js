@@ -80,21 +80,20 @@ const AccountScreen = ({ navigation }) => {
           ))}
         </View>
         {/* Login AS NAII */}
-        <TouchableOpacity style={styles.naaiBtn} onPress={handleNaaiRequest}>
+        {/* <TouchableOpacity style={styles.naaiBtn} onPress={handleNaaiRequest}>
           <Ionicons name="storefront-outline" size={18} color="#000" />
           <Text style={styles.naaiText}>
-            {/* Request to Register as Salon / Naai Owner */}
             Login as Salon / Naai Owner
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         {/* LOGIN */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.loginBtn}
           onPress={() => navigation.navigate('UserLogin')}
         >
           <Ionicons name="log-in-outline" size={18} color="#000" />
           <Text style={styles.loginText}>Login</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* LOGOUT */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
@@ -102,7 +101,7 @@ const AccountScreen = ({ navigation }) => {
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>App Version 1.0.0</Text>
+        <Text style={styles.version}>App Version 1.0.1</Text>
       </ScrollView>
 
       {/* EDIT PROFILE MODAL */}
@@ -120,13 +119,15 @@ const AccountScreen = ({ navigation }) => {
             />
 
             <TextInput
-              style={styles.input}
+              // style={styles.input}
+              style={[styles.input, { backgroundColor: '#2E2E2E', color: '#AAA' }]}
               placeholder="Mobile Number"
               placeholderTextColor="#999"
               keyboardType="number-pad"
               maxLength={10}
               value={mobile}
               onChangeText={setMobile}
+              editable={false}
             />
 
             <View style={styles.modalRow}>

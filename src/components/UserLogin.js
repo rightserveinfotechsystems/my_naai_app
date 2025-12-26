@@ -46,11 +46,11 @@ const UserLogin = ({ navigation }) => {
       <View style={styles.overlay}>
 
         <SafeAreaView style={{ flex: 1 }}>
-          <View style={styles.header}>
+          {/* <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
-          </View>
+          </View> */}
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.container}
@@ -95,6 +95,17 @@ const UserLogin = ({ navigation }) => {
                   onPress={() => navigation.navigate('UserSignup')}
                 >
                   Sign Up
+                </Text>
+              </Text>
+            </View>
+            <View style={styles.naaiFooter}>
+              <Text style={styles.footerText}>
+                Login as salon owner / Naai ?{' '}
+                <Text
+                  style={styles.signup}
+                  onPress={() => navigation.navigate('NaaiLogin')}
+                >
+                  Log In
                 </Text>
               </Text>
             </View>
@@ -178,6 +189,10 @@ const styles = StyleSheet.create({
 
   footer: {
     marginTop: 30,
+    alignItems: 'center',
+  },
+  naaiFooter: {
+    marginTop: 10,
     alignItems: 'center',
   },
 
