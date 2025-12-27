@@ -10,6 +10,7 @@ import {
   Dimensions,
   Modal,
   Linking,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -58,8 +59,8 @@ const BARBERS = [
 
 const SalonDetailScreen = ({ route, navigation }) => {
   const { salon } = route.params;
-  console.log("salon",salon.open);
-  
+  console.log("salon", salon.open);
+
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedServices, setSelectedServices] = useState([]);
@@ -110,7 +111,15 @@ const SalonDetailScreen = ({ route, navigation }) => {
   };
 
   const handleContinue = () => {
-    if (selectedServices.length === 0) return;
+    if (selectedServices.length === 0) {
+      Alert.alert(
+        'Service Required',
+        'Please select at least one service to continue booking.',
+        [{ text: 'OK' }],
+      );
+      return;
+    }
+
     navigation.navigate('BookingSchedule', {
       salon,
       services: selectedServices,
@@ -165,38 +174,44 @@ const SalonDetailScreen = ({ route, navigation }) => {
 
               {/* -------------------- DETAILS -------------------- */}
               <View style={styles.card}>
-                <View style={styles.row}>
-                  <Ionicons name="star" size={16} color="#FFD700" />
-                  <Text style={styles.rating}>
-                    {salon.rating} ({salon.reviews} reviews)
-                  </Text>
-                  <Text style={styles.wait}>
-                    • Avg wait {salon.waitingTime || '15 min'}
-                  </Text>
+                <View style={styles.ratingRow}>
+
+                  <View style={{ flexDirection: 'row' }}>
+                    <Ionicons name="star" size={16} color="#FFD700" />
+                    <Text style={styles.rating}>
+                      {salon.rating} ({salon.reviews} reviews)
+                    </Text>
+                  </View>
+                  {salon.open &&
+                    <Text style={styles.wait}>
+                      • Queue: {salon.waitNumber} People
+                    </Text>
+                  }
+
                 </View>
 
                 {/* SHOP STATUS */}
                 <View style={styles.infoBox}>
-                <View style={styles.infoRow}>
-  <Ionicons
-    name="time-outline"
-    size={16}
-    color={salon.open ? '#4CAF50' : '#F44336'}
-  />
+                  <View style={styles.infoRow}>
+                    <Ionicons
+                      name="time-outline"
+                      size={16}
+                      color={salon.open ? '#4CAF50' : '#F44336'}
+                    />
 
-  <Text
-    style={[
-      styles.infoText,
-      { color: salon.open ? '#4CAF50' : '#F44336' },
-    ]}
-  >
-    {salon.open ? 'OPEN NOW' : 'CLOSED'}
-  </Text>
+                    <Text
+                      style={[
+                        styles.infoText,
+                        { color: salon.open ? '#4CAF50' : '#F44336' },
+                      ]}
+                    >
+                      {salon.open ? 'OPEN NOW' : 'CLOSED'}
+                    </Text>
 
-  <Text style={styles.infoSub}>
-    ({salon.openTime ?? '9 AM'} - {salon.closeTime ?? '10 PM'})
-  </Text>
-</View>
+                    <Text style={styles.infoSub}>
+                      ({salon.openTime ?? '9 AM'} - {salon.closeTime ?? '10 PM'})
+                    </Text>
+                  </View>
 
 
                   <View style={styles.infoRow}>
@@ -356,9 +371,10 @@ const styles = StyleSheet.create({
   sliderImage: { width, height: 260 },
 
   card: { padding: 18 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   row: { flexDirection: 'row', alignItems: 'center', marginVertical: 6 },
   rating: { color: '#FFD700', marginLeft: 6 },
-  wait: { color: '#AAA', marginLeft: 6, fontSize: 12 },
+  wait: { color: '#fff', marginLeft: 6, fontSize: 13 },
   linkText: { color: '#E1B378', marginLeft: 8 },
 
   // infoBox: { backgroundColor: '#2A2A2A', borderRadius: 14, padding: 12 },

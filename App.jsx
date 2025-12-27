@@ -13,6 +13,7 @@ import SplashScreen from './src/screens/SplashScreen';
 import NaaiDashboard from './src/screens/NaaiDashboard';
 import ServicesScreen from './src/screens/ServicesScreen';
 import AccountScreen from './src/screens/AccountScreen';
+import UserProduct from './src/screens/UserProduct';
 import SalonDetailScreen from './src/screens/SalonDetailScreen';
 import BookingSchedule from './src/screens/BookingSchedule';
 import UserLogin from './src/components/UserLogin';
@@ -66,6 +67,8 @@ function MainTabs() {
             iconName = 'list-circle';
           } else if (route.name === 'Booked Salon') {
             iconName = 'cut';
+          } else if (route.name === 'Products') {
+            iconName = 'storefront-outline';
           } else if (route.name === 'Account') {
             iconName = 'person';
           }
@@ -82,6 +85,10 @@ function MainTabs() {
       <Tab.Screen
         name="Booked Salon"
         component={ServicesScreen}
+      />
+      <Tab.Screen
+        name="Products"
+        component={UserProduct}
       />
 
       <Tab.Screen
@@ -151,6 +158,11 @@ const App = () => {
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator>
+        {/* <Stack.Screen
+          name="Main"
+          component={MainTabs}
+          options={{ headerShown: false }}
+        /> */}
         <Stack.Screen
           name="SplashScreen"
           component={SplashScreen}

@@ -10,28 +10,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-/* -------------------- TIME SLOTS -------------------- */
-const TIME_SLOTS = [
-  '10:00 AM',
-  '11:00 AM',
-  '12:00 PM',
-  '02:00 PM',
-  '03:00 PM',
-  '04:00 PM',
-  '05:00 PM',
-  '06:00 PM',
-];
-
-/* -------------------- SCREEN -------------------- */
 const BookingSchedule = ({ route, navigation }) => {
-  const { salon, services, barber } = route.params;
+  const { salon, services = [], barber } = route.params;
 
   const [selectedDate, setSelectedDate] = useState(0);
-  const [selectedSlot, setSelectedSlot] = useState(null);
 
   /* -------------------- QUEUE LOGIC -------------------- */
   const queuePosition = useMemo(() => {
-    const baseQueue = barber ? 3 : 5; // barber selected → shorter queue
+    const baseQueue = barber ? 3 : 6;
     return baseQueue + selectedDate;
   }, [barber, selectedDate]);
 
@@ -40,8 +26,11 @@ const BookingSchedule = ({ route, navigation }) => {
 
   /* -------------------- CONFIRM -------------------- */
   const handleConfirm = () => {
-    if (!selectedSlot) {
-      Alert.alert('Select Time', 'Please select a time slot');
+    if (services.length === 0) {
+      Alert.alert(
+        'Select Service',
+        'Please select at least one service to continue.',
+      );
       return;
     }
 
@@ -51,110 +40,105 @@ const BookingSchedule = ({ route, navigation }) => {
 Services: ${services.map(s => s.name).join(', ')}
 Barber: ${barber ? barber.name : 'Auto Assigned'}
 Date: ${new Date(
-        Date.now() + selectedDate * 86400000
+        Date.now() + selectedDate * 86400000,
       ).toDateString()}
-Time: ${selectedSlot}
-Queue No: ${queuePosition}`,
+People ahead in queue: ${queuePosition}`,
       [
         {
           text: 'OK',
-          onPress: () => navigation.navigate('Main', { screen: 'Booked Salon' }),
+          onPress: () =>
+            navigation.navigate('Main', { screen: 'Booked Salon' }),
         },
-      ]
+      ],
     );
   };
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={{ flex: 1 }}>
-        {/* -------------------- HEADER -------------------- */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Schedule Appointment</Text>
+    <SafeAreaView style={styles.container}>
+      {/* -------------------- HEADER -------------------- */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Schedule Appointment</Text>
+      </View>
+
+      <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
+        {/* -------------------- SUMMARY -------------------- */}
+        <View style={styles.card}>
+          <Text style={styles.section}>Summary</Text>
+
+          <Text style={styles.summaryText}>
+            Salon: <Text style={styles.bold}>{salon.name}</Text>
+          </Text>
+
+          <Text style={styles.summaryText}>
+            Services:{' '}
+            <Text style={styles.bold}>
+              {services.map(s => s.name).join(', ')}
+            </Text>
+          </Text>
+
+          <Text style={styles.summaryText}>
+            Barber:{' '}
+            <Text style={styles.bold}>
+              {barber ? barber.name : 'Auto Assign'}
+            </Text>
+          </Text>
+
+          <Text style={styles.totalText}>Total: ₹{totalAmount}</Text>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>
-          {/* -------------------- SUMMARY -------------------- */}
-          <View style={styles.card}>
-            <Text style={styles.section}>Summary</Text>
+        {/* -------------------- DATE PICKER -------------------- */}
+        <View style={styles.card}>
+          <Text style={styles.section}>Select Date</Text>
 
-            <Text style={styles.summaryText}>
-              Salon: <Text style={styles.bold}>{salon.name}</Text>
-            </Text>
+          <View style={styles.dateRow}>
+            {[0, 1, 2].map(i => {
+              const date = new Date(Date.now() + i * 86400000);
+              const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : 'Day After';
 
-            <Text style={styles.summaryText}>
-              Services:{' '}
-              <Text style={styles.bold}>
-                {services.map(s => s.name).join(', ')}
-              </Text>
-            </Text>
-
-            <Text style={styles.summaryText}>
-              Barber:{' '}
-              <Text style={styles.bold}>
-                {barber ? barber.name : 'Auto Assign'}
-              </Text>
-            </Text>
-
-            <Text style={styles.totalText}>Total: ₹{totalAmount}</Text>
-          </View>
-
-          {/* -------------------- DATE PICKER -------------------- */}
-          <View style={styles.card}>
-            <Text style={styles.section}>Select Date</Text>
-            <View style={styles.dateRow}>
-              {[0, 1, 2, 3, 4, 5, 6].map(i => {
-                const date = new Date(Date.now() + i * 86400000);
-                return (
-                  <TouchableOpacity
-                    key={i}
-                    style={[
-                      styles.dateBox,
-                      selectedDate === i && styles.dateActive,
-                    ]}
-                    onPress={() => setSelectedDate(i)}
-                  >
-                    <Text style={styles.dateDay}>
-                      {date.toDateString().slice(0, 3)}
-                    </Text>
-                    <Text style={styles.dateNum}>{date.getDate()}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* -------------------- TIME SLOTS -------------------- */}
-          <View style={styles.card}>
-            <Text style={styles.section}>Select Time</Text>
-            <View style={styles.slotWrap}>
-              {TIME_SLOTS.map(slot => (
+              return (
                 <TouchableOpacity
-                  key={slot}
+                  key={i}
                   style={[
-                    styles.slot,
-                    selectedSlot === slot && styles.slotActive,
+                    styles.dateBox,
+                    selectedDate === i && styles.dateActive,
                   ]}
-                  onPress={() => setSelectedSlot(slot)}
+                  onPress={() => setSelectedDate(i)}
                 >
-                  <Text style={styles.slotText}>{slot}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+                  <Text
+                    style={[
+                      styles.dateDay,
+                      selectedDate === i && styles.activeText,
+                    ]}
+                  >
+                    {label}
+                  </Text>
 
-          {/* -------------------- QUEUE INFO -------------------- */}
-          <View style={styles.queueBox}>
-            <Ionicons name="people-outline" size={20} color="#E1B378" />
-            <Text style={styles.queueText}>
-              Estimated Queue Position:{' '}
-              <Text style={styles.bold}>#{queuePosition}</Text>
-            </Text>
+                  <Text
+                    style={[
+                      styles.dateNum,
+                      selectedDate === i && styles.activeText,
+                    ]}
+                  >
+                    {date.getDate()}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
-        </ScrollView>
-      </SafeAreaView>
+        </View>
+
+        {/* -------------------- QUEUE INFO -------------------- */}
+        <View style={styles.queueBox}>
+          <Ionicons name="people-outline" size={20} color="#E1B378" />
+          <Text style={styles.queueText}>
+            Estimated people ahead in queue:{' '}
+            <Text style={styles.bold}>{queuePosition}</Text>
+          </Text>
+        </View>
+      </ScrollView>
 
       {/* -------------------- CONFIRM BUTTON -------------------- */}
       <View style={styles.bottomBar}>
@@ -162,7 +146,7 @@ Queue No: ${queuePosition}`,
           <Text style={styles.confirmText}>Confirm Booking</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -220,9 +204,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   dateBox: {
-    width: 44,
-    height: 60,
-    borderRadius: 12,
+    width: 90,
+    height: 70,
+    borderRadius: 14,
     backgroundColor: '#2A2A2A',
     alignItems: 'center',
     justifyContent: 'center',
@@ -233,30 +217,15 @@ const styles = StyleSheet.create({
   dateDay: {
     color: '#AAA',
     fontSize: 12,
+    marginBottom: 4,
   },
   dateNum: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
   },
-
-  slotWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  slot: {
-    backgroundColor: '#2A2A2A',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-    margin: 6,
-  },
-  slotActive: {
-    backgroundColor: '#E1B378',
-  },
-  slotText: {
-    color: '#fff',
-    fontWeight: '600',
+  activeText: {
+    color: '#000',
   },
 
   queueBox: {
@@ -270,6 +239,7 @@ const styles = StyleSheet.create({
   queueText: {
     color: '#AAA',
     marginLeft: 10,
+    fontSize: 13,
   },
 
   bottomBar: {
