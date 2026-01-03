@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState } from 'react';
 import {
   View,
@@ -27,18 +28,34 @@ const AccountScreen = ({ navigation }) => {
   const [name, setName] = useState('Abhishek Tijare');
   const [mobile, setMobile] = useState('8308594231');
 
-  const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel' },
+  const handleLogout = async () => {
+  Alert.alert(
+    'Logout',
+    'Are you sure you want to logout?',
+    [
+      { text: 'Cancel', style: 'cancel' },
       {
         text: 'Logout',
         style: 'destructive',
-        onPress: () =>
-          // navigation.navigate('Main', { screen: 'Salon Naai' }),
-          navigation.navigate('UserLogin'),
+        onPress: async () => {
+          try {
+            await AsyncStorage.removeItem('mynaai');
+            await AsyncStorage.removeItem('mynaaiUser');
+
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'UserLogin' }],
+            });
+          } catch (error) {
+            console.log('Logout Error:', error);
+          }
+        },
       },
-    ]);
-  };
+    ],
+    { cancelable: true }
+  );
+};
+
 
   const handleNaaiRequest = () => {
     navigation.navigate('NaaiLogin')

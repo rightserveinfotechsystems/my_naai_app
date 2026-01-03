@@ -158,14 +158,15 @@ const App = () => {
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator>
-        {/* <Stack.Screen
-          name="Main"
-          component={MainTabs}
-          options={{ headerShown: false }}
-        /> */}
         <Stack.Screen
           name="SplashScreen"
           component={SplashScreen}
+          options={{ headerShown: false }}
+        />
+        {/*  */}
+         <Stack.Screen
+          name="UserLogin"
+          component={UserLogin}
           options={{ headerShown: false }}
         />
         <Stack.Screen
@@ -188,11 +189,7 @@ const App = () => {
           component={BookingSchedule}
           options={{ headerShown: false }}
         />
-        <Stack.Screen
-          name="UserLogin"
-          component={UserLogin}
-          options={{ headerShown: false }}
-        />
+       
         <Stack.Screen
           name="UserSignup"
           component={UserSignup}
