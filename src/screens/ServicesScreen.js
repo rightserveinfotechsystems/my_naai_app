@@ -34,8 +34,8 @@ const ServicesScreen = () => {
   const getUserInfo = async () => {
     try {
       const userData = await AsyncStorage.getItem('mynaaiUser');
-      console.log("userData",userData);
-      
+      console.log("userData", userData);
+
       const parsed = JSON.parse(userData);
       const id = parsed?.userId;
 
@@ -59,23 +59,23 @@ const ServicesScreen = () => {
         searchString: '',
       });
 
-     if (response?.status === 'SUCCESS') {
-  const data = response.data || [];
+      if (response?.status === 'SUCCESS') {
+        const data = response.data || [];
 
-  console.log("booked response",data);
-  
+        console.log("booked response", data);
 
-  
-  setSalonList(prev =>
-    loadMore ? [...prev, ...data] : data
-  );
 
-  setHasMore(data.length >= 10);
-  setPage(pageNo);
-} else {
-  if (!loadMore) setSalonList([]);
-  setHasMore(false);
-}
+
+        setSalonList(prev =>
+          loadMore ? [...prev, ...data] : data
+        );
+
+        setHasMore(data.length >= 10);
+        setPage(pageNo);
+      } else {
+        if (!loadMore) setSalonList([]);
+        setHasMore(false);
+      }
 
     } catch (e) {
       Alert.alert('Error', e.message);
@@ -88,72 +88,78 @@ const ServicesScreen = () => {
 
 
   useEffect(() => {
-  getUserInfo();
-}, []);
+    getUserInfo();
+  }, []);
 
-useEffect(() => {
-  if (userId) {
-    fetchBookings(userId, 1);
-  }
-}, [userId]);
+  useEffect(() => {
+    if (userId) {
+      fetchBookings(userId, 1);
+    }
+  }, [userId]);
 
 
   /* ---------------- LOAD MORE ---------------- */
   const handleLoadMore = () => {
-  if (
-    loading ||
-    loadingMore ||
-    !hasMore ||
-    !userId ||
-    salonList.length === 0
-  ) {
-    return;
-  }
+    if (
+      loading ||
+      loadingMore ||
+      !hasMore ||
+      !userId ||
+      salonList.length === 0
+    ) {
+      return;
+    }
 
-  fetchBookings(userId, page + 1, true);
-};
+    fetchBookings(userId, page + 1, true);
+  };
 
 
   /* ---------------- REFRESH ---------------- */
-const onRefresh = () => {
-  if (!userId) return;
-  setRefreshing(true);
-  setPage(1);
-  fetchBookings(userId, 1);
-};
+  const onRefresh = () => {
+    if (!userId) return;
+    setRefreshing(true);
+    setPage(1);
+    fetchBookings(userId, 1);
+  };
 
 
   /* ---------------- RENDER ITEM ---------------- */
   const renderItem = ({ item }) => {
     const btnColor =
-      item.queueStatus === 'waiting'
+      item.status === 'pending'
         ? '#E1B378'
-        : item.queueStatus === 'completed'
-        ? '#4CAF50'
-        : '#E53935';
+        : item.status === 'completed'
+          ? '#4CAF50'
+          : '#E53935';
 
 
-// const formatDateReadable = (dateStr) => {
-//   if (!dateStr) return '';
+    const formatDateReadable = (dateStr) => {
+      if (!dateStr) return '';
 
-//   const date = new Date(dateStr);
-//   return date.toLocaleDateString('en-IN', {
-//     day: '2-digit',
-//     month: 'short',
-//     year: 'numeric',
-//   });
-// };
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    };
 
 
-// const formatTime = time => {
-//   const [h, m] = time.split(':');
-//   const date = new Date();
-//   date.setHours(h, m);
-//   return date.toLocaleTimeString('en-IN', {
-//     hour: '2-digit',
-//     minute: '2-digit',
-//   });
-// };
+
+    const formatTime = (time) => {
+      if (!time) return '';
+
+      const [h, m] = time.split(':');
+      const date = new Date();
+      date.setHours(Number(h), Number(m));
+
+      return date.toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+    };
+
 
 
     return (
@@ -185,16 +191,24 @@ const onRefresh = () => {
               </Text>
             </View>
 
+            {/* <View style={styles.dateRow}>
+              <Ionicons name="calendar-outline" size={14} color="#E1B378" />
+              <Text style={styles.dateText}>
+                {item.bookingDate} • {item.bookingTime}
+              </Text>
+            </View> */}
+
             <View style={styles.dateRow}>
               <Ionicons name="calendar-outline" size={14} color="#E1B378" />
               <Text style={styles.dateText}>
-                {item.date} • {item.time}
+                {formatDateReadable(item.bookingDate)} • {formatTime(item.bookingTime)}
               </Text>
             </View>
+
           </View>
 
           <View style={[styles.statusBtn, { backgroundColor: btnColor }]}>
-            <Text style={styles.statusBtnText}>{item.queueStatus}</Text>
+            <Text style={styles.statusBtnText}>{item.status}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -230,8 +244,8 @@ const onRefresh = () => {
             <FlatList
               data={salonList}
               keyExtractor={(item, index) =>
-  `${item.bookingId || item.id}-${index}`
-}
+                `${item.bookingId || item.id}-${index}`
+              }
 
               // keyExtractor={(item, index) =>
               //   item.bookingId?.toString() || index.toString()
@@ -355,5 +369,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 6,
   },
+  empty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 80,
+  },
+  emptyText: {
+    color: '#777',
+    fontSize: 14,
+    marginTop: 10,
+  },
+
+  skeletonCard: {
+    height: 110,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 20,
+    marginBottom: 16,
+    opacity: 0.6,
+  },
+
+
 
 });

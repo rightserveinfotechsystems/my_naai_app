@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { communication } from '../services/communication';
 
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
@@ -21,6 +22,8 @@ const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 const NaaiLogin = ({ navigation }) => {
   const [mobile, setMobile] = useState('');
   const [loading, setLoading] = useState(false);
+  // const [otpSent, setOtpSent] = useState(false);
+
 
   const validate = () => {
     if (mobile.length !== 10) {
@@ -30,17 +33,41 @@ const NaaiLogin = ({ navigation }) => {
     return true;
   };
 
-  const handleLogin = () => {
+
+  const handleLogin = async () => {
     if (!validate()) return;
 
     setLoading(true);
-
-    // 🔔 Call LOGIN + SEND OTP API here
-    setTimeout(() => {
+    try {
+      const payload = { phoneNumber: mobile };
+      const res = await communication.SalonLogin(payload);
+      if (res?.status === 'SUCCESS') {
+        Alert.alert(
+          'OTP Sent',
+          res?.otp,
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                navigation.navigate('SalonOtpScreen', { mobile });
+              },
+            },
+          ],
+          { cancelable: false }
+        );
+      } else {
+        Alert.alert('Error', res?.message || 'Failed to send OTP');
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Something went wrong'
+      );
+    } finally {
       setLoading(false);
-      navigation.navigate('SalonOtpScreen', { mobile });
-    }, 1200);
+    }
   };
+
 
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>

@@ -2,7 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
-// const serverUrl = "http://192.168.1.24:5000";
+// const serverUrl = "http://192.168.1.6:5000";
 const serverUrl = "http://72.60.195.95:3006";
 // const serverUrl = "http://localhost:5000";
 // const serverUrl = "https://backend.vidyacurasolutions.com"
@@ -25,7 +25,7 @@ export async function getCookie() {
     try {
         const asyncStorageData = await AsyncStorage.getItem('mynaai');
         if (!asyncStorageData) return null;
-        
+
         console.log("asyncStorageData", asyncStorageData);
 
         // Try parsing as JSON first
@@ -110,21 +110,33 @@ export const communication = {
             throw error;
         }
     },
-    // updateUserById: async (payload) => {
-    //     try {
-    //         const response = await axios.post(`${getServerUrl()}/user/update-user`, payload, {
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //                 "Authorization": `Bearer ${await getCookie()}`
-
-    //             },
-    //         });
-    //         return response.data;
-    //     } catch (error) {
-    //         Alert.alert(error.response?.data?.message || error.message);
-    //         throw error;
-    //     }
-    // },
+    userProfile: async ({ userId }) => {
+        try {
+            const response = await axios.get(`${getServerUrl()}/api/users/profile`, {
+                params: { userId },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    updateProfile: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/users/update`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
 
     userSalonList: async (dataToSend) => {
         try {
@@ -139,9 +151,9 @@ export const communication = {
             throw error;
         }
     },
-    bookedSalonList: async ({userId}) => {
+    bookedSalonList: async ({ userId }) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/booking/get-list`, {userId}, {
+            const response = await axios.post(`${getServerUrl()}/api/booking/get-list`, { userId }, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -153,5 +165,46 @@ export const communication = {
         }
     },
 
-  
+    // salon api start
+    salonRequest: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/salonrequest/create-request`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    SalonLogin: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/salons/send-otp`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    verifySalonLogin: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/salons/login`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            console.log("response.data", response.data);
+
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
 };
+

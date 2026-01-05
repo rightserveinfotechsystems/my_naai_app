@@ -14,11 +14,12 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import {communication, getServerUrl} from '../services/communication';
+import { communication, getServerUrl } from '../services/communication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
@@ -40,20 +41,26 @@ const convertSalonApiData = (apiData = []) => {
   return apiData.map(item => ({
     id: item.salonId,
     name: item.salonName,
-    address: `${item.addressLine1}, ${item.addressLine2}`,
+    address: `${item.addressLine1}, ${item.city}`,
     location: item.city,
 
     rating: Number(item.ratingAverage),
     reviews: item.totalReviews,
-
+    phoneNumber: item.phoneNumber,
     open: item.isOpen,
     waitNumber: item.queues?.[0]?.queueNumber ?? '_',
-    waitTime: item.isOpen ? '25 mins' : '—',
+    // waitTime: item.isOpen ? '25 mins' : '—',
+    waitTime: item.isOpen ? item.totalWaitTime?.display : 'Closed',
 
     // image: { uri: item.imageUrl },
-    image: item.imageUrl
-  ? { uri: item.imageUrl }
-  : require('../assets/my_naai.jpeg'),
+
+
+    //   image: item.imageUrl
+    // ? { uri: item.imageUrl }
+    // : require('../assets/my_naai.jpeg'),
+
+    imageUrl: item.imageUrl,
+    imagesArray: item.imagesArray || [],
 
 
     raw: item,
@@ -74,26 +81,26 @@ const NaaiDashboard = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-    const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState('');
 
 
-  
-const userByIdInfo = async () => {
-        try {
-            // setIsLoading(true);
-            const userData = await AsyncStorage.getItem('mynaaiUser');
-            const parsedUser = JSON.parse(userData);
-            console.log("parsedUser",parsedUser);        
-            setUserName(parsedUser?.fullName || 'User');
-          
-        } catch (error) {
-            console.error("User fetch failed:", error);
-            Alert.alert(
-                'Error',
-                error?.response?.data?.message || error.message || 'Something went wrong.'
-            );
-        } 
-    };
+
+  const userByIdInfo = async () => {
+    try {
+      // setIsLoading(true);
+      const userData = await AsyncStorage.getItem('mynaaiUser');
+      const parsedUser = JSON.parse(userData);
+      console.log("parsedUser", parsedUser);
+      setUserName(parsedUser?.fullName || 'User');
+
+    } catch (error) {
+      console.error("User fetch failed:", error);
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || error.message || 'Something went wrong.'
+      );
+    }
+  };
 
 
   /* -------- AUTO SLIDE -------- */
@@ -119,9 +126,10 @@ const userByIdInfo = async () => {
       const response = await communication.userSalonList({
         page: pageNo,
         searchString: search,
+        // cityFilter: ""
       });
-      console.log("response",response);
-      
+      console.log("response", response);
+
 
       if (response?.status === 'SUCCESS') {
         const convertedData = convertSalonApiData(response.data);
@@ -146,15 +154,15 @@ const userByIdInfo = async () => {
   };
 
   useEffect(() => {
-            userByIdInfo()
+    userByIdInfo()
     getSalonList(1, true);
   }, []);
 
   const firstName =
-  userName?.trim()
-    ? userName.trim().split(' ')[0].charAt(0).toUpperCase() +
+    userName?.trim()
+      ? userName.trim().split(' ')[0].charAt(0).toUpperCase() +
       userName.trim().split(' ')[0].slice(1).toLowerCase()
-    : '';
+      : '';
 
 
   const handleLoadMore = () => {
@@ -203,26 +211,30 @@ const userByIdInfo = async () => {
   );
 
 
+
+
+
   /* -------- SALON CARD -------- */
   const renderSalon = ({ item }) => (
-    
     <TouchableOpacity
       style={styles.card}
       onPress={() => navigation.navigate('SalonDetail', { salonId: item.id })}
     >
-{/* <Image
+      {/* <Image
   source={{ uri: `${getServerUrl()}${item.imageUrl}` }}
   style={styles.image}
 /> */}
 
       <Image
-  source={{
-    uri: `${getServerUrl()}${
-      item.imagesArray?.[0] || item.imageUrl
-    }`,
-  }}
-  style={styles.image}
-/>
+        source={
+          item.imagesArray?.length
+            ? { uri: `${getServerUrl()}/getfiles/${item.imagesArray[0]}` }
+            : item.imageUrl
+              ? { uri: `${getServerUrl()}/getfiles/${item.imageUrl}` }
+              : require('../assets/my_naai.jpeg')
+        }
+        style={styles.image}
+      />
 
 
 
@@ -238,23 +250,26 @@ const userByIdInfo = async () => {
           </View>
 
           <Text style={styles.address}>{item.address}</Text>
+          <TouchableOpacity style={styles.row}>
+            <Ionicons name="call-outline" size={18} color="#E1B378" />
+            <Text style={styles.linkText}>{item?.phoneNumber}</Text>
+          </TouchableOpacity>
 
           <View style={styles.waitRow}>
             <View style={styles.waitTime}>
               <Ionicons name="time-outline" size={14} color="#E1B378" />
-              <Text style={styles.waitText}>
-                {item.open ? ` ${item.waitTime}` : ' Closed'}
-              </Text>
+              <Text style={styles.waitText}>{item?.waitTime}</Text>
             </View>
 
-            {item.open && item.waitNumber !== '_' && (
+            {item.open && item.queueLength > 0 && (
               <View style={styles.queueBadge}>
                 <Text style={styles.queueText}>
-                  Queue: {item.waitNumber} people
+                  Queue: {item.queueLength} people
                 </Text>
               </View>
             )}
           </View>
+
         </View>
 
         <TouchableOpacity
@@ -265,7 +280,7 @@ const userByIdInfo = async () => {
           disabled={!item.open}
         >
           <Text style={styles.bookText}>
-            {item.open ? 'Book Now' : 'Closed'}
+            {item?.open ? 'Book Now' : 'Closed'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -313,7 +328,7 @@ const userByIdInfo = async () => {
                           style={[
                             styles.dropdownItemText,
                             locationFilter === city &&
-                              styles.activeDropdownText,
+                            styles.activeDropdownText,
                           ]}
                         >
                           {city}
@@ -507,7 +522,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  image: { width: 100, height: '100%' },
+  // image: { width: 100, height: '100%' },
+  image: {
+    width: 100,
+    height: '100%',       // ✅ REQUIRED
+    minHeight: 110,       // ✅ SAFETY
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+    backgroundColor: '#333', // debug helper
+  },
 
   cardContent: {
     flex: 1,
@@ -531,7 +554,9 @@ const styles = StyleSheet.create({
   },
 
   address: { color: '#AAA', fontSize: 12 },
+  row: { flexDirection: 'row', alignItems: 'center', marginVertical: 6 },
 
+  linkText: { color: '#E1B378', marginLeft: 2 },
   waitRow: { marginTop: 4 },
   waitText: { fontSize: 12, color: '#E1B378' },
 

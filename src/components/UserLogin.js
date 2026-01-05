@@ -46,7 +46,7 @@ const UserLogin = ({ navigation }) => {
 
     setLoading(true);
     try {
-      const payload = { phoneNumber:mobile };
+      const payload = { phoneNumber: mobile };
       const res = await communication.userLogin(payload);
       if (res?.status === 'SUCCESS') {
         setOtpSent(true);
@@ -57,7 +57,7 @@ const UserLogin = ({ navigation }) => {
     } catch (error) {
       Alert.alert(
         'Error',
-        error?.res?.data?.message || 'Something went wrong'
+        error?.response?.data?.message || 'Something went wrong'
       );
     } finally {
       setLoading(false);
@@ -65,43 +65,43 @@ const UserLogin = ({ navigation }) => {
   };
 
   /* ---------------- VERIFY OTP ---------------- */
-const verifyOtp = async () => {
-  if (!validateOtp()) return;
+  const verifyOtp = async () => {
+    if (!validateOtp()) return;
 
-  setLoading(true);
-  try {
-    const payload = {
-      phoneNumber: mobile,          
-      otp: otp.toString(),      
-      deviceToken: 'test-device-token-123',
-    };
+    setLoading(true);
+    try {
+      const payload = {
+        phoneNumber: mobile,
+        otp: otp.toString(),
+        deviceToken: 'test-device-token-123',
+      };
 
-    const res = await communication.verifyLogin(payload);
+      const res = await communication.verifyLogin(payload);
 
-    if (res?.status === 'SUCCESS') {
-      console.log("token",res?.data?.token);
-      console.log("mynaaiUser",res?.data);
-      
-      if (res?.data?.token) {
-        await AsyncStorage.setItem('mynaai', res?.data?.token);
+      if (res?.status === 'SUCCESS') {
+        console.log("token", res?.data?.token);
+        console.log("mynaaiUser", res?.data);
+
+        if (res?.data?.token) {
+          await AsyncStorage.setItem('mynaai', res?.data?.token);
           await AsyncStorage.setItem(
-                  'mynaaiUser',
-                  JSON.stringify(res?.data),
-                );
+            'mynaaiUser',
+            JSON.stringify(res?.data),
+          );
+        }
+        navigation.replace('Main');
+      } else {
+        Alert.alert('Invalid OTP', res?.message || 'OTP verification failed');
       }
-      navigation.replace('Main');
-    } else {
-      Alert.alert('Invalid OTP', res?.message || 'OTP verification failed');
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Something went wrong'
+      );
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    Alert.alert(
-      'Error',
-      error?.response?.data?.message || 'OTP verification failed'
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
 

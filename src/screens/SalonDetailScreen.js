@@ -72,31 +72,31 @@ const SalonDetailScreen = ({ route, navigation }) => {
   }, []);
 
   /* -------------------- AUTO SLIDER -------------------- */
- 
-const images = Array.isArray(salonDetails?.imagesArray)
-  ? salonDetails.imagesArray.map(img => ({
-      uri: `${getServerUrl()}${img}`,
+
+  const images = Array.isArray(salonDetails?.imagesArray)
+    ? salonDetails.imagesArray.map(img => ({
+      uri: `${getServerUrl()}/getfiles/${img}`,
     }))
-  : [];
+    : [];
 
-   useEffect(() => {
-  if (images.length === 0) return;
+  useEffect(() => {
+    if (images.length === 0) return;
 
-  const interval = setInterval(() => {
-    setActiveIndex(prev => {
-      const next = (prev + 1) % images.length;
+    const interval = setInterval(() => {
+      setActiveIndex(prev => {
+        const next = (prev + 1) % images.length;
 
-      scrollRef.current?.scrollTo({
-        x: next * width,
-        animated: true,
+        scrollRef.current?.scrollTo({
+          x: next * width,
+          animated: true,
+        });
+
+        return next;
       });
+    }, 3000);
 
-      return next;
-    });
-  }, 3000);
-
-  return () => clearInterval(interval);
-}, [images]);
+    return () => clearInterval(interval);
+  }, [images]);
 
 
   /* -------------------- HELPERS -------------------- */
@@ -152,8 +152,8 @@ const images = Array.isArray(salonDetails?.imagesArray)
     });
   };
 
-  const totalAmount = selectedServices.reduce((s, i) => s + i.price, 0);
-  const totalTime = selectedServices.reduce((s, i) => s + i.time, 0);
+  // const totalAmount = selectedServices.reduce((s, i) => s + i.price, 0);
+  // const totalTime = selectedServices.reduce((s, i) => s + i.time, 0);
 
 
   if (!salonDetails) {
@@ -173,10 +173,24 @@ const images = Array.isArray(salonDetails?.imagesArray)
 
 
 
-  const services = salonDetails.services || [];
-  const barbers = salonDetails.barbers || [];
+  const services = salonDetails?.services || [];
+  const barbers = salonDetails?.barbers || [];
 
-  const address = `${salonDetails.addressLine1}, ${salonDetails.addressLine2}, ${salonDetails.city}`;
+  const address = `${salonDetails?.addressLine1}, ${salonDetails?.addressLine2}, ${salonDetails?.city}`;
+
+  const formatTime12Hour = (time) => {
+    if (!time) return '';
+
+    const [h, m] = time.split(':');
+    const date = new Date();
+    date.setHours(Number(h), Number(m));
+
+    return date.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
 
 
   return (
@@ -203,26 +217,26 @@ const images = Array.isArray(salonDetails?.imagesArray)
                   </View>
                 </View>
 
-                <ScrollView contentContainerStyle={{ paddingBottom: 180 }}>
+                <ScrollView contentContainerStyle={{ paddingBottom: 180, marginTop: 50 }}>
                   {/* -------------------- SLIDER -------------------- */}
-                 <ScrollView
-  ref={scrollRef}
-  horizontal
-  pagingEnabled
-  showsHorizontalScrollIndicator={false}
->
-  {images.map((img, i) => (
-    <TouchableOpacity
-      key={i}
-      onPress={() => {
-        setModalImage(img);
-        setModalVisible(true);
-      }}
-    >
-      <ImageBackground source={img} style={styles.sliderImage} />
-    </TouchableOpacity>
-  ))}
-</ScrollView>
+                  <ScrollView
+                    ref={scrollRef}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                  >
+                    {images.map((img, i) => (
+                      <TouchableOpacity
+                        key={i}
+                        onPress={() => {
+                          setModalImage(img);
+                          setModalVisible(true);
+                        }}
+                      >
+                        <ImageBackground source={img} style={styles.sliderImage} />
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
 
 
                   {/* -------------------- DETAILS -------------------- */}
@@ -235,13 +249,27 @@ const images = Array.isArray(salonDetails?.imagesArray)
                           {salonDetails.ratingAverage} ({salonDetails.totalReviews} reviews)
                         </Text>
                       </View>
-                      {salonDetails.isOpen &&
-                        <Text style={styles.wait}>
-                          • Queue: {salonDetails.currentQueueNumber} People
-                        </Text>
-                      }
+
 
                     </View>
+                    {salonDetails?.isOpen && (
+                      <>
+                        <View style={styles.waitRow}>
+                          <Ionicons name="people-outline" size={14} color="#E1B378" />
+                          <Text style={styles.waitText}>
+                            Queue: {salonDetails?.queueLength} People
+                          </Text>
+                        </View>
+
+                        <View style={styles.waitRow}>
+                          <Ionicons name="time-outline" size={14} color="#E1B378" />
+                          <Text style={styles.waitText}>
+                            Avg Waiting Time: {salonDetails?.totalWaitTime?.display}
+                          </Text>
+                        </View>
+                      </>
+                    )}
+
 
                     {/* SHOP STATUS */}
                     <View style={styles.infoBox}>
@@ -260,10 +288,18 @@ const images = Array.isArray(salonDetails?.imagesArray)
                         >
                           {salonDetails.isOpen ? 'OPEN NOW' : 'CLOSED'}
                         </Text>
-
                         <Text style={styles.infoSub}>
-                          ({salonDetails.openTime ?? '9 AM'} - {salonDetails.closeTime ?? '10 PM'})
+                          (
+                          {salonDetails?.businessHours?.length > 0
+                            ? `${formatTime12Hour(
+                              salonDetails.businessHours[0].openingTime
+                            )} - ${formatTime12Hour(
+                              salonDetails.businessHours[0].closingTime
+                            )}`
+                            : ''}
+                          )
                         </Text>
+
                       </View>
 
 
@@ -334,11 +370,11 @@ const images = Array.isArray(salonDetails?.imagesArray)
                     })}
 
 
-                    {selectedServices.length > 0 && (
+                    {/* {selectedServices.length > 0 && (
                       <Text style={styles.totalText}>
                         Total: ₹{totalAmount} • ⏱ {totalTime} min
                       </Text>
-                    )}
+                    )} */}
 
                     {/* BARBERS */}
                     <Text style={styles.section}>Select Barber (Optional)</Text>
@@ -490,4 +526,17 @@ const styles = StyleSheet.create({
   },
   modalImage: { width: '100%', height: '80%' },
   modalClose: { position: 'absolute', top: 50, right: 20 },
+  waitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+
+  waitText: {
+    marginLeft: 6,
+    color: '#E1B378',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
 });

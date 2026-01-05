@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { communication } from '../services/communication';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
@@ -48,20 +49,41 @@ const NaaiRequest = ({ navigation }) => {
 
   /* ---------------- SUBMIT ---------------- */
 
-  const handleSignup = () => {
+  // const handleSignup = () => {
+
+
+  const handleSignup = async () => {
     if (!validate()) return;
 
     setLoading(true);
+    try {
+      const payload = {
+        fullName: naaiName,
+        phoneNumber: mobile,
+        salonName: salonName,
+        address: address
+      }
+      console.log("payload", payload);
 
-    // 🔔 Simulate API call
-    setTimeout(() => {
+      const res = await communication.salonRequest(payload);
+      if (res?.status === 'SUCCESS') {
+        Alert.alert("Salon request submitted successfully");
+        navigation.navigate("NaaiLogin")
+      } else {
+        Alert.alert('Error', res?.message || 'Failed to send request to admin');
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Something went wrong'
+      );
+    } finally {
       setLoading(false);
-      navigation.navigate('SalonOtpScreen', {
-        mobile,
-        role: 'NAI_OWNER',
-      });
-    }, 1500);
+    }
   };
+
+
+  // };
 
   /* ---------------- UI ---------------- */
 
@@ -132,7 +154,7 @@ const NaaiRequest = ({ navigation }) => {
               {loading ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text style={styles.signupText}>Register with OTP</Text>
+                <Text style={styles.signupText}>Register as Salon owner</Text>
               )}
             </TouchableOpacity>
 

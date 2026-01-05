@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { communication } from '../services/communication';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RESEND_TIME = 30; // seconds
 
@@ -37,23 +39,52 @@ const SalonOtpScreen = ({ route, navigation }) => {
         return () => clearTimeout(timer);
     }, [secondsLeft]);
 
-    const verifyOtp = () => {
+    const verifyOtp = async () => {
         if (otp.length !== 6) {
             Alert.alert('Invalid OTP', 'Please enter 6-digit OTP');
             return;
         }
-
         setLoading(true);
-        setTimeout(() => {
+
+        try {
+            const payload = {
+                phoneNumber: mobile,
+                otp: otp.toString(),
+                deviceToken: 'test-device-token-123',
+            };
+            console.log("payload", payload);
+
+            const res = await communication.verifySalonLogin(payload);
+            console.log("res", res);
+
+            if (res?.status === 'SUCCESS') {
+                console.log("token", res?.data?.token);
+                console.log("mynaaiUser", res?.data);
+
+                if (res?.data?.token) {
+                    await AsyncStorage.setItem('mynaai', res?.data?.token);
+                    await AsyncStorage.setItem(
+                        'mynaaiUser',
+                        JSON.stringify(res?.data),
+                    );
+                }
+                navigation.replace('Salon');
+            } else {
+                Alert.alert('Invalid OTP', res?.message || 'OTP verification failed');
+            }
+        } catch (error) {
+            Alert.alert(
+                'Error',
+                error?.response?.data?.message || 'Something went wrong'
+            );
+        } finally {
             setLoading(false);
-            navigation.replace('Salon'); // Dashboard
-        }, 1500);
+        }
     };
 
     const resendOtp = () => {
         if (!canResend) return;
 
-        // 🔔 Call resend OTP API here
         console.log('Resending OTP to', mobile);
 
         setSecondsLeft(RESEND_TIME);
