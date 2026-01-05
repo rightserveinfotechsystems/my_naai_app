@@ -12,16 +12,19 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { communication } from '../services/communication';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
 const UserLogin = ({ navigation }) => {
   const [mobile, setMobile] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const validate = () => {
+  /* ---------------- VALIDATIONS ---------------- */
+  const validateMobile = () => {
     if (mobile.length !== 10) {
       Alert.alert('Invalid number', 'Please enter a valid 10-digit mobile number');
       return false;
@@ -29,87 +32,177 @@ const UserLogin = ({ navigation }) => {
     return true;
   };
 
-  const handleLogin = () => {
-    if (!validate()) return;
+  const validateOtp = () => {
+    if (otp.length !== 6) {
+      Alert.alert('Invalid OTP', 'Please enter 6-digit OTP');
+      return false;
+    }
+    return true;
+  };
+
+  /* ---------------- SEND OTP ---------------- */
+  const sendOtp = async () => {
+    if (!validateMobile()) return;
 
     setLoading(true);
-
-    // 🔔 Call LOGIN + SEND OTP API here
-    setTimeout(() => {
+    try {
+      const payload = { phoneNumber: mobile };
+      const res = await communication.userLogin(payload);
+      if (res?.status === 'SUCCESS') {
+        setOtpSent(true);
+        Alert.alert('OTP Sent', res?.otp);
+      } else {
+        Alert.alert('Error', res?.message || 'Failed to send OTP');
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Something went wrong'
+      );
+    } finally {
       setLoading(false);
-      navigation.navigate('OtpScreen', { mobile });
-    }, 1200);
+    }
   };
+
+  /* ---------------- VERIFY OTP ---------------- */
+  const verifyOtp = async () => {
+    if (!validateOtp()) return;
+
+    setLoading(true);
+    try {
+      const payload = {
+        phoneNumber: mobile,
+        otp: otp.toString(),
+        deviceToken: 'test-device-token-123',
+      };
+
+      const res = await communication.verifyLogin(payload);
+
+      if (res?.status === 'SUCCESS') {
+        console.log("token", res?.data?.token);
+        console.log("mynaaiUser", res?.data);
+
+        if (res?.data?.token) {
+          await AsyncStorage.setItem('mynaai', res?.data?.token);
+          await AsyncStorage.setItem(
+            'mynaaiUser',
+            JSON.stringify(res?.data),
+          );
+        }
+        navigation.replace('Main');
+      } else {
+        Alert.alert('Invalid OTP', res?.message || 'OTP verification failed');
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Something went wrong'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
-
         <SafeAreaView style={{ flex: 1 }}>
-          {/* <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={24} color="#fff" />
-            </TouchableOpacity>
-          </View> */}
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.container}
           >
-            {/* Title */}
+            <Text style={styles.title}>
+              {otpSent ? 'Verify OTP' : 'Welcome Back'}
+            </Text>
 
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Login to your account</Text>
+            <Text style={styles.subtitle}>
+              {otpSent
+                ? `Enter OTP sent to ${mobile}`
+                : 'Login to your account'}
+            </Text>
 
-            {/* Phone Input */}
-            <View style={styles.inputBox}>
-              <TextInput
-                placeholder="Mobile Number"
-                placeholderTextColor="#999"
-                keyboardType="number-pad"
-                maxLength={10}
-                value={mobile}
-                onChangeText={setMobile}
-                style={styles.input}
-              />
-            </View>
+            {/* MOBILE INPUT */}
+            {!otpSent && (
+              <View style={styles.inputBox}>
+                <TextInput
+                  placeholder="Mobile Number"
+                  placeholderTextColor="#999"
+                  keyboardType="number-pad"
+                  maxLength={10}
+                  value={mobile}
+                  onChangeText={setMobile}
+                  style={styles.input}
+                />
+              </View>
+            )}
 
-            {/* Login Button */}
+            {/* OTP INPUT */}
+            {otpSent && (
+              <View style={styles.inputBox}>
+                <TextInput
+                  placeholder="Enter OTP"
+                  placeholderTextColor="#999"
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  value={otp}
+                  onChangeText={setOtp}
+                  style={styles.input}
+                />
+              </View>
+            )}
+
+            {/* BUTTON */}
             <TouchableOpacity
               style={styles.loginBtn}
-              onPress={handleLogin}
+              onPress={otpSent ? verifyOtp : sendOtp}
               disabled={loading}
             >
               {loading ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text style={styles.loginText}>Login with OTP</Text>
+                <Text style={styles.loginText}>
+                  {otpSent ? 'Verify OTP' : 'Login with OTP'}
+                </Text>
               )}
             </TouchableOpacity>
 
-            {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                Don’t have an account?{' '}
-                <Text
-                  style={styles.signup}
-                  onPress={() => navigation.navigate('UserSignup')}
-                >
-                  Sign Up
-                </Text>
-              </Text>
-            </View>
-            <View style={styles.naaiFooter}>
-              <Text style={styles.footerText}>
-                Login as salon owner / Naai ?{' '}
-                <Text
-                  style={styles.signup}
-                  onPress={() => navigation.navigate('NaaiLogin')}
-                >
-                  Log In
-                </Text>
-              </Text>
-            </View>
+            {/* RESEND OTP */}
+            {/* {otpSent && (
+              <TouchableOpacity onPress={sendOtp} style={{ marginTop: 16 }}>
+                <Text style={styles.resend}>Resend OTP</Text>
+              </TouchableOpacity>
+            )} */}
 
+            {/* FOOTER */}
+            {!otpSent && (
+              <>
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>
+                    Don’t have an account?{' '}
+                    <Text
+                      style={styles.signup}
+                      onPress={() => navigation.navigate('UserSignup')}
+                    >
+                      Sign Up
+                    </Text>
+                  </Text>
+                </View>
+
+                <View style={styles.naaiFooter}>
+                  <Text style={styles.footerText}>
+                    Login as salon owner / Naai?{' '}
+                    <Text
+                      style={styles.signup}
+                      onPress={() => navigation.navigate('NaaiLogin')}
+                    >
+                      Log In
+                    </Text>
+                  </Text>
+                </View>
+              </>
+            )}
           </KeyboardAvoidingView>
         </SafeAreaView>
       </View>
@@ -119,6 +212,8 @@ const UserLogin = ({ navigation }) => {
 
 export default UserLogin;
 
+/* ======================== STYLES ======================== */
+
 const styles = StyleSheet.create({
   bg: {
     flex: 1,
@@ -126,83 +221,87 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-  },
-
-  header: {
-    position: 'absolute',
-    top: 50,
-    left: 16,
-    right: 16,
-    zIndex: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: 'rgba(0,0,0,0.78)',
   },
 
   container: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 26,
   },
 
   title: {
-    color: '#fff',
-    fontSize: 30,
+    color: '#FFFFFF',
+    fontSize: 32,
     fontWeight: '700',
     marginBottom: 6,
   },
 
   subtitle: {
-    color: '#ccc',
+    color: '#BDBDBD',
     fontSize: 14,
     marginBottom: 30,
+    lineHeight: 20,
   },
 
   inputBox: {
     backgroundColor: '#1E1E1E',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 54,
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    height: 56,
     justifyContent: 'center',
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
 
   input: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
+    letterSpacing: 0.5,
   },
 
   loginBtn: {
     backgroundColor: '#E8B97E',
-    height: 54,
-    borderRadius: 12,
+    height: 56,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
+    elevation: 6,
   },
 
   loginText: {
-    color: '#000',
+    color: '#000000',
     fontSize: 16,
     fontWeight: '700',
   },
 
+  resend: {
+    color: '#E8B97E',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+
   footer: {
-    marginTop: 30,
+    marginTop: 32,
     alignItems: 'center',
   },
+
   naaiFooter: {
     marginTop: 10,
     alignItems: 'center',
   },
 
   footerText: {
-    color: '#aaa',
+    color: '#9E9E9E',
     fontSize: 13,
+    textAlign: 'center',
   },
 
   signup: {
     color: '#E8B97E',
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

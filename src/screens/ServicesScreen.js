@@ -1,4 +1,5 @@
-import React from 'react';
+import { useIsFocused } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,93 +8,225 @@ import {
   StyleSheet,
   ImageBackground,
   TouchableOpacity,
+  Alert,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { communication } from '../services/communication';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
-const BOOKED_SALONS = [
-  {
-    id: '1',
-    name: 'Brett Gomez Salon',
-    address: 'Katol Road, Katol',
-    barber: 'Rahul Sharma',
-    date: '18 Dec 2025',
-    time: '11:30 AM',
-    status: 'Upcoming',
-    image: require('../assets/naai/naai1.jpg'),
-  },
-  {
-    id: '2',
-    name: 'Gimabel Hair Style',
-    address: 'Katol Road, Katol',
-    barber: 'Amit',
-    date: '10 Dec 2025',
-    time: '4:00 PM',
-    status: 'Completed',
-    image: require('../assets/naai/naai2.jpeg'),
-  },
-  {
-    id: '3',
-    name: 'Kobike Barber Shop',
-    address: 'Katol Road, Katol',
-    barber: 'Suresh',
-    date: '02 Dec 2025',
-    time: '1:00 PM',
-    status: 'Completed',
-    image: require('../assets/naai/naai3.jpg'),
-  },
-];
-
-
 const ServicesScreen = () => {
-  const renderItem = ({ item }) => {
-    let btnColor;
-    switch (item.status) {
-      case 'Upcoming':
-        btnColor = '#E1B378'; // gold
-        break;
-      case 'Completed':
-        btnColor = '#4CAF50'; // green
-        break;
-      default:
-        btnColor = '#E53935'; // red
+  const [salonList, setSalonList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [userId, setUserId] = useState(null);
+
+  const isFocused = useIsFocused();
+
+  /* ---------------- USER INFO ---------------- */
+  const getUserInfo = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('mynaaiUser');
+      console.log("userData", userData);
+
+      const parsed = JSON.parse(userData);
+      const id = parsed?.userId;
+
+      if (!id) return;
+
+      setUserId(id);
+
+    } catch {
+      Alert.alert('Error', 'Unable to load user');
     }
+  };
+
+  /* ---------------- API CALL ---------------- */
+  const fetchBookings = async (id, pageNo = 1, loadMore = false) => {
+    try {
+      loadMore ? setLoadingMore(true) : setLoading(true);
+
+      const response = await communication.bookedSalonList({
+        userId: id,
+        page: pageNo,
+        searchString: '',
+      });
+
+      if (response?.status === 'SUCCESS') {
+        const data = response.data || [];
+
+        console.log("booked response", data);
+
+
+
+        setSalonList(prev =>
+          loadMore ? [...prev, ...data] : data
+        );
+
+        setHasMore(data.length >= 10);
+        setPage(pageNo);
+      } else {
+        if (!loadMore) setSalonList([]);
+        setHasMore(false);
+      }
+
+    } catch (e) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      setLoadingMore(false);
+    }
+  };
+
+
+  useEffect(() => {
+    getUserInfo();
+  }, []);
+
+  useEffect(() => {
+    if (userId) {
+      fetchBookings(userId, 1);
+    }
+  }, [userId]);
+
+
+  /* ---------------- LOAD MORE ---------------- */
+  const handleLoadMore = () => {
+    if (
+      loading ||
+      loadingMore ||
+      !hasMore ||
+      !userId ||
+      salonList.length === 0
+    ) {
+      return;
+    }
+
+    fetchBookings(userId, page + 1, true);
+  };
+
+
+  /* ---------------- REFRESH ---------------- */
+  const onRefresh = () => {
+    if (!userId) return;
+    setRefreshing(true);
+    setPage(1);
+    fetchBookings(userId, 1);
+  };
+
+
+  /* ---------------- RENDER ITEM ---------------- */
+  const renderItem = ({ item }) => {
+    const btnColor =
+      item.status === 'pending'
+        ? '#E1B378'
+        : item.status === 'completed'
+          ? '#4CAF50'
+          : '#E53935';
+
+
+    const formatDateReadable = (dateStr) => {
+      if (!dateStr) return '';
+
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    };
+
+
+
+    const formatTime = (time) => {
+      if (!time) return '';
+
+      const [h, m] = time.split(':');
+      const date = new Date();
+      date.setHours(Number(h), Number(m));
+
+      return date.toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+    };
+
+
 
     return (
       <TouchableOpacity style={styles.card}>
-        <Image source={item.image} style={styles.image} />
+        <Image
+          source={
+            item.imageUrl
+              ? { uri: item.imageUrl }
+              : require('../assets/naai/naai1.jpg')
+          }
+          style={styles.image}
+        />
 
         <View style={styles.infoContainer}>
           <View style={styles.info}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.address}>{item.address}</Text>
+            <Text style={styles.name}>{item.salonName}</Text>
+            <Text style={styles.address}>{item.salonCity}</Text>
 
-            {/* BARBER */}
             <View style={styles.barberRow}>
               <Ionicons name="person-outline" size={14} color="#aaa" />
               <Text style={styles.barberText}>
-                Barber: {item.barber}
+                Barber: {item.barberName || 'N/A'}
               </Text>
             </View>
+            <View style={styles.barberRow}>
+              <Ionicons name="cut-outline" size={14} color="#aaa" />
+              <Text style={styles.barberText}>
+                Service: {item.serviceName || 'N/A'}
+              </Text>
+            </View>
+
+            {/* <View style={styles.dateRow}>
+              <Ionicons name="calendar-outline" size={14} color="#E1B378" />
+              <Text style={styles.dateText}>
+                {item.bookingDate} • {item.bookingTime}
+              </Text>
+            </View> */}
 
             <View style={styles.dateRow}>
               <Ionicons name="calendar-outline" size={14} color="#E1B378" />
               <Text style={styles.dateText}>
-                {item.date} • {item.time}
+                {formatDateReadable(item.bookingDate)} • {formatTime(item.bookingTime)}
               </Text>
             </View>
+
           </View>
 
-
-          <TouchableOpacity style={[styles.statusBtn, { backgroundColor: btnColor }]}>
+          <View style={[styles.statusBtn, { backgroundColor: btnColor }]}>
             <Text style={styles.statusBtnText}>{item.status}</Text>
-          </TouchableOpacity>
+          </View>
         </View>
       </TouchableOpacity>
     );
   };
+
+  /* ---------------- EMPTY STATE ---------------- */
+  const EmptyState = () => (
+    <View style={styles.empty}>
+      <Ionicons name="calendar-outline" size={60} color="#555" />
+      <Text style={styles.emptyText}>No bookings found</Text>
+    </View>
+  );
+
+  /* ---------------- SKELETON ---------------- */
+  const Skeleton = () => (
+    <View style={styles.skeletonCard} />
+  );
 
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
@@ -101,13 +234,45 @@ const ServicesScreen = () => {
         <SafeAreaView style={styles.container}>
           <Text style={styles.title}>My Bookings</Text>
 
-          <FlatList
-            data={BOOKED_SALONS}
-            keyExtractor={item => item.id}
-            renderItem={renderItem}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 30 }}
-          />
+          {loading ? (
+            <>
+              <Skeleton />
+              <Skeleton />
+              <Skeleton />
+            </>
+          ) : (
+            <FlatList
+              data={salonList}
+              keyExtractor={(item, index) =>
+                `${item.bookingId || item.id}-${index}`
+              }
+
+              // keyExtractor={(item, index) =>
+              //   item.bookingId?.toString() || index.toString()
+              // }
+              renderItem={renderItem}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor="#E1B378"
+                />
+              }
+              ListEmptyComponent={<EmptyState />}
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={
+                loadingMore && (
+                  <ActivityIndicator
+                    size="small"
+                    color="#E1B378"
+                    style={{ marginVertical: 20 }}
+                  />
+                )
+              }
+              showsVerticalScrollIndicator={false}
+            />
+          )}
         </SafeAreaView>
       </View>
     </ImageBackground>
@@ -115,6 +280,8 @@ const ServicesScreen = () => {
 };
 
 export default ServicesScreen;
+
+
 
 const styles = StyleSheet.create({
   bg: {
@@ -202,5 +369,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 6,
   },
+  empty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 80,
+  },
+  emptyText: {
+    color: '#777',
+    fontSize: 14,
+    marginTop: 10,
+  },
+
+  skeletonCard: {
+    height: 110,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 20,
+    marginBottom: 16,
+    opacity: 0.6,
+  },
+
+
 
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -13,36 +13,52 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { communication } from '../services/communication';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
 const UserSignup = ({ navigation }) => {
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const validate = () => {
-    if (!username.trim()) {
-      Alert.alert('Validation', 'Please enter username');
-      return false;
-    }
-    if (mobile.length !== 10) {
-      Alert.alert('Validation', 'Enter valid 10-digit mobile number');
-      return false;
-    }
-    return true;
-  };
+  /* ---------------- VALIDATION ---------------- */
+  const isNameValid = name.trim().length >= 2;
+  const isMobileValid = /^\d{10}$/.test(mobile);
 
-  const handleSignup = () => {
-    if (!validate()) return;
+  const canSubmit = useMemo(() => {
+    return isNameValid && isMobileValid;
+  }, [isNameValid, isMobileValid]);
+
+  /* ---------------- SEND OTP ---------------- */
+  const onSubmit = async () => {
+    if (!canSubmit || loading) return;
 
     setLoading(true);
+    try {
+      const response = await communication.sendRegisterOtp({
+        phoneNumber: mobile,
+      });
 
-    // 🔔 Simulate API
-    setTimeout(() => {
+      console.log('sendRegisterOtp response:', response);
+
+      if (response?.status === 'SUCCESS') {
+        Alert.alert(response.otp)
+        navigation.navigate('OtpScreen', {
+          mobile,
+          fullName: name,
+        });
+      } else {
+        Alert.alert('Error', response?.message || 'Failed to send OTP');
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || error.message,
+      );
+    } finally {
       setLoading(false);
-      navigation.navigate('OtpScreen', { mobile });
-    }, 1500);
+    }
   };
 
   return (
@@ -54,22 +70,19 @@ const UserSignup = ({ navigation }) => {
               <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
+
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.container}
           >
-            {/* <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={22} color="#fff" />
-            </TouchableOpacity> */}
-
             <Text style={styles.title}>Create an Account</Text>
 
             <View style={styles.inputBox}>
               <TextInput
                 placeholder="User name"
                 placeholderTextColor="#999"
-                value={username}
-                onChangeText={setUsername}
+                value={name}
+                onChangeText={setName}
                 style={styles.input}
               />
             </View>
@@ -87,21 +100,19 @@ const UserSignup = ({ navigation }) => {
             </View>
 
             <TouchableOpacity
-              style={styles.signupBtn}
-              onPress={handleSignup}
-              disabled={loading}
+              style={[
+                styles.signupBtn,
+                !canSubmit && { opacity: 0.6 },
+              ]}
+              onPress={onSubmit}
+              disabled={!canSubmit || loading}
             >
               {loading ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text style={styles.signupText}>Sign up</Text>
+                <Text style={styles.signupText}>Send OTP</Text>
               )}
             </TouchableOpacity>
-
-            <Text style={styles.terms}>
-              By continuing Sign up you agree to the following{'\n'}
-              terms & Conditions without reservation
-            </Text>
 
             <Text style={styles.footer}>
               Already have an account?{' '}
@@ -121,29 +132,26 @@ const UserSignup = ({ navigation }) => {
 
 export default UserSignup;
 
+/* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
   bg: { flex: 1 },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)' },
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    // paddingTop: 50,
     justifyContent: 'center',
   },
   header: {
     position: 'absolute',
     top: 50,
     left: 16,
-    right: 16,
     zIndex: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
   },
   title: {
     color: '#fff',
     fontSize: 28,
     fontWeight: '700',
-    marginVertical: 30,
+    marginBottom: 30,
   },
   inputBox: {
     backgroundColor: '#1E1E1E',
@@ -160,15 +168,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
   },
-  signupText: { color: '#000', fontSize: 16, fontWeight: '700' },
-  terms: {
-    color: '#999',
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 16,
-    lineHeight: 18,
+  signupText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '700',
   },
   footer: {
     color: '#aaa',
@@ -176,5 +180,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 24,
   },
-  link: { color: '#E8B97E', fontWeight: '600' },
+  link: {
+    color: '#E8B97E',
+    fontWeight: '600',
+  },
 });

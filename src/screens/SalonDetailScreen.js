@@ -11,84 +11,109 @@ import {
   Modal,
   Linking,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { communication, getServerUrl } from '../services/communication';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 const { width } = Dimensions.get('window');
 
-/* -------------------- SERVICES -------------------- */
-const SERVICES = [
-  { id: '1', name: 'Classic Haircut', price: 199, time: 20 },
-  { id: '2', name: 'Premium Haircut', price: 299, time: 30 },
-  { id: '3', name: 'Hair Spa', price: 599, time: 45 },
-  { id: '4', name: 'Beard Trim', price: 149, time: 15 },
-  { id: '5', name: 'Beard Styling', price: 249, time: 25 },
-  { id: '6', name: 'Basic Facial', price: 399, time: 30 },
-  { id: '7', name: 'Gold Facial', price: 699, time: 50 },
-];
 
-/* -------------------- BARBERS -------------------- */
-const BARBERS = [
-  {
-    id: '1',
-    name: 'Rahul',
-    rating: 4.8,
-    wait: '10 min',
-    status: 'available',
-    image: require('../assets/naai/barber1.jpeg'),
-  },
-  {
-    id: '2',
-    name: 'Amit',
-    rating: 4.5,
-    wait: '20 min',
-    status: 'busy',
-    image: require('../assets/naai/barber2.jpeg'),
-  },
-  {
-    id: '3',
-    name: 'Ritik',
-    rating: 4.6,
-    wait: '--',
-    status: 'break',
-    image: require('../assets/naai/barber3.jpg'),
-  },
-];
+
 
 const SalonDetailScreen = ({ route, navigation }) => {
-  const { salon } = route.params;
-  console.log("salon", salon.open);
+  const { salonId } = route.params;
+  console.log("salonId", salonId);
 
+  const [salonDetails, setSalonDetails] = useState(null);
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedServices, setSelectedServices] = useState([]);
   const [selectedBarber, setSelectedBarber] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalImage, setModalImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const scrollRef = useRef(null);
 
-  /* -------------------- AUTO SLIDER -------------------- */
+  // salonByIdInfo
+  const getSalonDetailsById = async (salonId) => {
+    setLoading(true);
+    try {
+      const response = await communication.salonByIdInfo({ salonId });
+      console.log("getSalonDetailsById", response);
+
+
+      if (response?.status === "SUCCESS") {
+        setSalonDetails(response?.data);
+      } else {
+        Alert.alert('Error', response?.message);
+      }
+    } catch (error) {
+      Alert.alert('Error', error?.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
+    // const loadUserDetails = async () => {
+    //   const user = await AsyncStorage.getItem('mnymktUser');
+    //   if (user) {
+    //     const userData = JSON.parse(user);
+    //     getSalonDetailsById(userData.userId);
+    //   }
+    // };
+    // getSalonDetailsById();
+    getSalonDetailsById(salonId);
+
+  }, []);
+
+  /* -------------------- AUTO SLIDER -------------------- */
+
+  const images = Array.isArray(salonDetails?.imagesArray)
+    ? salonDetails.imagesArray.map(img => ({
+      uri: `${getServerUrl()}/getfiles/${img}`,
+    }))
+    : [];
+
+  useEffect(() => {
+    if (images.length === 0) return;
+
     const interval = setInterval(() => {
-      let next = (activeIndex + 1) % salon.images.length;
-      setActiveIndex(next);
-      scrollRef.current?.scrollTo({ x: next * width, animated: true });
+      setActiveIndex(prev => {
+        const next = (prev + 1) % images.length;
+
+        scrollRef.current?.scrollTo({
+          x: next * width,
+          animated: true,
+        });
+
+        return next;
+      });
     }, 3000);
+
     return () => clearInterval(interval);
-  }, [activeIndex]);
+  }, [images]);
+
 
   /* -------------------- HELPERS -------------------- */
   const openMap = () => {
+    if (!salonDetails.latitude || !salonDetails.longitude) {
+      Alert.alert('Location not available');
+      return;
+    }
+
     Linking.openURL(
-      `https://www.google.com/maps/search/?api=1&query=${salon.latitude},${salon.longitude}`
+      `https://www.google.com/maps/search/?api=1&query=${salonDetails.latitude},${salonDetails.longitude}`
     );
   };
 
+
   const callSalon = () => {
-    Linking.openURL(`tel:${salon.phone}`);
+    Linking.openURL(`tel:${salonDetails.phone}`);
   };
 
   const toggleService = service => {
@@ -121,207 +146,276 @@ const SalonDetailScreen = ({ route, navigation }) => {
     }
 
     navigation.navigate('BookingSchedule', {
-      salon,
+      salonDetails,
       services: selectedServices,
       barber: selectedBarber,
     });
   };
 
-  const totalAmount = selectedServices.reduce((s, i) => s + i.price, 0);
-  const totalTime = selectedServices.reduce((s, i) => s + i.time, 0);
+  // const totalAmount = selectedServices.reduce((s, i) => s + i.price, 0);
+  // const totalTime = selectedServices.reduce((s, i) => s + i.time, 0);
+
+
+  if (!salonDetails) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: '#fff' }}>Loading...</Text>
+      </View>
+    );
+  }
+
+  // const images = salonDetails.imagesArray
+  //   ? [{ uri: salonDetails.imagesArray }]
+  //   : [];
+
+  //   console.log("images",images);
+
+
+
+
+  const services = salonDetails?.services || [];
+  const barbers = salonDetails?.barbers || [];
+
+  const address = `${salonDetails?.addressLine1}, ${salonDetails?.addressLine2}, ${salonDetails?.city}`;
+
+  const formatTime12Hour = (time) => {
+    if (!time) return '';
+
+    const [h, m] = time.split(':');
+    const date = new Date();
+    date.setHours(Number(h), Number(m));
+
+    return date.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
 
   return (
     <View style={styles.container}>
       <ImageBackground source={BG_IMAGE} style={styles.bg}>
         <View style={styles.overlay}>
-          <SafeAreaView style={{ flex: 1 }}>
-            {/* -------------------- HEADER -------------------- */}
-            <View style={styles.header}>
-              <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Ionicons name="arrow-back" size={24} color="#fff" />
-              </TouchableOpacity>
+          {loading ? (
+            <ActivityIndicator size="small" color="#a71818ff" />
+          ) : (
+            <>
+              <SafeAreaView style={{ flex: 1 }}>
 
-              <View>
-                <Text style={styles.headerTitle}>{salon.name}</Text>
-                <Text style={styles.salonType}>
-                  {salon.type || 'Unisex Salon'}
-                </Text>
-              </View>
-            </View>
+                {/* -------------------- HEADER -------------------- */}
+                <View style={styles.header}>
+                  <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={24} color="#fff" />
+                  </TouchableOpacity>
 
-            <ScrollView contentContainerStyle={{ paddingBottom: 180 }}>
-              {/* -------------------- SLIDER -------------------- */}
-              <View style={{ marginTop: 60 }}>
-                <ScrollView
-                  ref={scrollRef}
-                  horizontal
-                  pagingEnabled
-                  showsHorizontalScrollIndicator={false}
-                >
-                  {salon.images.map((img, i) => (
-                    <TouchableOpacity
-                      key={i}
-                      onPress={() => {
-                        setModalImage(img);
-                        setModalVisible(true);
-                      }}
-                    >
-                      <ImageBackground source={img} style={styles.sliderImage} />
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-
-              {/* -------------------- DETAILS -------------------- */}
-              <View style={styles.card}>
-                <View style={styles.ratingRow}>
-
-                  <View style={{ flexDirection: 'row' }}>
-                    <Ionicons name="star" size={16} color="#FFD700" />
-                    <Text style={styles.rating}>
-                      {salon.rating} ({salon.reviews} reviews)
+                  <View>
+                    <Text style={styles.headerTitle}>{salonDetails.salonName}</Text>
+                    <Text style={styles.salonType}>
+                      {salonDetails.genderType || ''}
                     </Text>
                   </View>
-                  {salon.open &&
-                    <Text style={styles.wait}>
-                      • Queue: {salon.waitNumber} People
-                    </Text>
-                  }
-
                 </View>
 
-                {/* SHOP STATUS */}
-                <View style={styles.infoBox}>
-                  <View style={styles.infoRow}>
-                    <Ionicons
-                      name="time-outline"
-                      size={16}
-                      color={salon.open ? '#4CAF50' : '#F44336'}
-                    />
-
-                    <Text
-                      style={[
-                        styles.infoText,
-                        { color: salon.open ? '#4CAF50' : '#F44336' },
-                      ]}
-                    >
-                      {salon.open ? 'OPEN NOW' : 'CLOSED'}
-                    </Text>
-
-                    <Text style={styles.infoSub}>
-                      ({salon.openTime ?? '9 AM'} - {salon.closeTime ?? '10 PM'})
-                    </Text>
-                  </View>
+                <ScrollView contentContainerStyle={{ paddingBottom: 180, marginTop: 50 }}>
+                  {/* -------------------- SLIDER -------------------- */}
+                  <ScrollView
+                    ref={scrollRef}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                  >
+                    {images.map((img, i) => (
+                      <TouchableOpacity
+                        key={i}
+                        onPress={() => {
+                          setModalImage(img);
+                          setModalVisible(true);
+                        }}
+                      >
+                        <ImageBackground source={img} style={styles.sliderImage} />
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
 
 
-                  <View style={styles.infoRow}>
-                    <Ionicons name="calendar-outline" size={16} color="#E1B378" />
-                    <Text style={styles.infoText}>
-                      Weekly Off: {salon.weeklyOff || 'Monday'}
-                    </Text>
-                  </View>
+                  {/* -------------------- DETAILS -------------------- */}
+                  <View style={styles.card}>
+                    <View style={styles.ratingRow}>
 
-                  {salon.upcomingHoliday && (
-                    <View style={styles.infoRow}>
-                      <Ionicons
-                        name="alert-circle-outline"
-                        size={16}
-                        color="#FF5252"
-                      />
-                      <Text style={[styles.infoText, { color: '#FF5252' }]}>
-                        Holiday: {salon.upcomingHoliday}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-
-                {/* LOCATION */}
-                <TouchableOpacity style={styles.row} onPress={openMap}>
-                  <Ionicons
-                    name="location-outline"
-                    size={18}
-                    color="#E1B378"
-                  />
-                  <Text style={styles.linkText}>{salon.address}</Text>
-                  <Ionicons name="open-outline" size={14} color="#AAA" />
-                </TouchableOpacity>
-
-                {/* CALL */}
-                <TouchableOpacity style={styles.row} onPress={callSalon}>
-                  <Ionicons name="call-outline" size={18} color="#E1B378" />
-                  <Text style={styles.linkText}>{salon.phone}</Text>
-                </TouchableOpacity>
-
-                {/* SERVICES */}
-                <Text style={styles.section}>Select Services</Text>
-                {SERVICES.map(service => {
-                  const active = selectedServices.some(
-                    s => s.id === service.id
-                  );
-                  return (
-                    <TouchableOpacity
-                      key={service.id}
-                      style={[
-                        styles.serviceRow,
-                        active && styles.serviceActive,
-                      ]}
-                      onPress={() => toggleService(service)}
-                    >
-                      <View>
-                        <Text style={styles.serviceName}>{service.name}</Text>
-                        <Text style={styles.serviceTime}>
-                          ⏱ {service.time} min
+                      <View style={{ flexDirection: 'row' }}>
+                        <Ionicons name="star" size={16} color="#FFD700" />
+                        <Text style={styles.rating}>
+                          {salonDetails.ratingAverage} ({salonDetails.totalReviews} reviews)
                         </Text>
                       </View>
-                      <Text style={styles.servicePrice}>₹{service.price}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
 
-                {selectedServices.length > 0 && (
-                  <Text style={styles.totalText}>
-                    Total: ₹{totalAmount} • ⏱ {totalTime} min
-                  </Text>
-                )}
 
-                {/* BARBERS */}
-                <Text style={styles.section}>Select Barber (Optional)</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {BARBERS.map(b => (
-                    <TouchableOpacity
-                      key={b.id}
-                      style={[
-                        styles.barberCard,
-                        selectedBarber?.id === b.id && styles.barberActive,
-                      ]}
-                      onPress={() =>
-                        setSelectedBarber(
-                          selectedBarber?.id === b.id ? null : b
-                        )
-                      }
-                    >
-                      <ImageBackground source={b.image} style={styles.barberImg} />
-                      <Text style={styles.barberName}>{b.name}</Text>
+                    </View>
+                    {salonDetails?.isOpen && (
+                      <>
+                        <View style={styles.waitRow}>
+                          <Ionicons name="people-outline" size={14} color="#E1B378" />
+                          <Text style={styles.waitText}>
+                            Queue: {salonDetails?.queueLength} People
+                          </Text>
+                        </View>
 
-                      <View style={styles.statusRow}>
-                        <View
-                          style={[
-                            styles.statusDot,
-                            { backgroundColor: getStatusColor(b.status) },
-                          ]}
+                        <View style={styles.waitRow}>
+                          <Ionicons name="time-outline" size={14} color="#E1B378" />
+                          <Text style={styles.waitText}>
+                            Avg Waiting Time: {salonDetails?.totalWaitTime?.display}
+                          </Text>
+                        </View>
+                      </>
+                    )}
+
+
+                    {/* SHOP STATUS */}
+                    <View style={styles.infoBox}>
+                      <View style={styles.infoRow}>
+                        <Ionicons
+                          name="time-outline"
+                          size={16}
+                          color={salonDetails.isOpen ? '#4CAF50' : '#F44336'}
                         />
-                        <Text style={styles.statusText}>{b.status}</Text>
+
+                        <Text
+                          style={[
+                            styles.infoText,
+                            { color: salonDetails.isOpen ? '#4CAF50' : '#F44336' },
+                          ]}
+                        >
+                          {salonDetails.isOpen ? 'OPEN NOW' : 'CLOSED'}
+                        </Text>
+                        <Text style={styles.infoSub}>
+                          (
+                          {salonDetails?.businessHours?.length > 0
+                            ? `${formatTime12Hour(
+                              salonDetails.businessHours[0].openingTime
+                            )} - ${formatTime12Hour(
+                              salonDetails.businessHours[0].closingTime
+                            )}`
+                            : ''}
+                          )
+                        </Text>
+
                       </View>
 
-                      <Text style={styles.barberInfo}>
-                        ⭐ {b.rating} • ⏱ {b.wait}
-                      </Text>
+
+                      <View style={styles.infoRow}>
+                        <Ionicons name="calendar-outline" size={16} color="#E1B378" />
+                        <Text style={styles.infoText}>
+                          Weekly Off:{' '}
+                          {salonDetails.businessHours?.length
+                            ? salonDetails.businessHours
+                              .flatMap(e => e.holidayDays || [])
+                              .join(', ')
+                            : 'N/A'}
+                        </Text>
+
+                      </View>
+
+                      {salonDetails.upcomingHoliday && (
+                        <View style={styles.infoRow}>
+                          <Ionicons
+                            name="alert-circle-outline"
+                            size={16}
+                            color="#FF5252"
+                          />
+                          <Text style={[styles.infoText, { color: '#FF5252' }]}>
+                            Holiday: {salonDetails.upcomingHoliday}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* LOCATION */}
+                    <TouchableOpacity style={styles.row} onPress={openMap}>
+                      <Ionicons
+                        name="location-outline"
+                        size={18}
+                        color="#E1B378"
+                      />
+                      <Text style={styles.linkText}>{address}</Text>
+                      <Ionicons name="open-outline" size={14} color="#AAA" />
                     </TouchableOpacity>
-                  ))}
+
+                    {/* CALL */}
+                    <TouchableOpacity style={styles.row} onPress={callSalon}>
+                      <Ionicons name="call-outline" size={18} color="#E1B378" />
+                      <Text style={styles.linkText}>{salonDetails.phoneNumber}</Text>
+                    </TouchableOpacity>
+
+                    {/* SERVICES */}
+                    <Text style={styles.section}>Select Services</Text>
+                    {services.map(service => {
+                      const active = selectedServices.some(s => s.serviceId === service.serviceId);
+
+                      return (
+                        <TouchableOpacity
+                          key={service.serviceId}
+                          style={[styles.serviceRow, active && styles.serviceActive]}
+                          onPress={() => toggleService(service)}
+                        >
+                          <View>
+                            <Text style={styles.serviceName}>{service.serviceName}</Text>
+                            <Text style={styles.serviceTime}>
+                              ⏱ {service.durationMinutes} min
+                            </Text>
+                          </View>
+                          <Text style={styles.servicePrice}>₹{service.price}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+
+
+                    {/* {selectedServices.length > 0 && (
+                      <Text style={styles.totalText}>
+                        Total: ₹{totalAmount} • ⏱ {totalTime} min
+                      </Text>
+                    )} */}
+
+                    {/* BARBERS */}
+                    <Text style={styles.section}>Select Barber (Optional)</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      {barbers.map(b => (
+                        <TouchableOpacity
+                          key={b.id}
+                          style={[
+                            styles.barberCard,
+                            selectedBarber?.id === b.id && styles.barberActive,
+                          ]}
+                          onPress={() =>
+                            setSelectedBarber(
+                              selectedBarber?.id === b.id ? null : b
+                            )
+                          }
+                        >
+                          <ImageBackground source={b.image} style={styles.barberImg} />
+                          <Text style={styles.barberName}>{b.name}</Text>
+
+                          <View style={styles.statusRow}>
+                            <View
+                              style={[
+                                styles.statusDot,
+                                { backgroundColor: getStatusColor(b.status) },
+                              ]}
+                            />
+                            <Text style={styles.statusText}>{b.status}</Text>
+                          </View>
+
+                          {/* <Text style={styles.barberInfo}>
+                        ⭐ {b.ratingAverage} • ⏱ {b.wait}
+                      </Text> */}
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
                 </ScrollView>
-              </View>
-            </ScrollView>
-          </SafeAreaView>
+              </SafeAreaView>
+            </>
+          )}
         </View>
       </ImageBackground>
 
@@ -432,4 +526,17 @@ const styles = StyleSheet.create({
   },
   modalImage: { width: '100%', height: '80%' },
   modalClose: { position: 'absolute', top: 50, right: 20 },
+  waitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+
+  waitText: {
+    marginLeft: 6,
+    color: '#E1B378',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
 });

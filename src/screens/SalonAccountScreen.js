@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { launchImageLibrary } from 'react-native-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const GOLD = '#E8B97E';
 const DARK = '#121212';
@@ -47,18 +48,33 @@ const SalonAccountScreen = ({ navigation }) => {
     { id: '2', name: 'Ritik', image: null, status: 'available' },
   ]);
 
-  const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel' },
+   const handleLogout = async () => {
+  Alert.alert(
+    'Logout',
+    'Are you sure you want to logout?',
+    [
+      { text: 'Cancel', style: 'cancel' },
       {
         text: 'Logout',
         style: 'destructive',
-        onPress: () =>
-          // navigation.navigate('Main', { screen: 'Salon Naai' }),
-          navigation.navigate('UserLogin'),
+        onPress: async () => {
+          try {
+            await AsyncStorage.removeItem('mynaai');
+            await AsyncStorage.removeItem('mynaaiUser');
+
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'UserLogin' }],
+            });
+          } catch (error) {
+            console.log('Logout Error:', error);
+          }
+        },
       },
-    ]);
-  };
+    ],
+    { cancelable: true }
+  );
+};
 
   /* ---------------- HELPERS ---------------- */
   const formatTime = date =>

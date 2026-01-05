@@ -11,9 +11,16 @@ import {
   ImageBackground,
   Pressable,
   Dimensions,
+  ActivityIndicator,
+  RefreshControl,
+  Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
+import { communication, getServerUrl } from '../services/communication';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
@@ -27,75 +34,38 @@ const ADS = [
   require('../assets/naai/ad3.jpg'),
 ];
 
-/* -------------------- SALONS -------------------- */
-const SALONS = [
-  {
-    id: '1',
-    name: 'Brett Gomez Salon',
-    address: 'Katol Road, Katol',
-    location: 'Katol',
-    waitTime: '25 mins',
-    waitNumber: '8',
-    rating: 4.6,
-    reviews: 120,
-    open: true,
-
-    phone: '9876543210',
-    latitude: 21.1458,
-    longitude: 79.0882,
-
-    image: require('../assets/naai/naai1.jpg'),
-    images: [
-      require('../assets/naai/naai1.jpg'),
-      require('../assets/naai/naai2.jpeg'),
-      require('../assets/naai/naai3.jpg'),
-    ],
-  },
-
-  {
-    id: '2',
-    name: 'Gimabel Hair Style',
-    address: 'Main Chowk, Warud',
-    location: 'Warud',
-    waitTime: '40 mins',
-    waitNumber: '7',
-    rating: 4.2,
-    reviews: 85,
-    open: true,
-
-    phone: '9123456780',
-    latitude: 21.4642,
-    longitude: 78.9275,
-
-    image: require('../assets/naai/naai2.jpeg'),
-    images: [
-      require('../assets/naai/naai2.jpeg'),
-      require('../assets/naai/naai1.jpg'),
-    ],
-  },
-  {
-    id: '3',
-    name: 'Kobike Barber Shop',
-    address: 'Main Chowk, Katol',
-    location: 'Katol',
-    waitTime: '—',
-    waitNumber: '_',
-    rating: 3.9,
-    reviews: 42,
-    open: false,
-
-    phone: '9000000000',
-    latitude: 21.1500,
-    longitude: 79.0900,
-
-    image: require('../assets/naai/naai3.jpg'),
-    images: [
-      require('../assets/naai/naai3.jpg'),
-    ],
-  },
-];
-
 const CITIES = ['All', 'Katol', 'Warud'];
+
+/* -------------------- API DATA CONVERTER -------------------- */
+const convertSalonApiData = (apiData = []) => {
+  return apiData.map(item => ({
+    id: item.salonId,
+    name: item.salonName,
+    address: `${item.addressLine1}, ${item.city}`,
+    location: item.city,
+
+    rating: Number(item.ratingAverage),
+    reviews: item.totalReviews,
+    phoneNumber: item.phoneNumber,
+    open: item.isOpen,
+    waitNumber: item.queues?.[0]?.queueNumber ?? '_',
+    // waitTime: item.isOpen ? '25 mins' : '—',
+    waitTime: item.isOpen ? item.totalWaitTime?.display : 'Closed',
+
+    // image: { uri: item.imageUrl },
+
+
+    //   image: item.imageUrl
+    // ? { uri: item.imageUrl }
+    // : require('../assets/my_naai.jpeg'),
+
+    imageUrl: item.imageUrl,
+    imagesArray: item.imagesArray || [],
+
+
+    raw: item,
+  }));
+};
 
 const NaaiDashboard = ({ navigation }) => {
   const [search, setSearch] = useState('');
@@ -105,6 +75,33 @@ const NaaiDashboard = ({ navigation }) => {
   const adRef = useRef(null);
   const [adIndex, setAdIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+
+  const [plans, setPlans] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [userName, setUserName] = useState('');
+
+
+
+  const userByIdInfo = async () => {
+    try {
+      // setIsLoading(true);
+      const userData = await AsyncStorage.getItem('mynaaiUser');
+      const parsedUser = JSON.parse(userData);
+      console.log("parsedUser", parsedUser);
+      setUserName(parsedUser?.fullName || 'User');
+
+    } catch (error) {
+      console.error("User fetch failed:", error);
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || error.message || 'Something went wrong.'
+      );
+    }
+  };
+
 
   /* -------- AUTO SLIDE -------- */
   useEffect(() => {
@@ -119,35 +116,127 @@ const NaaiDashboard = ({ navigation }) => {
     return () => clearInterval(timer);
   }, [adIndex, paused]);
 
-  /* -------- FILTER -------- */
-  const filteredSalons = SALONS.filter(salon => {
-    const matchSearch = salon.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
+  /* -------- FETCH SALONS -------- */
+  const getSalonList = async (pageNo = 1, refresh = false) => {
+    if (loading) return;
 
-    const matchLocation =
-      locationFilter === 'All' || salon.location === locationFilter;
+    setLoading(true);
 
-    return matchSearch && matchLocation;
-  });
+    try {
+      const response = await communication.userSalonList({
+        page: pageNo,
+        searchString: search,
+        // cityFilter: ""
+      });
+      console.log("response", response);
+
+
+      if (response?.status === 'SUCCESS') {
+        const convertedData = convertSalonApiData(response.data);
+
+        if (refresh) {
+          setPlans(convertedData);
+        } else {
+          setPlans(prev => [...prev, ...convertedData]);
+        }
+
+        setHasMore(convertedData.length > 0);
+      } else {
+        if (refresh) setPlans([]);
+        setHasMore(false);
+      }
+    } catch (error) {
+      Alert.alert('Error', error?.message || 'Failed to fetch salons');
+    } finally {
+      setLoading(false);
+      if (refresh) setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    userByIdInfo()
+    getSalonList(1, true);
+  }, []);
+
+  const firstName =
+    userName?.trim()
+      ? userName.trim().split(' ')[0].charAt(0).toUpperCase() +
+      userName.trim().split(' ')[0].slice(1).toLowerCase()
+      : '';
+
+
+  const handleLoadMore = () => {
+    if (hasMore && !loading && !refreshing) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      getSalonList(nextPage);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setHasMore(true);
+    setPage(1);
+    getSalonList(1, true);
+  };
+
+  const renderFooter = () => {
+    if (!loading || refreshing) return null;
+    return (
+      <ActivityIndicator
+        size="large"
+        color="#0e0740"
+        style={{ marginVertical: 16 }}
+      />
+    );
+  };
+
+  const renderEmpty = () => {
+    if (loading) return null;
+    return (
+      <View style={{ alignItems: 'center', marginTop: 50 }}>
+        <Text style={{ fontSize: 16, color: '#888' }}>
+          No Salons Available
+        </Text>
+      </View>
+    );
+  };
 
   useFocusEffect(
     React.useCallback(() => {
-      // Screen is focused → do nothing
       return () => {
-        // Screen is blurred (navigating away)
         setShowCityDropdown(false);
       };
     }, [])
   );
 
+
+
+
+
   /* -------- SALON CARD -------- */
   const renderSalon = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => navigation.navigate('SalonDetail', { salon: item })}
+      onPress={() => navigation.navigate('SalonDetail', { salonId: item.id })}
     >
-      <Image source={item.image} style={styles.image} />
+      {/* <Image
+  source={{ uri: `${getServerUrl()}${item.imageUrl}` }}
+  style={styles.image}
+/> */}
+
+      <Image
+        source={
+          item.imagesArray?.length
+            ? { uri: `${getServerUrl()}/getfiles/${item.imagesArray[0]}` }
+            : item.imageUrl
+              ? { uri: `${getServerUrl()}/getfiles/${item.imageUrl}` }
+              : require('../assets/my_naai.jpeg')
+        }
+        style={styles.image}
+      />
+
+
 
       <View style={styles.cardContent}>
         <View style={{ flex: 1 }}>
@@ -161,25 +250,24 @@ const NaaiDashboard = ({ navigation }) => {
           </View>
 
           <Text style={styles.address}>{item.address}</Text>
+          <TouchableOpacity style={styles.row}>
+            <Ionicons name="call-outline" size={18} color="#E1B378" />
+            <Text style={styles.linkText}>{item?.phoneNumber}</Text>
+          </TouchableOpacity>
 
           <View style={styles.waitRow}>
             <View style={styles.waitTime}>
-
               <Ionicons name="time-outline" size={14} color="#E1B378" />
-              <Text style={styles.waitText}>
-                {item.open ? ` ${item.waitTime}` : ' Closed'}
-              </Text>
+              <Text style={styles.waitText}>{item?.waitTime}</Text>
             </View>
 
-
-            {item.open && item.waitNumber !== '_' && (
+            {item.open && item.queueLength > 0 && (
               <View style={styles.queueBadge}>
                 <Text style={styles.queueText}>
-                  Queue: {item.waitNumber} people
+                  Queue: {item.queueLength} people
                 </Text>
               </View>
             )}
-
           </View>
 
         </View>
@@ -192,7 +280,7 @@ const NaaiDashboard = ({ navigation }) => {
           disabled={!item.open}
         >
           <Text style={styles.bookText}>
-            {item.open ? 'Book Now' : 'Closed'}
+            {item?.open ? 'Book Now' : 'Closed'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -207,12 +295,10 @@ const NaaiDashboard = ({ navigation }) => {
             style={{ flex: 1 }}
             onPress={() => showCityDropdown && setShowCityDropdown(false)}
           >
-
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={styles.greeting}>Hi Jackson 👋</Text>
+              <Text style={styles.greeting}>Hi {firstName} 👋</Text>
 
-              {/* INLINE DROPDOWN */}
-              {/* <View style={{ marginBottom: 12 }}> */}
+
               <View style={{ position: 'relative', zIndex: 20 }}>
                 <TouchableOpacity
                   style={styles.dropdownBtn}
@@ -254,8 +340,6 @@ const NaaiDashboard = ({ navigation }) => {
               </View>
             </View>
 
-
-            {/* SEARCH */}
             <View style={styles.searchBox}>
               <Ionicons name="search" size={18} color="#999" />
               <TextInput
@@ -267,7 +351,6 @@ const NaaiDashboard = ({ navigation }) => {
               />
             </View>
 
-            {/* ADS */}
             <Pressable
               onPressIn={() => setPaused(true)}
               onPressOut={() => setPaused(false)}
@@ -297,16 +380,21 @@ const NaaiDashboard = ({ navigation }) => {
               </View>
             </Pressable>
 
-            {/* SALONS */}
             <FlatList
-              data={filteredSalons}
+              data={plans}
               keyExtractor={item => item.id}
               renderItem={renderSalon}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 30 }}
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={renderFooter}
+              ListEmptyComponent={renderEmpty}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
             />
           </Pressable>
-
         </SafeAreaView>
       </View>
     </ImageBackground>
@@ -314,6 +402,7 @@ const NaaiDashboard = ({ navigation }) => {
 };
 
 export default NaaiDashboard;
+
 
 /* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
@@ -433,7 +522,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  image: { width: 100, height: '100%' },
+  // image: { width: 100, height: '100%' },
+  image: {
+    width: 100,
+    height: '100%',       // ✅ REQUIRED
+    minHeight: 110,       // ✅ SAFETY
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+    backgroundColor: '#333', // debug helper
+  },
 
   cardContent: {
     flex: 1,
@@ -457,7 +554,9 @@ const styles = StyleSheet.create({
   },
 
   address: { color: '#AAA', fontSize: 12 },
+  row: { flexDirection: 'row', alignItems: 'center', marginVertical: 6 },
 
+  linkText: { color: '#E1B378', marginLeft: 2 },
   waitRow: { marginTop: 4 },
   waitText: { fontSize: 12, color: '#E1B378' },
 

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { communication } from '../services/communication';
 
 const GOLD = '#E8B97E';
 const DARK = '#121212';
@@ -24,25 +26,109 @@ const MENUS = [
 
 const AccountScreen = ({ navigation }) => {
   const [editVisible, setEditVisible] = useState(false);
-  const [name, setName] = useState('Abhishek Tijare');
-  const [mobile, setMobile] = useState('8308594231');
+  const [name, setName] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [profileData, setProfileData] = useState({});
+  const [userId, setUserId] = useState(null);
 
-  const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: () =>
-          // navigation.navigate('Main', { screen: 'Salon Naai' }),
-          navigation.navigate('UserLogin'),
-      },
-    ]);
+  /* ---------------- GET USER FROM STORAGE ---------------- */
+  const getUserInfo = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('mynaaiUser');
+      if (!userData) return;
+
+      const parsed = JSON.parse(userData);
+      if (parsed?.userId) {
+        setUserId(parsed.userId);
+      }
+    } catch {
+      Alert.alert('Error', 'Unable to load user');
+    }
   };
 
-  const handleNaaiRequest = () => {
-    navigation.navigate('NaaiLogin')
-    //  navigation.navigate('Salon')
+  /* ---------------- FETCH PROFILE ---------------- */
+  const userProfile = async (id) => {
+    try {
+      const response = await communication.userProfile({ userId: id });
+
+      if (response?.status === 'SUCCESS') {
+        setProfileData(response.data);
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Failed to fetch profile'
+      );
+    }
+  };
+
+  /* ---------------- UPDATE PROFILE ---------------- */
+  const updateProfile = async () => {
+    const payload = {
+      userId,
+      fullName: name,
+      phoneNumber: mobile,
+      email: profileData?.email || '',
+      profileImageUrl: profileData?.profileImageUrl || '',
+    };
+
+    try {
+      const response = await communication.updateProfile(payload);
+
+      if (response?.status === 'SUCCESS') {
+        setEditVisible(false);
+        await userProfile(userId);
+        Alert.alert('Success', 'Profile updated successfully');
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Failed to update profile'
+      );
+    }
+  };
+
+  /* ---------------- EFFECTS ---------------- */
+  useEffect(() => {
+    getUserInfo();
+  }, []);
+
+  useEffect(() => {
+    if (userId) {
+      userProfile(userId);
+    }
+  }, [userId]);
+
+  /* ---------------- LOGOUT ---------------- */
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.removeItem('mynaai');
+            await AsyncStorage.removeItem('mynaaiUser');
+
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'UserLogin' }],
+            });
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  /* ---------------- OPEN EDIT MODAL ---------------- */
+  const openEditModal = () => {
+    setName(profileData?.fullName || '');
+    setMobile(profileData?.phoneNumber || '');
+    setEditVisible(true);
   };
 
   return (
@@ -51,20 +137,20 @@ const AccountScreen = ({ navigation }) => {
 
         {/* PROFILE */}
         <View style={styles.profileCard}>
-          <Text style={styles.name}>{name}</Text>
-          <Text style={styles.mobile}>📞 {mobile}</Text>
+          <Text style={styles.name}>
+            {profileData?.fullName || 'User'}
+          </Text>
 
-          <TouchableOpacity
-            style={styles.editBtn}
-            onPress={() => setEditVisible(true)}
-          >
+          <Text style={styles.mobile}>
+            📞 {profileData?.phoneNumber || ''}
+          </Text>
+
+          <TouchableOpacity style={styles.editBtn} onPress={openEditModal}>
             <Text style={styles.editText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
 
-
-
-        {/* VERTICAL MENU */}
+        {/* MENU */}
         <View style={styles.menuCard}>
           {MENUS.map(item => (
             <TouchableOpacity
@@ -80,21 +166,6 @@ const AccountScreen = ({ navigation }) => {
             </TouchableOpacity>
           ))}
         </View>
-        {/* Login AS NAII */}
-        {/* <TouchableOpacity style={styles.naaiBtn} onPress={handleNaaiRequest}>
-          <Ionicons name="storefront-outline" size={18} color="#000" />
-          <Text style={styles.naaiText}>
-            Login as Salon / Naai Owner
-          </Text>
-        </TouchableOpacity> */}
-        {/* LOGIN */}
-        {/* <TouchableOpacity
-          style={styles.loginBtn}
-          onPress={() => navigation.navigate('UserLogin')}
-        >
-          <Ionicons name="log-in-outline" size={18} color="#000" />
-          <Text style={styles.loginText}>Login</Text>
-        </TouchableOpacity> */}
 
         {/* LOGOUT */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
@@ -120,14 +191,10 @@ const AccountScreen = ({ navigation }) => {
             />
 
             <TextInput
-              // style={styles.input}
               style={[styles.input, { backgroundColor: '#2E2E2E', color: '#AAA' }]}
               placeholder="Mobile Number"
-              placeholderTextColor="#999"
               keyboardType="number-pad"
-              maxLength={10}
               value={mobile}
-              onChangeText={setMobile}
               editable={false}
             />
 
@@ -139,10 +206,7 @@ const AccountScreen = ({ navigation }) => {
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.saveBtn}
-                onPress={() => setEditVisible(false)}
-              >
+              <TouchableOpacity style={styles.saveBtn} onPress={updateProfile}>
                 <Text style={styles.saveText}>Save</Text>
               </TouchableOpacity>
             </View>
@@ -154,6 +218,7 @@ const AccountScreen = ({ navigation }) => {
 };
 
 export default AccountScreen;
+
 
 /* ---------------- STYLES ---------------- */
 
@@ -175,7 +240,8 @@ const styles = StyleSheet.create({
   name: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
+    textTransform: "capitalize",
   },
 
   mobile: {
