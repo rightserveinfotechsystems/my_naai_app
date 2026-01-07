@@ -2,7 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
-// const serverUrl = "http://192.168.1.6:5000";
+// const serverUrl = "http://192.168.1.8:5000";
 const serverUrl = "http://72.60.195.95:3006";
 // const serverUrl = "http://localhost:5000";
 // const serverUrl = "https://backend.vidyacurasolutions.com"
@@ -46,7 +46,7 @@ export async function getCookie() {
 
 
 export const communication = {
-    //===================Register User API===================//
+    //=================== User API===================//
     sendRegisterOtp: async (userData) => {
         try {
             const response = await axios.post(`${getServerUrl()}/api/users/send-otp-register`, userData, {
@@ -110,6 +110,19 @@ export const communication = {
             throw error;
         }
     },
+    bookSalonService: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/booking/book`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
     userProfile: async ({ userId }) => {
         try {
             const response = await axios.get(`${getServerUrl()}/api/users/profile`, {
@@ -164,8 +177,20 @@ export const communication = {
             throw error;
         }
     },
-
-    // salon api start
+    userAds: async () => {
+        try {
+            const response = await axios.get(`${getServerUrl()}/api/advertisement/get-advertisement`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    //=================== salon API start===================//
     salonRequest: async (payload) => {
         try {
             const response = await axios.post(`${getServerUrl()}/api/salonrequest/create-request`, payload, {
@@ -200,6 +225,97 @@ export const communication = {
             });
             console.log("response.data", response.data);
 
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    customerList: async ({ salonId }) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/booking/get-booking-list`, { salonId }, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    salonProfile: async ({ salonId }) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/salons/get-salon`, { salonId }, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    updateSalonProfile: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/salons/update-salon`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    SalonOpenClose: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/salons/open-close`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    salonQueueHistory: async () => {
+        try {
+            const response = await axios.get(`${getServerUrl()}/api/booking/get-completed-bookings`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    bookingDone: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/booking/booking-complete`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    walkInBooking: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/booking/create-walk-in`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
             return response.data;
         } catch (error) {
             throw error;

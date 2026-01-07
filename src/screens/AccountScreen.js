@@ -9,6 +9,7 @@ import {
   Modal,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -30,6 +31,8 @@ const AccountScreen = ({ navigation }) => {
   const [mobile, setMobile] = useState('');
   const [profileData, setProfileData] = useState({});
   const [userId, setUserId] = useState(null);
+  const [loading, setLoading] = useState(true);
+
 
   /* ---------------- GET USER FROM STORAGE ---------------- */
   const getUserInfo = async () => {
@@ -49,6 +52,8 @@ const AccountScreen = ({ navigation }) => {
   /* ---------------- FETCH PROFILE ---------------- */
   const userProfile = async (id) => {
     try {
+      setLoading(true);
+
       const response = await communication.userProfile({ userId: id });
 
       if (response?.status === 'SUCCESS') {
@@ -59,26 +64,32 @@ const AccountScreen = ({ navigation }) => {
         'Error',
         error?.response?.data?.message || 'Failed to fetch profile'
       );
+    } finally {
+      setLoading(false);
     }
   };
 
   /* ---------------- UPDATE PROFILE ---------------- */
   const updateProfile = async () => {
-    const payload = {
-      userId,
-      fullName: name,
-      phoneNumber: mobile,
-      email: profileData?.email || '',
-      profileImageUrl: profileData?.profileImageUrl || '',
-    };
+    if (!name.trim()) {
+      Alert.alert('Validation', 'Name cannot be empty');
+      return;
+    }
 
     try {
+      const payload = {
+        userId,
+        fullName: name.trim(),
+      };
+
       const response = await communication.updateProfile(payload);
 
       if (response?.status === 'SUCCESS') {
         setEditVisible(false);
         await userProfile(userId);
         Alert.alert('Success', 'Profile updated successfully');
+      } else {
+        Alert.alert('Error', response?.message || 'Update failed');
       }
     } catch (error) {
       Alert.alert(
@@ -87,6 +98,7 @@ const AccountScreen = ({ navigation }) => {
       );
     }
   };
+
 
   /* ---------------- EFFECTS ---------------- */
   useEffect(() => {
@@ -110,8 +122,13 @@ const AccountScreen = ({ navigation }) => {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            await AsyncStorage.removeItem('mynaai');
-            await AsyncStorage.removeItem('mynaaiUser');
+
+            await AsyncStorage.multiRemove([
+              'mynaai',
+              'mynaaiUser',
+              'isLoggedIn',
+              'userType',
+            ]);
 
             navigation.reset({
               index: 0,
@@ -130,6 +147,15 @@ const AccountScreen = ({ navigation }) => {
     setMobile(profileData?.phoneNumber || '');
     setEditVisible(true);
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={GOLD} />
+        <Text style={{ color: '#aaa', marginTop: 10 }}>Loading profile...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -214,7 +240,9 @@ const AccountScreen = ({ navigation }) => {
         </View>
       </Modal>
     </SafeAreaView>
+
   );
+
 };
 
 export default AccountScreen;

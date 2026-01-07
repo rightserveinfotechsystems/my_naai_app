@@ -25,12 +25,11 @@ const { width } = Dimensions.get('window');
 
 const SalonDetailScreen = ({ route, navigation }) => {
   const { salonId } = route.params;
-  console.log("salonId", salonId);
 
   const [salonDetails, setSalonDetails] = useState(null);
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [selectedServices, setSelectedServices] = useState([]);
+  // const [selectedServices, setSelectedServices] = useState([]);
   const [selectedBarber, setSelectedBarber] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalImage, setModalImage] = useState(null);
@@ -116,17 +115,16 @@ const SalonDetailScreen = ({ route, navigation }) => {
     Linking.openURL(`tel:${salonDetails.phone}`);
   };
 
-  const toggleService = service => {
-    setSelectedServices(prev =>
-      prev.some(s => s.id === service.id)
-        ? prev.filter(s => s.id !== service.id)
-        : [...prev, service]
-    );
-  };
+  // const toggleService = service => {
+  //   setSelectedServices(prev =>
+  //     prev.some(s => s.id === service.id)
+  //       ? prev.filter(s => s.id !== service.id)
+  //       : [...prev, service]
+  //   );
+  // };
 
-  const getStatusColor = status => {
-    if (status === 'available') return '#4CAF50';
-    if (status === 'busy') return '#FF9800';
+  const getStatusColor = isAvailable => {
+    if (isAvailable === true) return '#4CAF50';
     return '#F44336';
   };
 
@@ -136,24 +134,17 @@ const SalonDetailScreen = ({ route, navigation }) => {
   };
 
   const handleContinue = () => {
-    if (selectedServices.length === 0) {
-      Alert.alert(
-        'Service Required',
-        'Please select at least one service to continue booking.',
-        [{ text: 'OK' }],
-      );
-      return;
-    }
+    // if (selectedServices.length === 0) {
+    //   Alert.alert(
+    //     'Service Required',
+    //     'Please select at least one service to continue booking.',
+    //     [{ text: 'OK' }],
+    //   );
+    //   return;
+    // }
 
-    navigation.navigate('BookingSchedule', {
-      salonDetails,
-      services: selectedServices,
-      barber: selectedBarber,
-    });
+    navigation.navigate('BookingSchedule', { salon: salonDetails });
   };
-
-  // const totalAmount = selectedServices.reduce((s, i) => s + i.price, 0);
-  // const totalTime = selectedServices.reduce((s, i) => s + i.time, 0);
 
 
   if (!salonDetails) {
@@ -348,15 +339,13 @@ const SalonDetailScreen = ({ route, navigation }) => {
                     </TouchableOpacity>
 
                     {/* SERVICES */}
-                    <Text style={styles.section}>Select Services</Text>
+                    <Text style={styles.section}>Services</Text>
                     {services.map(service => {
-                      const active = selectedServices.some(s => s.serviceId === service.serviceId);
 
                       return (
                         <TouchableOpacity
                           key={service.serviceId}
-                          style={[styles.serviceRow, active && styles.serviceActive]}
-                          onPress={() => toggleService(service)}
+                          style={styles.serviceRow}
                         >
                           <View>
                             <Text style={styles.serviceName}>{service.serviceName}</Text>
@@ -377,37 +366,40 @@ const SalonDetailScreen = ({ route, navigation }) => {
                     )} */}
 
                     {/* BARBERS */}
-                    <Text style={styles.section}>Select Barber (Optional)</Text>
+                    <Text style={styles.section}>Barbers</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                       {barbers.map(b => (
                         <TouchableOpacity
-                          key={b.id}
-                          style={[
-                            styles.barberCard,
-                            selectedBarber?.id === b.id && styles.barberActive,
-                          ]}
+                          key={b.id || b.barberId}
+                          style={
+                            styles.barberCard
+                          }
                           onPress={() =>
                             setSelectedBarber(
                               selectedBarber?.id === b.id ? null : b
                             )
                           }
                         >
-                          <ImageBackground source={b.image} style={styles.barberImg} />
-                          <Text style={styles.barberName}>{b.name}</Text>
+                          <ImageBackground source={{ uri: `${getServerUrl()}/getfiles/${b.profileImageUrl}` }
+                          } style={styles.barberImg} />
+                          <Text style={styles.barberName}>{b.fullName}</Text>
 
                           <View style={styles.statusRow}>
                             <View
                               style={[
                                 styles.statusDot,
-                                { backgroundColor: getStatusColor(b.status) },
+                                { backgroundColor: getStatusColor(b.isAvailable) },
                               ]}
                             />
-                            <Text style={styles.statusText}>{b.status}</Text>
+                            <Text style={styles.statusText}>
+                              {b.isAvailable ? 'Available' : 'Not available'}
+                            </Text>
+
                           </View>
 
-                          {/* <Text style={styles.barberInfo}>
-                        ⭐ {b.ratingAverage} • ⏱ {b.wait}
-                      </Text> */}
+                          <Text style={styles.barberInfo}>
+                            ⭐ {b.ratingAverage} • ⏱ {b.durationTime}
+                          </Text>
                         </TouchableOpacity>
                       ))}
                     </ScrollView>

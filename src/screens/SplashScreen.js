@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -35,6 +36,9 @@ const SLIDES = [
   },
 ];
 
+
+
+
 const SplashScreen = ({ navigation }) => {
   const flatListRef = useRef(null);
   const [index, setIndex] = useState(0);
@@ -50,6 +54,27 @@ const SplashScreen = ({ navigation }) => {
   const skipIntro = () => {
     navigation.replace('UserLogin');
   };
+
+  useEffect(() => {
+    const checkLogin = async () => {
+      const isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
+      const userType = await AsyncStorage.getItem('userType');
+
+      if (isLoggedIn === 'true') {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: userType === 'USER' ? 'Main' : 'Salon' }],
+        });
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'UserLogin' }],
+        });
+      }
+    };
+
+    checkLogin();
+  }, []);
 
   const renderItem = ({ item }) => (
     <ImageBackground source={item.image} style={styles.slide}>

@@ -52,13 +52,6 @@ const convertSalonApiData = (apiData = []) => {
     // waitTime: item.isOpen ? '25 mins' : '—',
     waitTime: item.isOpen ? item.totalWaitTime?.display : 'Closed',
 
-    // image: { uri: item.imageUrl },
-
-
-    //   image: item.imageUrl
-    // ? { uri: item.imageUrl }
-    // : require('../assets/my_naai.jpeg'),
-
     imageUrl: item.imageUrl,
     imagesArray: item.imagesArray || [],
 
@@ -82,6 +75,9 @@ const NaaiDashboard = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [userName, setUserName] = useState('');
+  const [totalPages, setTotalPages] = useState(1);
+  const [ads, setAds] = useState([]);
+
 
 
 
@@ -105,16 +101,17 @@ const NaaiDashboard = ({ navigation }) => {
 
   /* -------- AUTO SLIDE -------- */
   useEffect(() => {
-    if (paused) return;
+    if (paused || ads.length === 0) return;
 
     const timer = setInterval(() => {
-      const next = (adIndex + 1) % ADS.length;
+      const next = (adIndex + 1) % ads.length;
       setAdIndex(next);
       adRef.current?.scrollToIndex({ index: next, animated: true });
     }, 3000);
 
     return () => clearInterval(timer);
-  }, [adIndex, paused]);
+  }, [adIndex, paused, ads]);
+
 
   /* -------- FETCH SALONS -------- */
   const getSalonList = async (pageNo = 1, refresh = false) => {
@@ -123,16 +120,21 @@ const NaaiDashboard = ({ navigation }) => {
     setLoading(true);
 
     try {
-      const response = await communication.userSalonList({
+
+      const payload = {
         page: pageNo,
         searchString: search,
-        // cityFilter: ""
-      });
-      console.log("response", response);
+      };
 
+      if (locationFilter !== 'All') {
+        payload.cityFilter = locationFilter;
+      }
+
+      const response = await communication.userSalonList(payload);
 
       if (response?.status === 'SUCCESS') {
         const convertedData = convertSalonApiData(response.data);
+        const pagination = response.pagination;
 
         if (refresh) {
           setPlans(convertedData);
@@ -140,7 +142,9 @@ const NaaiDashboard = ({ navigation }) => {
           setPlans(prev => [...prev, ...convertedData]);
         }
 
-        setHasMore(convertedData.length > 0);
+        // 🔑 pagination control
+        setTotalPages(pagination?.totalPages || 1);
+        setHasMore(pageNo < (pagination?.totalPages || 1));
       } else {
         if (refresh) setPlans([]);
         setHasMore(false);
@@ -152,11 +156,45 @@ const NaaiDashboard = ({ navigation }) => {
       if (refresh) setRefreshing(false);
     }
   };
+  // ads
+  const userAds = async () => {
+    try {
+      const response = await communication.userAds();
+
+      if (response?.status === 'SUCCESS') {
+        setAds(response.data?.images || []); // 👈 IMPORTANT
+      } else {
+        setAds([]);
+      }
+    } catch (error) {
+      Alert.alert('Error', error?.message || 'Failed to fetch Ads');
+      setAds([]);
+    }
+  };
+
+
 
   useEffect(() => {
     userByIdInfo()
-    getSalonList(1, true);
+    userAds()
   }, []);
+
+  useEffect(() => {
+    setPage(1);
+    setHasMore(true);
+    getSalonList(1, true);
+  }, [locationFilter]);
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      setPage(1);
+      setHasMore(true);
+      getSalonList(1, true);
+    }, 500);
+
+    return () => clearTimeout(delay);
+  }, [search]);
+
 
   const firstName =
     userName?.trim()
@@ -166,12 +204,17 @@ const NaaiDashboard = ({ navigation }) => {
 
 
   const handleLoadMore = () => {
-    if (hasMore && !loading && !refreshing) {
-      const nextPage = page + 1;
+    if (loading || refreshing || !hasMore) return;
+
+    const nextPage = page + 1;
+
+    if (nextPage <= totalPages) {
       setPage(nextPage);
       getSalonList(nextPage);
     }
   };
+
+
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -180,27 +223,33 @@ const NaaiDashboard = ({ navigation }) => {
     getSalonList(1, true);
   };
 
+
   const renderFooter = () => {
-    if (!loading || refreshing) return null;
+    if (!loading || refreshing || !hasMore) return null;
+
     return (
       <ActivityIndicator
         size="large"
-        color="#0e0740"
-        style={{ marginVertical: 16 }}
+        color="#E1B378"
+        style={{ marginVertical: 20 }}
       />
     );
   };
 
+
   const renderEmpty = () => {
     if (loading) return null;
+
     return (
-      <View style={{ alignItems: 'center', marginTop: 50 }}>
-        <Text style={{ fontSize: 16, color: '#888' }}>
-          No Salons Available
+      <View style={{ alignItems: 'center', marginTop: 60 }}>
+        <Ionicons name="cut-outline" size={40} color="#777" />
+        <Text style={{ color: '#aaa', marginTop: 10, fontSize: 14 }}>
+          No salons available
         </Text>
       </View>
     );
   };
+
 
   useFocusEffect(
     React.useCallback(() => {
@@ -357,27 +406,32 @@ const NaaiDashboard = ({ navigation }) => {
             >
               <FlatList
                 ref={adRef}
-                data={ADS}
+                data={ads}
                 horizontal
                 pagingEnabled
                 snapToInterval={AD_WIDTH}
                 decelerationRate="fast"
                 showsHorizontalScrollIndicator={false}
-                keyExtractor={(_, i) => i.toString()}
+                keyExtractor={(item, index) => index.toString()}
                 style={styles.adSlider}
                 renderItem={({ item }) => (
-                  <Image source={item} style={styles.adImage} />
+                  <Image
+                    source={{ uri: `${getServerUrl()}${item}` }}
+                    style={styles.adImage}
+                  />
                 )}
               />
 
+
               <View style={styles.dotsContainer}>
-                {ADS.map((_, i) => (
+                {ads.map((_, i) => (
                   <View
                     key={i}
                     style={[styles.dot, adIndex === i && styles.activeDot]}
                   />
                 ))}
               </View>
+
             </Pressable>
 
             <FlatList

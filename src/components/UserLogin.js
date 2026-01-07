@@ -88,8 +88,17 @@ const UserLogin = ({ navigation }) => {
             'mynaaiUser',
             JSON.stringify(res?.data),
           );
+
+          await AsyncStorage.setItem('isLoggedIn', 'true');
+          await AsyncStorage.setItem('userType', 'USER');
         }
-        navigation.replace('Main');
+        // navigation.replace('Main');
+
+
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Main' }],
+        });
       } else {
         Alert.alert('Invalid OTP', res?.message || 'OTP verification failed');
       }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,14 @@ import {
   Alert,
   Image,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { launchImageLibrary } from 'react-native-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { communication } from '../services/communication';
 
 const GOLD = '#E8B97E';
 const DARK = '#121212';
@@ -30,10 +32,8 @@ const MENUS = [
 
 const SalonAccountScreen = ({ navigation }) => {
   const [editVisible, setEditVisible] = useState(false);
-  const [salonOpen, setSalonOpen] = useState(true);
-
-  const [salonName, setSalonName] = useState('Golden Scissors Salon');
-  const [salonAddress, setSalonAddress] = useState('Katol, Maharashtra');
+  const [salonName, setSalonName] = useState('');
+  const [salonAddress, setSalonAddress] = useState('');
   const [salonImage, setSalonImage] = useState(null);
 
   const [openTime, setOpenTime] = useState(new Date());
@@ -48,17 +48,105 @@ const SalonAccountScreen = ({ navigation }) => {
     { id: '2', name: 'Ritik', image: null, status: 'available' },
   ]);
 
-   const handleLogout = async () => {
-  Alert.alert(
-    'Logout',
-    'Are you sure you want to logout?',
-    [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          try {
+  const [profileData, setProfileData] = useState({});
+  const [salonId, setsalonId] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+
+  const address = `${profileData?.addressLine1},${profileData?.city}`
+
+
+  /* ---------------- GET USER FROM STORAGE ---------------- */
+
+  const userByIdInfo = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('mynaaiUser');
+      const parsedUser = JSON.parse(userData);
+      console.log("parsedUser", parsedUser);
+      setsalonId(parsedUser?.salon?.salonId)
+
+    } catch (error) {
+      console.error("User fetch failed:", error);
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || error.message || 'Something went wrong.'
+      );
+    }
+  };
+
+
+  /* ---------------- FETCH PROFILE ---------------- */
+  const salonProfile = async (id) => {
+    try {
+      setProfileLoading(true);
+
+      const response = await communication.salonProfile({ salonId: id });
+
+      if (response?.status === 'SUCCESS') {
+        setProfileData(response.data);
+        setIsOpen(response.data?.isOpen);
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Failed to fetch profile'
+      );
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+
+  /* ---------------- UPDATE PROFILE ---------------- */
+  // const updateProfile = async () => {
+  //   const payload = {
+  //     userId,
+  //     fullName: name,
+  //     phoneNumber: mobile,
+  //     email: profileData?.email || '',
+  //     profileImageUrl: profileData?.profileImageUrl || '',
+  //   };
+
+  //   try {
+  //     const response = await communication.updateProfile(payload);
+
+  //     if (response?.status === 'SUCCESS') {
+  //       setEditVisible(false);
+  //       await userProfile(userId);
+  //       Alert.alert('Success', 'Profile updated successfully');
+  //     }
+  //   } catch (error) {
+  //     Alert.alert(
+  //       'Error',
+  //       error?.response?.data?.message || 'Failed to update profile'
+  //     );
+  //   }
+  // };
+
+  /* ---------------- EFFECTS ---------------- */
+  useEffect(() => {
+    userByIdInfo();
+  }, []);
+
+  useEffect(() => {
+    if (salonId) {
+      salonProfile(salonId);
+    }
+  }, [salonId]);
+
+
+  /* ---------------- LOGOUT ---------------- */
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
             await AsyncStorage.removeItem('mynaai');
             await AsyncStorage.removeItem('mynaaiUser');
 
@@ -66,15 +154,13 @@ const SalonAccountScreen = ({ navigation }) => {
               index: 0,
               routes: [{ name: 'UserLogin' }],
             });
-          } catch (error) {
-            console.log('Logout Error:', error);
-          }
+          },
         },
-      },
-    ],
-    { cancelable: true }
-  );
-};
+      ],
+      { cancelable: true }
+    );
+  };
+
 
   /* ---------------- HELPERS ---------------- */
   const formatTime = date =>
@@ -98,19 +184,48 @@ const SalonAccountScreen = ({ navigation }) => {
   /* ---------------- SALON TOGGLE ---------------- */
   const handleToggleSalon = () => {
     Alert.alert(
-      salonOpen ? 'Close Salon?' : 'Open Salon?',
-      salonOpen
+      isOpen ? 'Close Salon?' : 'Open Salon?',
+      isOpen
         ? 'Customers will not be able to book.'
         : 'Customers can start booking.',
       [
-        { text: 'Cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: salonOpen ? 'Close' : 'Open',
-          onPress: () => setSalonOpen(!salonOpen),
+          text: isOpen ? 'Close' : 'Open',
+          onPress: async () => {
+            try {
+              const payload = {
+                salonId,
+                isOpen: !isOpen,
+              };
+
+              const response = await communication.SalonOpenClose(payload);
+
+              if (response?.status === 'SUCCESS') {
+                setIsOpen(!isOpen); // ✅ update UI
+              } else {
+                Alert.alert('Error', 'Unable to change salon status');
+              }
+            } catch (error) {
+              Alert.alert(
+                'Error',
+                error?.response?.data?.message || 'Something went wrong'
+              );
+            }
+          },
         },
       ]
     );
   };
+
+  if (profileLoading) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center' }]}>
+        <ActivityIndicator size="large" color={GOLD} />
+      </SafeAreaView>
+    );
+  }
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -118,20 +233,23 @@ const SalonAccountScreen = ({ navigation }) => {
 
         {/* PROFILE */}
         <View style={styles.profileCard}>
-          <TouchableOpacity onPress={() => pickImage(setSalonImage)}>
-            <Image
-              source={
-                salonImage
-                  ? { uri: salonImage }
-                  : require('../assets/my_naai.jpeg')
-              }
-              style={styles.salonImage}
-            />
-            <Text style={styles.changeImg}>Change Image</Text>
-          </TouchableOpacity>
+          {/* <TouchableOpacity onPress={() => pickImage(setSalonImage)}> */}
+          <Image
+            source={
+              salonImage
+                ? { uri: salonImage }
+                : require('../assets/my_naai.jpeg')
+            }
+            style={styles.salonImage}
+          />
+          {/* <Text style={styles.changeImg}>Change Image</Text> */}
+          {/* </TouchableOpacity> */}
 
-          <Text style={styles.name}>{salonName}</Text>
-          <Text style={styles.mobile}>{salonAddress}</Text>
+          <Text style={styles.name}>
+            {profileData?.salonName || ''}
+          </Text>
+
+          <Text style={styles.mobile}>{address}</Text>
 
           <TouchableOpacity
             style={styles.editBtn}
@@ -143,18 +261,19 @@ const SalonAccountScreen = ({ navigation }) => {
 
         {/* STATUS */}
         <View style={styles.statusRow}>
-          <Text style={styles.statusLabel}>Salon Status</Text>
+          <Text style={styles.statusLabel}>Salon Open/Close Status</Text>
           <TouchableOpacity
             style={[
               styles.toggleBtn,
-              { backgroundColor: salonOpen ? '#4CAF50' : '#E53935' },
+              { backgroundColor: isOpen ? '#4CAF50' : '#E53935' },
             ]}
             onPress={handleToggleSalon}
           >
             <Text style={styles.toggleText}>
-              {salonOpen ? 'OPEN' : 'CLOSED'}
+              {isOpen ? 'OPEN' : 'CLOSED'}
             </Text>
           </TouchableOpacity>
+
         </View>
 
         {/* MENU */}
@@ -189,6 +308,21 @@ const SalonAccountScreen = ({ navigation }) => {
           <ScrollView style={styles.modalCard}>
 
             <Text style={styles.modalTitle}>Salon Settings</Text>
+
+            <View style={styles.profileCard}>
+
+              <TouchableOpacity onPress={() => pickImage(setSalonImage)}>
+                <Image
+                  source={
+                    salonImage
+                      ? { uri: salonImage }
+                      : require('../assets/my_naai.jpeg')
+                  }
+                  style={styles.salonImage}
+                />
+                <Text style={styles.changeImg}>Change Image</Text>
+              </TouchableOpacity>
+            </View>
 
             <TextInput
               style={styles.input}

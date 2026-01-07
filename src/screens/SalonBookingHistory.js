@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,72 +7,122 @@ import {
   ImageBackground,
   TouchableOpacity,
   Linking,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { communication } from '../services/communication';
+import Skeleton from '../utilities/Skeleton';
+
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
 /* -------------------- CUSTOMER BOOKING DATA -------------------- */
-/* Use YYYY-MM-DD format for date filtering */
 
-const CUSTOMER_BOOKINGS = [
-  {
-    id: '1',
-    customerName: 'Brett Gomez',
-    barberName: 'Rahul',
-    mobile: '9876543210',
-    services: 'Haircut, Beard',
-    date: '2025-12-20',
-    time: '11:30 AM',
-    status: 'Completed',
-  },
-  {
-    id: '2',
-    customerName: 'Salman Khan',
-    barberName: 'Ritik',
-    mobile: '9123456789',
-    services: 'Hair Spa',
-    date: '2025-12-19',
-    time: '4:00 PM',
-    status: 'Completed',
-  },
-  {
-    id: '3',
-    customerName: 'Shahrukh Khan',
-    barberName: 'Rajwal',
-    mobile: '9988776655',
-    services: 'Haircut',
-    date: '2025-12-10',
-    time: '1:00 PM',
-    status: 'Completed',
-  },
-];
+const formatDateReadable = (dateStr) => {
+  if (!dateStr) return '';
 
-/* -------------------- LAST 7 DAYS FILTER -------------------- */
-
-const isWithinLast7Days = (dateStr) => {
-  const bookingDate = new Date(dateStr);
-  const today = new Date();
-  const diffTime = today - bookingDate;
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
-  return diffDays >= 0 && diffDays <= 7;
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 };
 
-const WEEKLY_CUSTOMERS = CUSTOMER_BOOKINGS.filter(item =>
-  isWithinLast7Days(item.date),
-);
+
+
+const formatTime = (time) => {
+  if (!time) return '';
+
+  const [h, m] = time.split(':');
+  const date = new Date();
+  date.setHours(Number(h), Number(m));
+
+  return date.toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
 
 /* -------------------- SCREEN -------------------- */
-
 const CustomerBookingHistory = () => {
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [userList, setUserList] = useState([]);
+
+
+  const salonQueueHistory = async (pageNo = 1, loadMore = false) => {
+    try {
+      loadMore ? setLoadingMore(true) : setLoading(true);
+
+      const response = await communication.salonQueueHistory({
+        page: pageNo,
+      });
+
+      if (response?.status === 'SUCCESS') {
+        const data = response?.bookings || [];
+
+        setUserList(prev =>
+          loadMore ? [...prev, ...data] : data
+        );
+
+        setHasMore(response.page < response.totalPages);
+        setPage(pageNo);
+      } else {
+        if (!loadMore) setUserList([]);
+        setHasMore(false);
+      }
+    } catch (e) {
+      Alert.alert(
+        'Error',
+        e?.response?.data?.message || 'Failed to load booking history'
+      );
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      setLoadingMore(false);
+    }
+  };
+
+
+  useEffect(() => {
+    salonQueueHistory();
+  }, []);
+
+
+  /* ---------------- LOAD MORE ---------------- */
+  const handleLoadMore = () => {
+    if (
+      loading ||
+      loadingMore ||
+      !hasMore ||
+      userList.length === 0
+    ) {
+      return;
+    }
+
+    salonQueueHistory(page + 1, true);
+  };
+
+
+  /* ---------------- REFRESH ---------------- */
+  const onRefresh = () => {
+    setRefreshing(true);
+    setPage(1);
+    salonQueueHistory();
+  };
+
+
+
   const renderItem = ({ item }) => {
-    const statusColor =
-      item.status === 'Completed'
-        ? '#4CAF50'
-        : item.status === 'Cancelled'
-          ? '#E53935'
-          : '#E8B97E';
+    // const statusColor = '#4CAF50'; 
 
     return (
       <View style={styles.card}>
@@ -80,44 +130,55 @@ const CustomerBookingHistory = () => {
 
           {/* LEFT INFO */}
           <View style={styles.infoLeft}>
-            <Text style={styles.name}>{item.customerName}</Text>
-            <Text style={styles.barber}>✂️ Barber: {item.barberName}</Text>
+            <Text style={styles.name}>
+              {item.userName || 'Guest'}
+            </Text>
 
-            {/* MOBILE NUMBER (CLICKABLE) */}
-            <TouchableOpacity
-              style={styles.row}
-              onPress={() => Linking.openURL(`tel:${item.mobile}`)}
-            >
-              <Ionicons name="call-outline" size={14} color="#E8B97E" />
-              <Text
-                style={[
-                  styles.subText,
-                  { textDecorationLine: 'underline' },
-                ]}
+            {item.barberName && (
+              <View style={styles.row}>
+                <Ionicons name="person-outline" size={14} color="#E8B97E" />
+                <Text style={styles.barber}>
+                  Barber: {item.barberName}
+                </Text>
+              </View>
+
+            )}
+
+            {/* MOBILE */}
+            {item.userPhone && (
+              <TouchableOpacity
+                style={styles.row}
+                onPress={() => Linking.openURL(`tel:${item.userPhone}`)}
               >
-                {item.mobile}
-              </Text>
-            </TouchableOpacity>
+                <Ionicons name="call-outline" size={14} color="#E8B97E" />
+                <Text style={styles.subText}>
+                  {item.userPhone}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {/* SERVICES */}
-            <View style={styles.row}>
-              <Ionicons name="cut-outline" size={14} color="#E8B97E" />
-              <Text style={styles.subText}>{item.services}</Text>
-            </View>
+            {item.services ? (
+              <View style={styles.row}>
+                <Ionicons name="cut-outline" size={14} color="#E8B97E" />
+                <Text style={styles.subText}>{item.services}</Text>
+              </View>
+            ) : null}
 
             {/* DATE & TIME */}
             <View style={styles.row}>
               <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
               <Text style={styles.subText}>
-                {item.date} • {item.time}
+                {formatDateReadable(item.bookingDate)}
+                {item.bookingTime ? ` • ${formatTime(item.bookingTime)}` : ''}
               </Text>
             </View>
           </View>
 
-          {/* RIGHT STATUS */}
-          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-            <Text style={styles.statusText}>{item.status}</Text>
-          </View>
+          {/* STATUS */}
+          {/* <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+            <Text style={styles.statusText}>COMPLETED</Text>
+          </View> */}
 
         </View>
       </View>
@@ -125,16 +186,28 @@ const CustomerBookingHistory = () => {
   };
 
 
+  /* ---------------- EMPTY STATE ---------------- */
+  const EmptyState = () => (
+    <View style={styles.empty}>
+      <Ionicons name="calendar-outline" size={60} color="#555" />
+      <Text style={styles.emptyText}>No bookings found</Text>
+    </View>
+  );
+
+  /* ---------------- SKELETON ---------------- */
+  // const Skeleton = () => (
+  //   <View style={styles.skeletonCard} />
+  // );
 
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg} resizeMode="cover">
       <View style={styles.overlay}>
         <SafeAreaView style={styles.container}>
           <Text style={styles.title}>
-            Customer History (Last 7 Days)
+            Customer history
           </Text>
 
-          {WEEKLY_CUSTOMERS.length === 0 ? (
+          {/* {WEEKLY_CUSTOMERS.length === 0 ? (
             <View style={styles.emptyBox}>
               <Ionicons name="people-outline" size={48} color="#777" />
               <Text style={styles.emptyText}>
@@ -148,6 +221,42 @@ const CustomerBookingHistory = () => {
               renderItem={renderItem}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 30 }}
+            />
+          )} */}
+          {loading ? (
+            <>
+              <Skeleton />
+              <Skeleton />
+              <Skeleton />
+              <Skeleton />
+              <Skeleton />
+              <Skeleton />
+            </>
+          ) : (
+            <FlatList
+              data={userList}
+              keyExtractor={(item) => item.bookingId}
+              renderItem={renderItem}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor="#E1B378"
+                />
+              }
+              ListEmptyComponent={<EmptyState />}
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={
+                loadingMore && (
+                  <ActivityIndicator
+                    size="small"
+                    color="#E1B378"
+                    style={{ marginVertical: 20 }}
+                  />
+                )
+              }
+              showsVerticalScrollIndicator={false}
             />
           )}
         </SafeAreaView>
@@ -198,6 +307,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 6,
+    textTransform: "capitalize",
   },
 
   row: {
@@ -252,8 +362,28 @@ const styles = StyleSheet.create({
   barber: {
     color: '#E8B97E',
     fontSize: 13,
-    marginBottom: 6,
+    // marginBottom: 6,
     fontWeight: '600',
+    textTransform: "capitalize",
+    marginLeft: 8,
+  },
+  empty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 80,
+  },
+  emptyText: {
+    color: '#777',
+    fontSize: 14,
+    marginTop: 10,
+  },
+
+  skeletonCard: {
+    height: 110,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 20,
+    marginBottom: 16,
+    opacity: 0.6,
   },
 
 });

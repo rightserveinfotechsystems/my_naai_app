@@ -6,13 +6,17 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { communication } from '../services/communication';
 
-const AddOfflineCustomer = ({ navigation }) => {
+const AddOfflineCustomer = ({ route, navigation }) => {
+  const { salonId } = route.params;
   const [count, setCount] = useState('');
 
+  const [loading, setLoading] = useState(false);
   useLayoutEffect(() => {
     navigation.setOptions({
       title: 'Add Walk-in Customers',
@@ -21,30 +25,49 @@ const AddOfflineCustomer = ({ navigation }) => {
     });
   }, [navigation]);
 
-  const handleAddCustomers = () => {
-    const number = parseInt(count, 10);
-
-    if (!count || isNaN(number) || number <= 0) {
+  const handleAddCustomers = async () => {
+    if (!count || isNaN(count) || count <= 0) {
       Alert.alert(
         'Invalid Number',
         'Please enter a valid number of customers'
       );
       return;
     }
+    setLoading(true);
+    try {
+      const payload = {
+        salonId: salonId,
+        count: Number(count),
+      }
+      console.log("payload", payload);
 
-    // 🔥 Push to backend / queue logic here
-    console.log('Offline customers added:', number);
+      const res = await communication.walkInBooking(payload);
 
-    Alert.alert(
-      'Added to Queue ✅',
-      `${number} walk-in customer(s) added successfully`,
-      [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]
-    );
+      if (res?.status === 'SUCCESS') {
+        Alert.alert(
+          'Success',
+          res?.message || 'Added to queue successfully',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        );
+
+
+      } else {
+        Alert.alert('Error', res?.message || 'failed');
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Something went wrong'
+      );
+
+    } finally {
+      setLoading(false)
+    }
   };
 
   return (
@@ -72,9 +95,22 @@ const AddOfflineCustomer = ({ navigation }) => {
         </View>
 
         {/* SUBMIT */}
-        <TouchableOpacity style={styles.addBtn} onPress={handleAddCustomers}>
-          <Text style={styles.addText}>Add to Queue</Text>
+        <TouchableOpacity
+          style={[
+            styles.addBtn,
+            loading && { opacity: 0.6 },
+          ]}
+          onPress={handleAddCustomers}
+          disabled={loading}
+          activeOpacity={0.8}
+        >
+          {loading ? (
+            <ActivityIndicator color="#000" />
+          ) : (
+            <Text style={styles.addText}>Add to Queue</Text>
+          )}
         </TouchableOpacity>
+
       </View>
     </SafeAreaView>
   );
