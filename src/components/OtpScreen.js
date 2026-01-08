@@ -27,15 +27,18 @@ const OtpScreen = ({ route, navigation }) => {
 
   /* ⏳ TIMER */
   useEffect(() => {
+    if (!canResend && secondsLeft > 0) {
+      const timer = setTimeout(() => {
+        setSecondsLeft(prev => prev - 1);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+
     if (secondsLeft === 0) {
       setCanResend(true);
-      return;
     }
-    const timer = setTimeout(() => {
-      setSecondsLeft(prev => prev - 1);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [secondsLeft]);
+  }, [secondsLeft, canResend]);
 
   /* ✅ VERIFY OTP */
   const verifyOtp = async () => {
@@ -54,18 +57,21 @@ const OtpScreen = ({ route, navigation }) => {
       });
 
       if (response?.status === 'SUCCESS') {
-        console.log("response",response);
-        
-   await AsyncStorage.setItem('mynaai', response?.data?.token);
-   const savedToken = await AsyncStorage.getItem('mynaai');
-   console.log('SAVED TOKEN:', savedToken);
+        console.log("response", response);
 
-   
+        await AsyncStorage.setItem('mynaai', response?.data?.token);
+        const savedToken = await AsyncStorage.getItem('mynaai');
+        console.log('SAVED TOKEN:', savedToken);
+
+
         await AsyncStorage.setItem(
           'mynaaiUser',
           JSON.stringify(response?.data),
         );
-        navigation.replace('Main');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Main' }],
+        });
       } else {
         Alert.alert('Error', response?.message || 'Invalid OTP');
       }
@@ -79,30 +85,38 @@ const OtpScreen = ({ route, navigation }) => {
     }
   };
 
-  /* 🔁 RESEND OTP */
+  /*  RESEND OTP */
+
   const resendOtp = async () => {
-    if (!canResend) return;
+    if (!canResend || loading) return;
+
+    setLoading(true);
 
     try {
-      await communication.sendRegisterOtp({ phoneNumber: mobile });
-      Alert.alert('OTP Sent', 'A new OTP has been sent');
-      setOtp('');
-      setSecondsLeft(RESEND_TIME);
-      setCanResend(false);
-      inputRef.current?.focus();
+      const payload = { phoneNumber: mobile };
+      const res = await communication.sendRegisterOtp(payload);
+
+      if (res?.status === 'SUCCESS') {
+        Alert.alert('OTP code', res?.otp?.toString()); // DEV ONLY
+        setOtp('');
+        setSecondsLeft(RESEND_TIME);
+        setCanResend(false);
+        inputRef.current?.focus();
+      } else {
+        Alert.alert('Error', res?.message || 'Failed to resend OTP');
+      }
     } catch (error) {
-      Alert.alert('Failed', 'Unable to resend OTP');
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Something went wrong'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
       <Text style={styles.title}>Phone Verification</Text>
       <Text style={styles.subtitle}>
         Enter the code sent to +91 {mobile}
@@ -143,67 +157,67 @@ export default OtpScreen;
 
 
 const styles = StyleSheet.create({
-    header: {
-        position: 'absolute',
-        top: 50,
-        left: 16,
-        right: 16,
-        zIndex: 10,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
+  header: {
+    position: 'absolute',
+    top: 50,
+    left: 16,
+    right: 16,
+    zIndex: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
 
-    container: {
-        flex: 1,
-        backgroundColor: '#000',
-        paddingHorizontal: 24,
-        justifyContent: 'center',
-    },
-    title: {
-        color: '#fff',
-        fontSize: 26,
-        fontWeight: '700',
-        textAlign: 'center',
-    },
-    subtitle: {
-        color: '#aaa',
-        fontSize: 14,
-        textAlign: 'center',
-        marginVertical: 14,
-    },
-    otpInput: {
-        backgroundColor: '#1E1E1E',
-        color: '#fff',
-        height: 56,
-        borderRadius: 12,
-        fontSize: 22,
-        letterSpacing: 12,
-        textAlign: 'center',
-        marginVertical: 30,
-    },
-    btn: {
-        backgroundColor: '#E8B97E',
-        height: 54,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    btnText: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#000',
-    },
-    timerText: {
-        color: '#888',
-        textAlign: 'center',
-        marginTop: 20,
-        fontSize: 13,
-    },
-    resend: {
-        color: '#E8B97E',
-        textAlign: 'center',
-        marginTop: 20,
-        fontSize: 14,
-        fontWeight: '600',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+    paddingHorizontal: 24,
+    justifyContent: 'center',
+  },
+  title: {
+    color: '#fff',
+    fontSize: 26,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: '#aaa',
+    fontSize: 14,
+    textAlign: 'center',
+    marginVertical: 14,
+  },
+  otpInput: {
+    backgroundColor: '#1E1E1E',
+    color: '#fff',
+    height: 56,
+    borderRadius: 12,
+    fontSize: 22,
+    letterSpacing: 12,
+    textAlign: 'center',
+    marginVertical: 30,
+  },
+  btn: {
+    backgroundColor: '#E8B97E',
+    height: 54,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  btnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000',
+  },
+  timerText: {
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 13,
+  },
+  resend: {
+    color: '#E8B97E',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });

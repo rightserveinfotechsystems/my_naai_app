@@ -44,9 +44,16 @@ const SalonAccountScreen = ({ navigation }) => {
   const [holidayPickerVisible, setHolidayPickerVisible] = useState(false);
 
   const [barbers, setBarbers] = useState([
-    { id: '1', name: 'Rahul', image: null, status: 'available' },
-    { id: '2', name: 'Ritik', image: null, status: 'available' },
+    { id: '1', name: 'Rahul', image: null, status: 'available', rating: 4 },
+    { id: '2', name: 'Ritik', image: null, status: 'available', rating: 5 },
   ]);
+
+
+  const [services, setServices] = useState([
+    { id: '1', name: 'Hair Cut', price: '150', duration: '30' },
+    { id: '2', name: 'Beard Trim', price: '80', duration: '15' },
+  ]);
+
 
   const [profileData, setProfileData] = useState({});
   const [salonId, setsalonId] = useState(null);
@@ -384,70 +391,169 @@ const SalonAccountScreen = ({ navigation }) => {
               </View>
             ))}
 
+
+            {/* ================= SERVICES ================= */}
+            <Text style={styles.sectionTitle}>Services</Text>
+
+            {services.map((service, index) => (
+              <View key={service.id} style={styles.serviceRow}>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Service Name"
+                  placeholderTextColor="#999"
+                  value={service.name}
+                  onChangeText={text => {
+                    const updated = [...services];
+                    updated[index].name = text;
+                    setServices(updated);
+                  }}
+                />
+
+                <TextInput
+                  style={[styles.input, styles.smallInput]}
+                  placeholder="Price"
+                  keyboardType="numeric"
+                  placeholderTextColor="#999"
+                  value={service.price}
+                  onChangeText={text => {
+                    const updated = [...services];
+                    updated[index].price = text;
+                    setServices(updated);
+                  }}
+                />
+
+                <TextInput
+                  style={[styles.input, styles.smallInput]}
+                  placeholder="Time"
+                  keyboardType="numeric"
+                  placeholderTextColor="#999"
+                  value={service.duration}
+                  onChangeText={text => {
+                    const updated = [...services];
+                    updated[index].duration = text;
+                    setServices(updated);
+                  }}
+                />
+
+                <TouchableOpacity
+                  onPress={() =>
+                    setServices(services.filter(s => s.id !== service.id))
+                  }
+                >
+                  <Ionicons name="trash-outline" size={20} color="#E53935" />
+                </TouchableOpacity>
+              </View>
+            ))}
+
+            <TouchableOpacity
+              style={styles.addBtn}
+              onPress={() =>
+                setServices([
+                  ...services,
+                  {
+                    id: Date.now().toString(),
+                    name: '',
+                    price: '',
+                    duration: '',
+                  },
+                ])
+              }
+            >
+              <Text style={styles.addText}>+ Add Service</Text>
+            </TouchableOpacity>
+
+
             {/* BARBERS */}
             <Text style={styles.sectionTitle}>Barbers</Text>
 
             {barbers.map((b, index) => (
-              <View key={b.id} style={styles.barberRow}>
-                <TouchableOpacity
-                  onPress={() =>
-                    pickImage(uri => {
-                      const updated = [...barbers];
-                      updated[index].image = uri;
-                      setBarbers(updated);
-                    })
-                  }
-                >
-                  <Image
-                    source={
-                      b.image
-                        ? { uri: b.image }
-                        : require('../assets/my_naai.jpeg')
-                    }
-                    style={styles.barberImg}
-                  />
-                </TouchableOpacity>
-
-                <TextInput
-                  style={[styles.input, { flex: 1 }]}
-                  value={b.name}
-                  onChangeText={text => {
-                    const updated = [...barbers];
-                    updated[index].name = text;
-                    setBarbers(updated);
-                  }}
-                />
-
-                <View style={{ flexDirection: 'row', gap: 6 }}>
-                  {['available', 'busy', 'leave'].map(s => (
-                    <TouchableOpacity
-                      key={s}
-                      style={[
-                        styles.statusPill,
-                        {
-                          backgroundColor:
-                            b.status === s
-                              ? s === 'available'
-                                ? '#4CAF50'
-                                : s === 'busy'
-                                  ? '#FFC107'
-                                  : '#E53935'
-                              : '#333',
-                        },
-                      ]}
-                      onPress={() => {
+              <View key={b.id} style={styles.barberCard}>
+                {/* TOP ROW */}
+                <View style={styles.barberTopRow}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      pickImage(uri => {
                         const updated = [...barbers];
-                        updated[index].status = s;
+                        updated[index].image = uri;
                         setBarbers(updated);
-                      }}
-                    >
-                      <Text style={styles.statusPillText}>
-                        {s.toUpperCase()}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                      })
+                    }
+                  >
+                    <Image
+                      source={
+                        b.image
+                          ? { uri: b.image }
+                          : require('../assets/my_naai.jpeg')
+                      }
+                      style={styles.barberImg}
+                    />
+                  </TouchableOpacity>
+
+                  <TextInput
+                    style={[styles.input, styles.barberNameInput]}
+                    placeholder="Barber Name"
+                    placeholderTextColor="#999"
+                    value={b.name}
+                    onChangeText={text => {
+                      const updated = [...barbers];
+                      updated[index].name = text;
+                      setBarbers(updated);
+                    }}
+                  />
+                </View>
+
+                {/* BOTTOM ROW */}
+                <View style={styles.barberBottomRow}>
+                  <TextInput
+                    style={styles.ratingInput}
+                    placeholder="Rating (0–5)"
+                    placeholderTextColor="#999"
+                    keyboardType="decimal-pad"
+                    maxLength={3}
+                    value={String(b.rating)}
+                    onChangeText={text => {
+                      if (text === '' || (/^\d(\.\d)?$/.test(text) && Number(text) <= 5)) {
+                        const updated = [...barbers];
+                        updated[index].rating = text;
+                        setBarbers(updated);
+                      }
+                    }}
+                  />
+                  <Text style={{ color: '#777', fontSize: 11, marginTop: 4 }}>
+                    Out of 5
+                  </Text>
+
+
+                  <View style={styles.statusGroup}>
+                    {['available', 'leave'].map(s => (
+                      <TouchableOpacity
+                        key={s}
+                        style={[
+                          styles.statusPill,
+                          {
+                            backgroundColor:
+                              b.status === s
+                                ? s === 'available'
+                                  ? '#4CAF50'
+                                  : '#E53935'
+                                : '#333',
+                          },
+                        ]}
+                        onPress={() => {
+                          const updated = [...barbers];
+                          updated[index].status = s;
+                          setBarbers(updated);
+                        }}
+                      >
+                        <Text style={styles.statusPillText}>
+                          {s === 'available' ? 'AVAILABLE' : 'ON LEAVE'}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 </View>
               </View>
+
             ))}
 
             <TouchableOpacity
@@ -460,7 +566,9 @@ const SalonAccountScreen = ({ navigation }) => {
                     name: '',
                     image: null,
                     status: 'available',
+                    rating: 0,
                   },
+
                 ])
               }
             >
@@ -646,7 +754,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',
     justifyContent: 'center',
-    padding: 16,
+    padding: 5,
   },
 
   modalCard: {
@@ -776,6 +884,7 @@ const styles = StyleSheet.create({
   modalRow: {
     flexDirection: 'row',
     marginTop: 14,
+    paddingBottom: 40,
   },
 
   cancelBtn: {
@@ -829,4 +938,70 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 30,
   },
+  serviceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+
+  smallInput: {
+    width: 70,
+    textAlign: 'center',
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 4,
+  },
+  ratingInput: {
+    width: 80,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+
+
+  barberCard: {
+    backgroundColor: '#1F1F1F',
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 12,
+  },
+
+  barberTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+
+  barberNameInput: {
+    flex: 1,
+    marginBottom: 0,
+  },
+
+  barberBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+
+  ratingInput: {
+    width: 90,
+    textAlign: 'center',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    paddingVertical: 8,
+    color: '#fff',
+    fontWeight: '700',
+  },
+
+  statusGroup: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+
+
+
 });

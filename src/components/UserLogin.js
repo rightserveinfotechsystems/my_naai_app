@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -17,11 +17,17 @@ import { communication } from '../services/communication';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
+
 const UserLogin = ({ navigation }) => {
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const RESEND_TIME = 30;
+
+  const [secondsLeft, setSecondsLeft] = useState(RESEND_TIME);
+  const [canResend, setCanResend] = useState(false);
+
 
   /* ---------------- VALIDATIONS ---------------- */
   const validateMobile = () => {
@@ -48,9 +54,14 @@ const UserLogin = ({ navigation }) => {
     try {
       const payload = { phoneNumber: mobile };
       const res = await communication.userLogin(payload);
+
       if (res?.status === 'SUCCESS') {
         setOtpSent(true);
-        Alert.alert('OTP Sent', res?.otp);
+        setOtp('');
+        setSecondsLeft(RESEND_TIME);
+        setCanResend(false);
+
+        Alert.alert('OTP Sent', res?.otp); // dev only
       } else {
         Alert.alert('Error', res?.message || 'Failed to send OTP');
       }
@@ -63,6 +74,7 @@ const UserLogin = ({ navigation }) => {
       setLoading(false);
     }
   };
+
 
   /* ---------------- VERIFY OTP ---------------- */
   const verifyOtp = async () => {
@@ -112,6 +124,19 @@ const UserLogin = ({ navigation }) => {
     }
   };
 
+  useEffect(() => {
+    if (otpSent && !canResend && secondsLeft > 0) {
+      const timer = setTimeout(() => {
+        setSecondsLeft(prev => prev - 1);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+
+    if (secondsLeft === 0) {
+      setCanResend(true);
+    }
+  }, [otpSent, secondsLeft, canResend]);
 
 
   return (
@@ -178,11 +203,22 @@ const UserLogin = ({ navigation }) => {
             </TouchableOpacity>
 
             {/* RESEND OTP */}
-            {/* {otpSent && (
-              <TouchableOpacity onPress={sendOtp} style={{ marginTop: 16 }}>
-                <Text style={styles.resend}>Resend OTP</Text>
-              </TouchableOpacity>
-            )} */}
+            {otpSent && (
+              !canResend ? (
+                <Text style={styles.timerText}>
+                  Resend OTP in 00:{secondsLeft < 10 ? `0${secondsLeft}` : secondsLeft}
+                </Text>
+              ) : (
+                <TouchableOpacity
+                  onPress={sendOtp}
+                  style={{ marginTop: 16 }}
+                  disabled={loading}
+                >
+                  <Text style={styles.resend}>Resend OTP</Text>
+                </TouchableOpacity>
+              )
+            )}
+
 
             {/* FOOTER */}
             {!otpSent && (
@@ -313,4 +349,11 @@ const styles = StyleSheet.create({
     color: '#E8B97E',
     fontWeight: '700',
   },
+  timerText: {
+    color: '#9E9E9E',
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 16,
+  },
+
 });

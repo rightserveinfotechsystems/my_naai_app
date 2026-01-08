@@ -27,23 +27,26 @@ const SalonOtpScreen = ({ route, navigation }) => {
 
     // ⏳ Countdown timer
     useEffect(() => {
-        if (secondsLeft === 0) {
-            setCanResend(true);
-            return;
+        if (!canResend && secondsLeft > 0) {
+            const timer = setTimeout(() => {
+                setSecondsLeft(prev => prev - 1);
+            }, 1000);
+
+            return () => clearTimeout(timer);
         }
 
-        const timer = setTimeout(() => {
-            setSecondsLeft(prev => prev - 1);
-        }, 1000);
+        if (secondsLeft === 0) {
+            setCanResend(true);
+        }
+    }, [secondsLeft, canResend]);
 
-        return () => clearTimeout(timer);
-    }, [secondsLeft]);
 
     const verifyOtp = async () => {
         if (otp.length !== 6) {
             Alert.alert('Invalid OTP', 'Please enter 6-digit OTP');
             return;
         }
+
         setLoading(true);
 
         try {
@@ -52,23 +55,22 @@ const SalonOtpScreen = ({ route, navigation }) => {
                 otp: otp.toString(),
                 deviceToken: 'test-device-token-123',
             };
-            console.log("payload", payload);
 
             const res = await communication.verifySalonLogin(payload);
-            console.log("res", res);
 
             if (res?.status === 'SUCCESS') {
-                console.log("token", res?.data?.token);
-                console.log("mynaaiUser", res?.data);
-
                 if (res?.data?.token) {
                     await AsyncStorage.setItem('mynaai', res?.data?.token);
                     await AsyncStorage.setItem(
                         'mynaaiUser',
-                        JSON.stringify(res?.data),
+                        JSON.stringify(res?.data)
                     );
                 }
-                navigation.replace('Salon');
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Salon' }],
+                });
+
             } else {
                 Alert.alert('Invalid OTP', res?.message || 'OTP verification failed');
             }
@@ -82,24 +84,36 @@ const SalonOtpScreen = ({ route, navigation }) => {
         }
     };
 
-    const resendOtp = () => {
-        if (!canResend) return;
+    const resendOtp = async () => {
+        if (!canResend || loading) return;
 
-        console.log('Resending OTP to', mobile);
+        setLoading(true);
 
-        setSecondsLeft(RESEND_TIME);
-        setCanResend(false);
-        setOtp('');
-        inputRef.current?.focus();
+        try {
+            const payload = { phoneNumber: mobile };
+            const res = await communication.SalonLogin(payload);
+
+            if (res?.status === 'SUCCESS') {
+                Alert.alert('OTP code', res?.otp?.toString()); // DEV ONLY
+                setOtp('');
+                setSecondsLeft(RESEND_TIME);
+                setCanResend(false);
+                inputRef.current?.focus();
+            } else {
+                Alert.alert('Error', res?.message || 'Failed to resend OTP');
+            }
+        } catch (error) {
+            Alert.alert(
+                'Error',
+                error?.response?.data?.message || 'Something went wrong'
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color="#fff" />
-                </TouchableOpacity>
-            </View>
             <Text style={styles.title}>Phone Verification</Text>
             <Text style={styles.subtitle}>
                 Enter the code sent to +91 {mobile}
@@ -115,7 +129,11 @@ const SalonOtpScreen = ({ route, navigation }) => {
                 autoFocus
             />
 
-            <TouchableOpacity style={styles.btn} onPress={verifyOtp}>
+            <TouchableOpacity
+                style={styles.btn}
+                onPress={verifyOtp}
+                disabled={loading}
+            >
                 {loading ? (
                     <ActivityIndicator color="#000" />
                 ) : (
@@ -123,15 +141,19 @@ const SalonOtpScreen = ({ route, navigation }) => {
                 )}
             </TouchableOpacity>
 
+
             {/* ⏱ Countdown / Resend */}
             {!canResend ? (
                 <Text style={styles.timerText}>
                     Resend code in 00:{secondsLeft < 10 ? `0${secondsLeft}` : secondsLeft}
                 </Text>
             ) : (
-                <TouchableOpacity onPress={resendOtp}>
-                    <Text style={styles.resend}>Resend a new Code</Text>
+                <TouchableOpacity disabled={loading} onPress={resendOtp}>
+                    <Text style={styles.resend}>
+                        {loading ? 'Sending...' : 'Resend a new Code'}
+                    </Text>
                 </TouchableOpacity>
+
             )}
         </SafeAreaView>
     );
