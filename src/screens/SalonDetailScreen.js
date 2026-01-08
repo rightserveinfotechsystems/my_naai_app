@@ -20,7 +20,9 @@ import { communication, getServerUrl } from '../services/communication';
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 const { width } = Dimensions.get('window');
 
-
+const GOLD = '#E8B97E';
+const DARK = '#121212';
+// const CARD = '#1E1E1E';
 
 
 const SalonDetailScreen = ({ route, navigation }) => {
@@ -149,20 +151,11 @@ const SalonDetailScreen = ({ route, navigation }) => {
 
   if (!salonDetails) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: '#fff' }}>Loading...</Text>
-      </View>
+      <SafeAreaView style={[styles.container, { justifyContent: 'center' }]}>
+        <ActivityIndicator size="large" color={GOLD} />
+      </SafeAreaView>
     );
   }
-
-  // const images = salonDetails.imagesArray
-  //   ? [{ uri: salonDetails.imagesArray }]
-  //   : [];
-
-  //   console.log("images",images);
-
-
-
 
   const services = salonDetails?.services || [];
   const barbers = salonDetails?.barbers || [];
@@ -203,7 +196,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                   <View>
                     <Text style={styles.headerTitle}>{salonDetails.salonName}</Text>
                     <Text style={styles.salonType}>
-                      {salonDetails.genderType || ''}
+                      {salonDetails.genderType || ''} SALON
                     </Text>
                   </View>
                 </View>
@@ -438,13 +431,18 @@ export default SalonDetailScreen;
 
 /* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  // container: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: DARK,
+    padding: 14,
+  },
   bg: { flex: 1 },
   overlay: { flex: 1, backgroundColor: '#1E1E1E' },
 
   header: {
     position: 'absolute',
-    top: 50,
+    top: 30,
     left: 16,
     right: 16,
     zIndex: 10,

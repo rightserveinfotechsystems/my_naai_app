@@ -21,6 +21,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { communication, getServerUrl } from '../services/communication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CITIES from '../utilities/CitiesArray';
+
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
@@ -28,13 +30,9 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 const AD_WIDTH = SCREEN_WIDTH - 28;
 
 /* -------------------- ADS -------------------- */
-const ADS = [
-  require('../assets/naai/ad3.jpg'),
-  require('../assets/naai/ad2.jpg'),
-  require('../assets/naai/ad3.jpg'),
-];
 
-const CITIES = ['All', 'Katol', 'Warud'];
+
+// const CITIES = ['All', 'Katol', 'Warud'];
 
 /* -------------------- API DATA CONVERTER -------------------- */
 const convertSalonApiData = (apiData = []) => {
@@ -43,7 +41,6 @@ const convertSalonApiData = (apiData = []) => {
     name: item.salonName,
     address: `${item.addressLine1}, ${item.city}`,
     location: item.city,
-
     rating: Number(item.ratingAverage),
     reviews: item.totalReviews,
     phoneNumber: item.phoneNumber,
@@ -51,11 +48,8 @@ const convertSalonApiData = (apiData = []) => {
     waitNumber: item.queues?.[0]?.queueNumber ?? '_',
     // waitTime: item.isOpen ? '25 mins' : '—',
     waitTime: item.isOpen ? item.totalWaitTime?.display : 'Closed',
-
     imageUrl: item.imageUrl,
     imagesArray: item.imagesArray || [],
-
-
     raw: item,
   }));
 };
@@ -172,8 +166,6 @@ const NaaiDashboard = ({ navigation }) => {
     }
   };
 
-
-
   useEffect(() => {
     userByIdInfo()
     userAds()
@@ -213,8 +205,6 @@ const NaaiDashboard = ({ navigation }) => {
       getSalonList(nextPage);
     }
   };
-
-
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -259,20 +249,12 @@ const NaaiDashboard = ({ navigation }) => {
     }, [])
   );
 
-
-
-
-
   /* -------- SALON CARD -------- */
   const renderSalon = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => navigation.navigate('SalonDetail', { salonId: item.id })}
     >
-      {/* <Image
-  source={{ uri: `${getServerUrl()}${item.imageUrl}` }}
-  style={styles.image}
-/> */}
 
       <Image
         source={
@@ -299,7 +281,9 @@ const NaaiDashboard = ({ navigation }) => {
           </View>
 
           <Text style={styles.address}>{item.address}</Text>
-          <TouchableOpacity style={styles.row}>
+          <TouchableOpacity style={styles.row}
+            onPress={() => Linking.openURL(`tel:${item?.phoneNumbere}`)}
+          >
             <Ionicons name="call-outline" size={18} color="#E1B378" />
             <Text style={styles.linkText}>{item?.phoneNumber}</Text>
           </TouchableOpacity>
@@ -327,6 +311,8 @@ const NaaiDashboard = ({ navigation }) => {
             { backgroundColor: item.open ? '#E1B378' : '#555' },
           ]}
           disabled={!item.open}
+          onPress={() => navigation.navigate('SalonDetail', { salonId: item.id })}
+
         >
           <Text style={styles.bookText}>
             {item?.open ? 'Book Now' : 'Closed'}
@@ -416,7 +402,7 @@ const NaaiDashboard = ({ navigation }) => {
                 style={styles.adSlider}
                 renderItem={({ item }) => (
                   <Image
-                    source={{ uri: `${getServerUrl()}${item}` }}
+                    source={{ uri: `${getServerUrl()}/getfiles/${item}` }}
                     style={styles.adImage}
                   />
                 )}
@@ -615,8 +601,8 @@ const styles = StyleSheet.create({
   waitText: { fontSize: 12, color: '#E1B378' },
 
   bookBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
     borderRadius: 20,
     marginLeft: 10,
   },

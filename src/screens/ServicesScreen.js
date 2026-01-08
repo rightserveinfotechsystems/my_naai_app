@@ -201,14 +201,15 @@ const ServicesScreen = () => {
             <View style={styles.dateRow}>
               <Ionicons name="calendar-outline" size={14} color="#E1B378" />
               <Text style={styles.dateText}>
-                {formatDateReadable(item.bookingDate)} • {formatTime(item.bookingTime)}
+                {formatDateReadable(item.bookingDate)}
+                {/* • {formatTime(item.bookingTime)} */}
               </Text>
             </View>
 
           </View>
 
           <View style={[styles.statusBtn, { backgroundColor: btnColor }]}>
-            <Text style={styles.statusBtnText}>{item.status}</Text>
+            <Text style={styles.statusBtnText}>{item.status === "pending" ? "Pending" : "Completed"}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -349,13 +350,13 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   statusBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: 4,
+    paddingVertical: 3,
+    borderRadius: 10,
   },
   statusBtnText: {
     color: '#000',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   barberRow: {

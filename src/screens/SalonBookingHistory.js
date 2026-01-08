@@ -170,7 +170,7 @@ const CustomerBookingHistory = () => {
               <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
               <Text style={styles.subText}>
                 {formatDateReadable(item.bookingDate)}
-                {item.bookingTime ? ` • ${formatTime(item.bookingTime)}` : ''}
+                {/* {item.bookingTime ? ` • ${formatTime(item.bookingTime)}` : ''} */}
               </Text>
             </View>
           </View>
