@@ -9,7 +9,6 @@ import {
   TextInput,
   Alert,
   Image,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,7 +16,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { launchImageLibrary } from 'react-native-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { communication } from '../services/communication';
+import { communication, getServerUrl } from '../services/communication';
+import { DAYS } from '../utilities/DaysArray';
 
 const GOLD = '#E8B97E';
 const DARK = '#121212';
@@ -35,33 +35,21 @@ const SalonAccountScreen = ({ navigation }) => {
   const [salonName, setSalonName] = useState('');
   const [salonAddress, setSalonAddress] = useState('');
   const [salonImage, setSalonImage] = useState(null);
-
   const [openTime, setOpenTime] = useState(new Date());
   const [closeTime, setCloseTime] = useState(new Date());
   const [pickerType, setPickerType] = useState(null);
+  const [holiday, setHoliday] = useState(null);
 
-  const [holidays, setHolidays] = useState([]);
   const [holidayPickerVisible, setHolidayPickerVisible] = useState(false);
-
-  const [barbers, setBarbers] = useState([
-    { id: '1', name: 'Rahul', image: null, status: 'available', rating: 4 },
-    { id: '2', name: 'Ritik', image: null, status: 'available', rating: 5 },
-  ]);
-
-
-  const [services, setServices] = useState([
-    { id: '1', name: 'Hair Cut', price: '150', duration: '30' },
-    { id: '2', name: 'Beard Trim', price: '80', duration: '15' },
-  ]);
-
-
+  const [barbers, setBarbers] = useState([]);
+  const [services, setServices] = useState([]);
   const [profileData, setProfileData] = useState({});
   const [salonId, setsalonId] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
 
 
-  const address = `${profileData?.addressLine1},${profileData?.city}`
+  const address = `${profileData?.addressLine1}`
 
 
   /* ---------------- GET USER FROM STORAGE ---------------- */
@@ -91,9 +79,67 @@ const SalonAccountScreen = ({ navigation }) => {
       const response = await communication.salonProfile({ salonId: id });
 
       if (response?.status === 'SUCCESS') {
-        setProfileData(response.data);
-        setIsOpen(response.data?.isOpen);
+        const data = response.data;
+
+        setProfileData(data);
+        setIsOpen(data?.isOpen);
+
+        // BASIC INFO
+        setSalonName(data?.salonName || '');
+        setSalonAddress(
+          `${data?.addressLine1 || ''}`
+        );
+
+        // SALON IMAGE
+        setSalonImage(data?.imageUrl || null);
+
+        // BUSINESS HOURS
+        if (data?.businessHours?.length) {
+          const bh = data.businessHours[0];
+          setOpenTime(new Date(`1970-01-01T${bh.openingTime}`));
+          setCloseTime(new Date(`1970-01-01T${bh.closingTime}`));
+
+          // convert everything to number & remove invalid
+          let holidayValue = null;
+
+          if (bh.holidayDays?.length > 0) {
+            const day = bh.holidayDays[0];
+
+            holidayValue =
+              typeof day === 'number'
+                ? day
+                : DAYS.find(d => d.label === day)?.value ?? null;
+          }
+
+          setHoliday(holidayValue);
+
+
+        }
+
+
+
+        // BARBERS
+        setBarbers(
+          data.barbers.map(b => ({
+            id: b.barberId,
+            name: b.fullName,
+            image: b.profileImageUrl || null,
+            status: b.isAvailable ? 'available' : 'leave',
+            rating: b.ratingAverage || '0.0', // ✅ numeric only
+          }))
+        );
+
+        // SERVICES
+        setServices(
+          data.services.map(s => ({
+            id: s.serviceId,
+            name: s.serviceName,
+            price: s.price,
+            duration: String(s.durationMinutes),
+          }))
+        );
       }
+
     } catch (error) {
       Alert.alert(
         'Error',
@@ -105,31 +151,174 @@ const SalonAccountScreen = ({ navigation }) => {
   };
 
 
+  const dayMap = {
+    Sunday: 0,
+    Monday: 1,
+    Tuesday: 2,
+    Wednesday: 3,
+    Thursday: 4,
+    Friday: 5,
+    Saturday: 6,
+  };
+
+  const mapHolidays = (days) => days.map(d => dayMap[d]);
+
+  const formatTimeForApi = (date) => {
+    return date.toTimeString().slice(0, 8);
+  };
+
+
+  const uploadImages = async (fileUri) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', {
+        uri: fileUri,
+        type: 'image/jpeg', // adjust if needed
+        name: `salon_${Date.now()}.jpg`,
+      });
+
+
+      const response = await communication.uploadImages(formData);
+
+
+      if (response.data?.status === 'SUCCESS') {
+        return response.data.filePath; // returned path to use in payload
+      } else {
+        throw new Error(response.data?.message || 'Upload failed');
+      }
+    } catch (error) {
+      console.log('Upload Error:', error);
+      throw error;
+    }
+  };
+
+
   /* ---------------- UPDATE PROFILE ---------------- */
-  // const updateProfile = async () => {
-  //   const payload = {
-  //     userId,
-  //     fullName: name,
-  //     phoneNumber: mobile,
-  //     email: profileData?.email || '',
-  //     profileImageUrl: profileData?.profileImageUrl || '',
-  //   };
+  const handleSaveProfile = async () => {
+    try {
+      setProfileLoading(true);
 
-  //   try {
-  //     const response = await communication.updateProfile(payload);
+      /* ================= SERVICES ================= */
+      // Helper to validate GUID
+      const isValidGuid = (id) =>
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-  //     if (response?.status === 'SUCCESS') {
-  //       setEditVisible(false);
-  //       await userProfile(userId);
-  //       Alert.alert('Success', 'Profile updated successfully');
-  //     }
-  //   } catch (error) {
-  //     Alert.alert(
-  //       'Error',
-  //       error?.response?.data?.message || 'Failed to update profile'
-  //     );
-  //   }
-  // };
+      // Existing services (only valid GUIDs)
+      const existingServices = services
+        .filter(s => isValidGuid(s.id))
+        .map(s => ({
+          serviceId: s.id,
+          serviceName: s.name,
+          durationMinutes: Number(s.duration) || 0,
+          price: String(s.price || 0),
+        }));
+
+      // New services (anything else)
+      const newServices = services
+        .filter(s => !isValidGuid(s.id))
+        .map(s => ({
+          serviceName: s.name || 'New Service',
+          durationMinutes: Number(s.duration) || 0,
+          price: String(s.price || 0),
+          description: s.description?.trim() || 'No description', // ✅ must not be empty
+        }));
+
+      // Existing barbers (valid GUIDs)
+      const existingBarbers = await Promise.all(
+        barbers
+          .filter(b => isValidGuid(b.id))
+          .map(async b => ({
+            barberId: b.id,
+            profileImageUrl:
+              b.image?.startsWith('file://')
+                ? await uploadImages(b.image)
+                : b.image,
+            ratingAverage: String(b.rating || '0.0'),
+          }))
+      );
+
+      const newBarbers = await Promise.all(
+        barbers
+          .filter(b => !isValidGuid(b.id))
+          .map(async b => ({
+            fullName: b.name,
+            profileImageUrl:
+              b.image?.startsWith('file://')
+                ? await uploadImages(b.image)
+                : null,
+            ratingAverage: String(b.rating || '0.0'),
+          }))
+      );
+
+      // Final payload
+      const imagePath =
+        salonImage && salonImage.startsWith('file://')
+          ? await uploadImages(salonImage)
+          : salonImage; // already uploaded path
+
+      const imagesArray = imagePath ? [imagePath] : [];
+
+      const payload = {
+        salonId,
+        salonName,
+        ownerName: profileData.ownerName,
+        phoneNumber: profileData.phoneNumber,
+        email: profileData.email,
+        addressLine1: salonAddress,
+        addressLine2: '',
+        city: profileData.city,
+        state: profileData.state,
+        pincode: profileData.pincode,
+        genderType: profileData.genderType || 'UNISEX',
+        isActive: true,
+
+        imageUrl: imagePath,
+        imagesArray, // ✅ THIS FIXES THE ERROR
+
+        existingServices,
+        newServices,
+
+        existingBarbers,
+        newBarbers,
+
+        businessHours: [
+          {
+            scheduleId: profileData.businessHours?.[0]?.scheduleId,
+            openingTime: formatTimeForApi(openTime),
+            closingTime: formatTimeForApi(closeTime),
+            breakStartTime: '13:00:00',
+            breakEndTime: '15:00:00',
+            holidayDays: holiday !== null ? [holiday] : [],
+          },
+        ],
+      };
+
+
+      console.log("payload", payload);
+      const response = await communication.updateSalonProfile(payload);
+
+      if (response?.status === 'SUCCESS') {
+        Alert.alert('Success', 'Salon profile updated successfully');
+        setEditVisible(false);
+        salonProfile(salonId);
+      } else {
+        Alert.alert('Error', response?.message || 'Update failed');
+        console.log('Error', response?.message || 'Update failed');
+      }
+
+    } catch (error) {
+      Alert.alert(
+        'Errors',
+        error?.response?.data?.message || 'Something went wrong'
+      );
+      console.log(
+        'Error',
+        error?.response?.data?.message || 'Something went wrong'
+      );
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   /* ---------------- EFFECTS ---------------- */
   useEffect(() => {
@@ -142,6 +331,11 @@ const SalonAccountScreen = ({ navigation }) => {
     }
   }, [salonId]);
 
+  const getImageSource = (path) => {
+    return path
+      ? { uri: `${getServerUrl()}${path}` }
+      : require('../assets/my_naai.jpeg');
+  };
 
   /* ---------------- LOGOUT ---------------- */
   const handleLogout = () => {
@@ -173,7 +367,7 @@ const SalonAccountScreen = ({ navigation }) => {
   const formatTime = date =>
     date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  const formatDate = date => date.toISOString().split('T')[0];
+  // const formatDate = date => date.toISOString().split('T')[0];
 
   /* ---------------- IMAGE PICKER ---------------- */
   const pickImage = callback => {
@@ -187,6 +381,12 @@ const SalonAccountScreen = ({ navigation }) => {
       callback(asset.uri);
     });
   };
+
+  const selectHoliday = dayValue => {
+    setHoliday(Number(dayValue));
+    setHolidayPickerVisible(false);
+  };
+
 
   /* ---------------- SALON TOGGLE ---------------- */
   const handleToggleSalon = () => {
@@ -233,24 +433,21 @@ const SalonAccountScreen = ({ navigation }) => {
     );
   }
 
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
 
         {/* PROFILE */}
         <View style={styles.profileCard}>
-          {/* <TouchableOpacity onPress={() => pickImage(setSalonImage)}> */}
+
           <Image
             source={
               salonImage
-                ? { uri: salonImage }
+                ? { uri: `${getServerUrl()}/getfiles/${salonImage}` }
                 : require('../assets/my_naai.jpeg')
             }
             style={styles.salonImage}
           />
-          {/* <Text style={styles.changeImg}>Change Image</Text> */}
-          {/* </TouchableOpacity> */}
 
           <Text style={styles.name}>
             {profileData?.salonName || ''}
@@ -319,14 +516,16 @@ const SalonAccountScreen = ({ navigation }) => {
             <View style={styles.profileCard}>
 
               <TouchableOpacity onPress={() => pickImage(setSalonImage)}>
+
                 <Image
                   source={
                     salonImage
-                      ? { uri: salonImage }
+                      ? { uri: `${getServerUrl()}/getfiles/${salonImage}` }
                       : require('../assets/my_naai.jpeg')
                   }
                   style={styles.salonImage}
                 />
+
                 <Text style={styles.changeImg}>Change Image</Text>
               </TouchableOpacity>
             </View>
@@ -368,28 +567,48 @@ const SalonAccountScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            {/* HOLIDAYS */}
-            <Text style={styles.sectionTitle}>Holidays</Text>
+            {/* Week Off */}
+            <Text style={styles.sectionTitle}>Week Off</Text>
 
             <TouchableOpacity
-              style={styles.timeBtn}
-              onPress={() => setHolidayPickerVisible(true)}
+              style={styles.addBtn}
+              onPress={() => setHolidayPickerVisible(prev => !prev)}
             >
-              <Text style={styles.timeText}>Add Holiday</Text>
+              <Text style={styles.addText}>
+                {holiday !== null
+                  ? `Week Off: ${DAYS.find(d => d.value === holiday)?.label}`
+                  : '+ Add Week Off'}
+              </Text>
+
+
+
             </TouchableOpacity>
 
-            {holidays.map(date => (
-              <View key={date} style={styles.holidayRow}>
-                <Text style={styles.holidayText}>{date}</Text>
-                <TouchableOpacity
-                  onPress={() =>
-                    setHolidays(holidays.filter(d => d !== date))
-                  }
-                >
-                  <Ionicons name="close-circle" size={20} color="#E53935" />
-                </TouchableOpacity>
+            {holidayPickerVisible && (
+              <View style={styles.dropdown}>
+                {DAYS.map(day => (
+                  <TouchableOpacity
+                    key={day.value}
+                    style={styles.dropdownItem}
+                    onPress={() => selectHoliday(day.value)}
+                  >
+                    <Ionicons
+                      name={
+                        holiday === day.value
+                          ? 'radio-button-on'
+                          : 'radio-button-off'
+                      }
+                      size={18}
+                      color={holiday === day.value ? '#4CAF50' : '#999'}
+                    />
+                    <Text style={styles.dropdownText}>{day.label}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-            ))}
+            )}
+
+
+
 
 
             {/* ================= SERVICES ================= */}
@@ -435,13 +654,13 @@ const SalonAccountScreen = ({ navigation }) => {
                   }}
                 />
 
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   onPress={() =>
                     setServices(services.filter(s => s.id !== service.id))
                   }
                 >
                   <Ionicons name="trash-outline" size={20} color="#E53935" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
             ))}
 
@@ -479,14 +698,18 @@ const SalonAccountScreen = ({ navigation }) => {
                       })
                     }
                   >
+
                     <Image
                       source={
                         b.image
-                          ? { uri: b.image }
+                          ? { uri: `${getServerUrl()}/getfiles/${b.image}` }
                           : require('../assets/my_naai.jpeg')
                       }
                       style={styles.barberImg}
                     />
+
+
+
                   </TouchableOpacity>
 
                   <TextInput
@@ -586,7 +809,8 @@ const SalonAccountScreen = ({ navigation }) => {
 
               <TouchableOpacity
                 style={styles.saveBtn}
-                onPress={() => setEditVisible(false)}
+                onPress={handleSaveProfile}
+
               >
                 <Text style={styles.saveText}>Save</Text>
               </TouchableOpacity>
@@ -608,19 +832,7 @@ const SalonAccountScreen = ({ navigation }) => {
         />
       )}
 
-      {holidayPickerVisible && (
-        <DateTimePicker
-          value={new Date()}
-          mode="date"
-          onChange={(e, d) => {
-            setHolidayPickerVisible(false);
-            if (d) {
-              const f = formatDate(d);
-              if (!holidays.includes(f)) setHolidays([...holidays, f]);
-            }
-          }}
-        />
-      )}
+
     </SafeAreaView>
   );
 };
@@ -956,9 +1168,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   ratingInput: {
-    width: 80,
+    width: 90,
     textAlign: 'center',
-    marginTop: 4,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    paddingVertical: 8,
+    color: '#fff',
+    fontWeight: '700',
   },
 
 
@@ -987,21 +1203,32 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-  ratingInput: {
-    width: 90,
-    textAlign: 'center',
-    backgroundColor: '#2A2A2A',
-    borderRadius: 12,
-    paddingVertical: 8,
-    color: '#fff',
-    fontWeight: '700',
-  },
+
 
   statusGroup: {
     flexDirection: 'row',
     gap: 6,
   },
 
+  dropdown: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 14,
+    padding: 10,
+    marginBottom: 10,
+  },
+
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    gap: 10,
+  },
+
+  dropdownText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
 
 
 });

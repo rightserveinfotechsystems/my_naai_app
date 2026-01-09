@@ -34,7 +34,8 @@ local.properties
 *.keystore
 !debug.keystore
 .kotlin/
-
+# Gradle local properties & secrets
+gradle.properties
 # node.js
 #
 node_modules/

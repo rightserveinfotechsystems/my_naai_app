@@ -321,6 +321,19 @@ export const communication = {
             throw error;
         }
     },
-
+    //
+    uploadImages: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/upload/upload-image`, payload, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
 };
 
