@@ -80,6 +80,8 @@ const SalonAccountScreen = ({ navigation }) => {
 
       if (response?.status === 'SUCCESS') {
         const data = response.data;
+        console.log("data", data);
+
 
         setProfileData(data);
         setIsOpen(data?.isOpen);
@@ -124,10 +126,11 @@ const SalonAccountScreen = ({ navigation }) => {
             id: b.barberId,
             name: b.fullName,
             image: b.profileImageUrl || null,
-            status: b.isAvailable ? 'available' : 'leave',
-            rating: b.ratingAverage || '0.0', // ✅ numeric only
+            isAvailable: b.isAvailable, // ✅ BOOLEAN
+            rating: b.ratingAverage,
           }))
         );
+
 
         // SERVICES
         setServices(
@@ -195,6 +198,20 @@ const SalonAccountScreen = ({ navigation }) => {
 
   /* ---------------- UPDATE PROFILE ---------------- */
   const handleSaveProfile = async () => {
+
+    // ================= BARBER VALIDATION =================
+    const emptyBarber = barbers.find(
+      b => !b.name || !b.name.trim()
+    );
+
+    if (emptyBarber) {
+      Alert.alert(
+        'Validation Error',
+        'Please enter barber name before saving.'
+      );
+      setProfileLoading(false);
+      return;
+    }
     try {
       setProfileLoading(true);
 
@@ -234,6 +251,7 @@ const SalonAccountScreen = ({ navigation }) => {
                 ? await uploadImages(b.image)
                 : b.image,
             ratingAverage: String(b.rating || '0.0'),
+            isAvailable: b.isAvailable, // ✅ ONLY FIELD ALLOWED
           }))
       );
 
@@ -247,8 +265,10 @@ const SalonAccountScreen = ({ navigation }) => {
                 ? await uploadImages(b.image)
                 : null,
             ratingAverage: String(b.rating || '0.0'),
+            isAvailable: b.isAvailable, // ✅
           }))
       );
+
 
       // Final payload
       const imagePath =
@@ -301,6 +321,8 @@ const SalonAccountScreen = ({ navigation }) => {
         Alert.alert('Success', 'Salon profile updated successfully');
         setEditVisible(false);
         salonProfile(salonId);
+        console.log("response", response);
+
       } else {
         Alert.alert('Error', response?.message || 'Update failed');
         console.log('Error', response?.message || 'Update failed');
@@ -628,7 +650,7 @@ const SalonAccountScreen = ({ navigation }) => {
                   }}
                 />
 
-                <TextInput
+                {/* <TextInput
                   style={[styles.input, styles.smallInput]}
                   placeholder="Price"
                   keyboardType="numeric"
@@ -639,7 +661,7 @@ const SalonAccountScreen = ({ navigation }) => {
                     updated[index].price = text;
                     setServices(updated);
                   }}
-                />
+                /> */}
 
                 <TextInput
                   style={[styles.input, styles.smallInput]}
@@ -729,50 +751,77 @@ const SalonAccountScreen = ({ navigation }) => {
                 <View style={styles.barberBottomRow}>
                   <TextInput
                     style={styles.ratingInput}
-                    placeholder="Rating (0–5)"
+                    placeholder="Rating (1–5)"
                     placeholderTextColor="#999"
-                    keyboardType="decimal-pad"
-                    maxLength={3}
+                    keyboardType="number-pad"
+                    maxLength={1}
                     value={String(b.rating)}
                     onChangeText={text => {
-                      if (text === '' || (/^\d(\.\d)?$/.test(text) && Number(text) <= 5)) {
+                      if (text === '') {
                         const updated = [...barbers];
-                        updated[index].rating = text;
+                        updated[index].rating = '';
+                        setBarbers(updated);
+                        return;
+                      }
+
+                      const num = Number(text);
+                      if (num >= 1 && num <= 5) {
+                        const updated = [...barbers];
+                        updated[index].rating = num;
                         setBarbers(updated);
                       }
                     }}
                   />
+
                   <Text style={{ color: '#777', fontSize: 11, marginTop: 4 }}>
                     Out of 5
                   </Text>
 
 
                   <View style={styles.statusGroup}>
-                    {['available', 'leave'].map(s => (
+                    {[
+                      { label: 'AVAILABLE', value: true },
+                      { label: 'ON LEAVE', value: false },
+                    ].map(opt => (
                       <TouchableOpacity
-                        key={s}
+                        key={opt.label}
                         style={[
                           styles.statusPill,
                           {
                             backgroundColor:
-                              b.status === s
-                                ? s === 'available'
+                              b.isAvailable === opt.value
+                                ? opt.value
                                   ? '#4CAF50'
                                   : '#E53935'
                                 : '#333',
                           },
                         ]}
                         onPress={() => {
-                          const updated = [...barbers];
-                          updated[index].status = s;
-                          setBarbers(updated);
+                          const actionText = opt.value ? 'mark this barber as AVAILABLE' : 'mark this barber as ON LEAVE';
+
+                          Alert.alert(
+                            'Confirm Status Change',
+                            `Are you sure you want to ${actionText}?`,
+                            [
+                              { text: 'Cancel', style: 'cancel' },
+                              {
+                                text: 'Yes',
+                                onPress: () => {
+                                  const updated = [...barbers];
+                                  updated[index].isAvailable = opt.value; // ✅ boolean
+                                  setBarbers(updated);
+                                },
+                              },
+                            ],
+                            { cancelable: true }
+                          );
                         }}
+
                       >
-                        <Text style={styles.statusPillText}>
-                          {s === 'available' ? 'AVAILABLE' : 'ON LEAVE'}
-                        </Text>
+                        <Text style={styles.statusPillText}>{opt.label}</Text>
                       </TouchableOpacity>
                     ))}
+
                   </View>
                 </View>
               </View>
@@ -788,8 +837,8 @@ const SalonAccountScreen = ({ navigation }) => {
                     id: Date.now().toString(),
                     name: '',
                     image: null,
-                    status: 'available',
-                    rating: 0,
+                    isAvailable: true,
+                    rating: 1,
                   },
 
                 ])
