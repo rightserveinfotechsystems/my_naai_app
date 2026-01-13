@@ -352,7 +352,7 @@ const SalonAccountScreen = ({ navigation }) => {
   const getImageSource = (path) => {
     return path
       ? { uri: `${getServerUrl()}${path}` }
-      : require('../assets/my_naai.jpeg');
+      : require('../assets/my_naai.png');
   };
 
 
@@ -393,6 +393,9 @@ const SalonAccountScreen = ({ navigation }) => {
           onPress: async () => {
             await AsyncStorage.removeItem('mynaai');
             await AsyncStorage.removeItem('mynaaiUser');
+            await AsyncStorage.removeItem('isLoggedIn');
+            await AsyncStorage.removeItem('userType');
+            await AsyncStorage.removeItem('token');
 
             navigation.reset({
               index: 0,
@@ -496,7 +499,7 @@ const SalonAccountScreen = ({ navigation }) => {
             source={
               salonImage
                 ? { uri: `${getServerUrl()}/getfiles/${salonImage}` }
-                : require('../assets/my_naai.jpeg')
+                : require('../assets/my_naai.png')
             }
             style={styles.salonImage}
           />
@@ -582,7 +585,7 @@ const SalonAccountScreen = ({ navigation }) => {
                   source={
                     salonImage
                       ? { uri: `${getServerUrl()}/getfiles/${salonImage}` }
-                      : require('../assets/my_naai.jpeg')
+                      : require('../assets/my_naai.png')
                   }
                   style={styles.salonImage}
                 />
@@ -765,7 +768,7 @@ const SalonAccountScreen = ({ navigation }) => {
                       source={
                         b.image
                           ? { uri: b.image.startsWith('file://') ? b.image : `${getServerUrl()}${b.image}` }
-                          : require('../assets/my_naai.jpeg')
+                          : require('../assets/my_naai.png')
                       }
                       style={styles.barberImg}
                     />

@@ -128,6 +128,8 @@ const NaaiDashboard = ({ navigation }) => {
 
       if (response?.status === 'SUCCESS') {
         const convertedData = convertSalonApiData(response.data);
+        console.log("convertedData", convertedData);
+
         const pagination = response.pagination;
 
         if (refresh) {
@@ -262,7 +264,7 @@ const NaaiDashboard = ({ navigation }) => {
             ? { uri: `${getServerUrl()}/getfiles/${item.imagesArray[0]}` }
             : item.imageUrl
               ? { uri: `${getServerUrl()}/getfiles/${item.imageUrl}` }
-              : require('../assets/my_naai.jpeg')
+              : require('../assets/my_naai.png')
         }
         style={styles.image}
       />
@@ -292,15 +294,11 @@ const NaaiDashboard = ({ navigation }) => {
             <View style={styles.waitTime}>
               <Ionicons name="time-outline" size={14} color="#E1B378" />
               <Text style={styles.waitText}>{item?.waitTime}</Text>
-            </View>
-
-            {item.open && item.queueLength > 0 && (
-              <View style={styles.queueBadge}>
+              {item?.open &&
                 <Text style={styles.queueText}>
-                  Queue: {item.queueLength} people
-                </Text>
-              </View>
-            )}
+                  Queue: {item?.raw?.queueLength} people
+                </Text>}
+            </View>
           </View>
 
         </View>
@@ -597,8 +595,27 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', marginVertical: 6 },
 
   linkText: { color: '#E1B378', marginLeft: 2 },
-  waitRow: { marginTop: 4 },
-  waitText: { fontSize: 12, color: '#E1B378' },
+  waitRow: {
+    marginTop: 6,
+  },
+
+  // waitTime: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   flexWrap: 'wrap',      
+  //   gap: 8,               
+  // },
+  waitText: {
+    fontSize: 12,
+    color: '#E1B378',
+    fontWeight: '600',
+  },
+  queueText: {
+    fontSize: 12,
+    color: '#E1B378',
+    fontWeight: '600',
+    marginLeft: 5,
+  },
 
   bookBtn: {
     paddingVertical: 4,
@@ -621,11 +638,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  queueText: {
-    color: '#dfdbdbff',
-    fontSize: 12,
-    fontWeight: '700',
-  },
+  // queueText: {
+  //   color: '#dfdbdbff',
+  //   fontSize: 12,
+  //   fontWeight: '700',
+  // },
 
 
 });

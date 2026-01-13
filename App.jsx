@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler'; // MUST be first
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -10,6 +10,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Screens
 import SplashScreen from './src/screens/SplashScreen';
+import SplashLogoScreen from './src/screens/SplashLogoScreen';
 import NaaiDashboard from './src/screens/NaaiDashboard';
 import ServicesScreen from './src/screens/ServicesScreen';
 import AccountScreen from './src/screens/AccountScreen';
@@ -157,7 +158,12 @@ function SalonTabs() {
 const App = () => {
   return (
     <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator>
+      <Stack.Navigator initialRouteName="SplashLogo">
+        <Stack.Screen
+          name="SplashLogo"
+          component={SplashLogoScreen}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="SplashScreen"
           component={SplashScreen}

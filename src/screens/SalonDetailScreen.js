@@ -117,13 +117,6 @@ const SalonDetailScreen = ({ route, navigation }) => {
     Linking.openURL(`tel:${salonDetails.phone}`);
   };
 
-  // const toggleService = service => {
-  //   setSelectedServices(prev =>
-  //     prev.some(s => s.id === service.id)
-  //       ? prev.filter(s => s.id !== service.id)
-  //       : [...prev, service]
-  //   );
-  // };
 
   const getStatusColor = isAvailable => {
     if (isAvailable === true) return '#4CAF50';
@@ -136,15 +129,6 @@ const SalonDetailScreen = ({ route, navigation }) => {
   };
 
   const handleContinue = () => {
-    // if (selectedServices.length === 0) {
-    //   Alert.alert(
-    //     'Service Required',
-    //     'Please select at least one service to continue booking.',
-    //     [{ text: 'OK' }],
-    //   );
-    //   return;
-    // }
-
     navigation.navigate('BookingSchedule', { salon: salonDetails });
   };
 
@@ -332,7 +316,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                     </TouchableOpacity>
 
                     {/* SERVICES */}
-                    <Text style={styles.section}>Services</Text>
+                    {/* <Text style={styles.section}>Services</Text>
                     {services.map(service => {
 
                       return (
@@ -349,17 +333,10 @@ const SalonDetailScreen = ({ route, navigation }) => {
                           <Text style={styles.servicePrice}>₹{service.price}</Text>
                         </TouchableOpacity>
                       );
-                    })}
-
-
-                    {/* {selectedServices.length > 0 && (
-                      <Text style={styles.totalText}>
-                        Total: ₹{totalAmount} • ⏱ {totalTime} min
-                      </Text>
-                    )} */}
+                    })} */}
 
                     {/* BARBERS */}
-                    <Text style={styles.section}>Barbers</Text>
+                    {/* <Text style={styles.section}>Barbers</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                       {barbers.map(b => (
                         <TouchableOpacity
@@ -395,7 +372,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                           </Text>
                         </TouchableOpacity>
                       ))}
-                    </ScrollView>
+                    </ScrollView> */}
                   </View>
                 </ScrollView>
               </SafeAreaView>
@@ -435,7 +412,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: DARK,
-    padding: 14,
+    padding: 0,
   },
   bg: { flex: 1 },
   overlay: { flex: 1, backgroundColor: '#1E1E1E' },
@@ -455,16 +432,56 @@ const styles = StyleSheet.create({
   sliderImage: { width, height: 260 },
 
   card: { padding: 18 },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  row: { flexDirection: 'row', alignItems: 'center', marginVertical: 6 },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginTop: 8,
+  },
+
   rating: { color: '#FFD700', marginLeft: 6 },
   wait: { color: '#fff', marginLeft: 6, fontSize: 13 },
-  linkText: { color: '#E1B378', marginLeft: 8 },
+  linkText: {
+    color: '#E1B378',
+    marginLeft: 10,
+    flex: 1,
+    lineHeight: 20,
+  },
 
-  // infoBox: { backgroundColor: '#2A2A2A', borderRadius: 14, padding: 12 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  infoText: { color: '#fff', marginLeft: 8, fontWeight: '600' },
-  infoSub: { color: '#AAA', marginLeft: 6, fontSize: 12 },
+
+  infoBox: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 14,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+
+  infoText: {
+    color: '#fff',
+    marginLeft: 8,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+
+  infoSub: {
+    color: '#AAA',
+    marginLeft: 6,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+
 
   section: { color: '#fff', fontWeight: '700', fontSize: 16, marginTop: 16, marginBottom: 5 },
 
@@ -519,9 +536,8 @@ const styles = StyleSheet.create({
   waitRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 6,
   },
-
   waitText: {
     marginLeft: 6,
     color: '#E1B378',

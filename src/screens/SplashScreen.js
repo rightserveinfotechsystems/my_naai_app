@@ -43,29 +43,45 @@ const SplashScreen = ({ navigation }) => {
   const flatListRef = useRef(null);
   const [index, setIndex] = useState(0);
 
+  const completeOnboarding = async () => {
+    await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+    navigation.replace('UserLogin');
+  };
   const goNext = () => {
     if (index < SLIDES.length - 1) {
       flatListRef.current.scrollToIndex({ index: index + 1 });
     } else {
-      navigation.replace('UserLogin');
+      completeOnboarding();
     }
   };
 
   const skipIntro = () => {
-    navigation.replace('UserLogin');
+    completeOnboarding();
   };
 
+
+
+
   useEffect(() => {
-    const checkLogin = async () => {
+    const checkFlow = async () => {
+      const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
       const isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
       const userType = await AsyncStorage.getItem('userType');
 
+      // 1️⃣ First install → onboarding
+      if (!hasSeenOnboarding) {
+        return; // Stay on onboarding
+      }
+
+      // 2️⃣ Already logged in → dashboard
       if (isLoggedIn === 'true') {
         navigation.reset({
           index: 0,
           routes: [{ name: userType === 'USER' ? 'Main' : 'Salon' }],
         });
-      } else {
+      }
+      // 3️⃣ Not logged in → login
+      else {
         navigation.reset({
           index: 0,
           routes: [{ name: 'UserLogin' }],
@@ -73,8 +89,9 @@ const SplashScreen = ({ navigation }) => {
       }
     };
 
-    checkLogin();
+    checkFlow();
   }, []);
+
 
   const renderItem = ({ item }) => (
     <ImageBackground source={item.image} style={styles.slide}>
@@ -89,7 +106,7 @@ const SplashScreen = ({ navigation }) => {
         {/* Logo only on first slide */}
         {/* {item.id === '1' && (
           <Image
-            source={require('../assets/my_naai.jpeg')}
+            source={require('../assets/my_naai.png')}
             style={styles.logo}
           />
         )} */}

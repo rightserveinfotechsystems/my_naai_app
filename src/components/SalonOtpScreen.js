@@ -65,6 +65,9 @@ const SalonOtpScreen = ({ route, navigation }) => {
                         'mynaaiUser',
                         JSON.stringify(res?.data)
                     );
+                    await AsyncStorage.setItem('isLoggedIn', 'true');
+                    await AsyncStorage.setItem('userType', 'SALON');
+
                 }
                 navigation.reset({
                     index: 0,

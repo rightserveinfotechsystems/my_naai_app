@@ -169,14 +169,6 @@ Total: ₹${totalAmount}`,
                   >
                     {service.serviceName}
                   </Text>
-                  <Text
-                    style={[
-                      styles.serviceTime,
-                      selected && styles.activeText,
-                    ]}
-                  >
-                    ⏱ {service.durationMinutes} min
-                  </Text>
                 </View>
 
                 <View style={{ alignItems: 'flex-end' }}>
@@ -186,8 +178,9 @@ Total: ₹${totalAmount}`,
                       selected && styles.activeText,
                     ]}
                   >
-                    ₹{service.price}
+                    ⏱ {service.durationMinutes} min
                   </Text>
+
 
                   {selected && (
                     <Ionicons

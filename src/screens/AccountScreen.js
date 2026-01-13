@@ -128,7 +128,9 @@ const AccountScreen = ({ navigation }) => {
               'mynaaiUser',
               'isLoggedIn',
               'userType',
+              'token',
             ]);
+
 
             navigation.reset({
               index: 0,
