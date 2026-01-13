@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { communication, getServerUrl } from '../services/communication';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -26,103 +27,192 @@ const SalonProduct = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [editId, setEditId] = useState(null);
 
-    const [name, setName] = useState('');
-    const [price, setPrice] = useState('');
-    const [rating, setRating] = useState('');
-    const [image, setImage] = useState(null);
-    const [available, setAvailable] = useState(true);
+    const [productForm, setProductForm] = useState({
+        productName: '',
+        price: '',
+        rating: '',
+        isAvailable: true,
+        productImage: '',
+        phoneNumber: '',
+    });
 
-    /* ---------------- IMAGE PICKER ---------------- */
-    const pickImage = async () => {
-        const result = await launchImageLibrary({
-            mediaType: 'photo',
-            quality: 0.7,
-        });
-
-        if (!result.didCancel && result.assets?.length > 0) {
-            setImage(result.assets[0].uri);
+    const fetchProducts = async () => {
+        try {
+            const response = await communication.salonProductList({});
+            if (response?.status === 'SUCCESS') {
+                const apiProducts = response?.data?.products.map(p => ({
+                    id: p.productId,
+                    name: p.productName,
+                    price: p.price,
+                    rating: parseFloat(p.rating),
+                    available: p.isAvailable,
+                    image: p.productImage ? `${getServerUrl()}/getFiles/${p.productImage}` : null,
+                }));
+                setProducts(apiProducts);
+            } else {
+                setProducts([]);
+            }
+        } catch (error) {
+            Alert.alert('Error', error?.response?.data?.message || 'Failed to fetch products');
         }
     };
 
-    /* ---------------- SAVE PRODUCT ---------------- */
-    const saveProduct = () => {
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+    const pickAndUploadImage = async () => {
+        try {
+            const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.7 });
+            if (result.didCancel) return;
+
+            const selected = result.assets[0];
+            const formData = new FormData();
+            formData.append('file', {
+                uri: selected.uri,
+                type: selected.type || 'image/jpeg',
+                name: selected.fileName || `photo_${Date.now()}.jpg`,
+            });
+
+            const uploadResponse = await communication.uploadImages(formData);
+            if (uploadResponse?.status === 'SUCCESS') {
+                const imageUrl = `${getServerUrl()}${uploadResponse.data.imageUrl}`;
+                setProductForm(prev => ({ ...prev, productImage: imageUrl }));
+            } else {
+                Alert.alert('Upload Failed', uploadResponse?.message || 'Failed to upload image');
+            }
+        } catch (error) {
+            console.log('Image upload error:', error);
+            Alert.alert('Error', 'Failed to upload image');
+        }
+    };
+
+    const saveProduct = async () => {
         if (!name || !price) {
             Alert.alert('Required', 'Product name and price are required');
             return;
         }
 
-        let safeRating = parseFloat(rating);
-        if (isNaN(safeRating)) safeRating = 4;
-        if (safeRating > 5) safeRating = 5;
-        if (safeRating < 0) safeRating = 0;
+        const safeRating = Math.min(Math.max(parseFloat(rating) || 0, 0), 5);
 
-        if (editId) {
-            setProducts(prev =>
-                prev.map(p =>
-                    p.id === editId
-                        ? {
-                            ...p,
-                            name,
-                            price,
-                            rating: safeRating,
-                            image,
-                            available,
-                        }
-                        : p
-                )
-            );
-        } else {
-            setProducts(prev => [
-                ...prev,
-                {
-                    id: Date.now().toString(),
-                    name,
-                    price,
-                    rating: safeRating,
-                    image,
-                    available,
-                },
-            ]);
+        const payload = {
+            productId: editId,        // <-- the product you are editing
+            productName: name,
+            price: parseFloat(price),
+            rating: safeRating,
+            isAvailable: available,
+            productImage: image?.replace(getServerUrl(), '') || '', // remove server URL if needed
+        };
+
+        try {
+            let response;
+            if (editId) {
+                // Update existing product
+                response = await communication.updateProductList(payload);
+            } else {
+                // Create new product
+                response = await communication.createProductList(payload);
+            }
+
+            if (response?.status === 'SUCCESS') {
+                const updated = response.data;
+
+                if (editId) {
+                    setProducts(prev =>
+                        prev.map(p =>
+                            p.id === editId
+                                ? {
+                                    id: updated.productId,
+                                    name: updated.productName,
+                                    price: updated.price,
+                                    rating: parseFloat(updated.rating),
+                                    available: updated.isAvailable,
+                                    image: updated.productImage
+                                        ? `${getServerUrl()}/getfiles/${updated.productImage}`
+                                        : null,
+                                }
+                                : p
+                        )
+                    );
+                } else {
+                    setProducts(prev => [
+                        {
+                            id: updated.productId,
+                            name: updated.productName,
+                            price: updated.price,
+                            rating: parseFloat(updated.rating),
+                            available: updated.isAvailable,
+                            image: updated.productImage
+                                ? `${getServerUrl()}/getfiles/${updated.productImage}`
+                                : null,
+                        },
+                        ...prev,
+                    ]);
+                }
+
+                Alert.alert('Success', editId ? 'Product updated successfully' : 'Product added successfully');
+                resetForm();
+            } else {
+                Alert.alert('Error', response?.message || 'Something went wrong');
+            }
+        } catch (error) {
+            Alert.alert('Error', error?.response?.data?.message || 'Failed to save product');
         }
-
-        resetForm();
     };
+
 
     const resetForm = () => {
         setModalVisible(false);
         setEditId(null);
-        setName('');
-        setPrice('');
-        setRating('');
-        setImage(null);
-        setAvailable(true);
+        setProductForm({
+            productName: '',
+            price: '',
+            rating: '',
+            isAvailable: true,
+            productImage: '',
+            phoneNumber: '',
+        });
     };
 
-    /* ---------------- EDIT ---------------- */
     const editProduct = item => {
         setEditId(item.id);
-        setName(item.name);
-        setPrice(String(item.price));
-        setRating(String(item.rating));
-        setImage(item.image);
-        setAvailable(item.available);
+        setProductForm({
+            productName: item.name,
+            price: item.price,
+            rating: String(item.rating),
+            isAvailable: item.available,
+            productImage: item.image,
+            phoneNumber: '',
+        });
         setModalVisible(true);
     };
 
-    /* ---------------- DELETE ---------------- */
-    const deleteProduct = id => {
-        Alert.alert('Delete Product', 'Are you sure?', [
-            { text: 'Cancel' },
+
+    const handleDeleteProduct = (productId) => {
+        Alert.alert('Delete Product', 'Are you sure you want to delete this product?', [
+            { text: 'Cancel', style: 'cancel' },
             {
                 text: 'Delete',
                 style: 'destructive',
-                onPress: () =>
-                    setProducts(prev => prev.filter(p => p.id !== id)),
+                onPress: async () => {
+                    try {
+                        const response = await communication.deleteProduct(productId);
+                        if (response?.status === 'SUCCESS') {
+                            setProducts(prev => prev.filter(p => p.id !== productId));
+                            Alert.alert('Deleted', 'Product deleted successfully');
+                        } else {
+                            Alert.alert('Error', response?.message || 'Failed to delete product');
+                        }
+                    } catch (error) {
+                        Alert.alert('Error', error?.response?.data?.message || 'Failed to delete product');
+                    }
+                },
             },
         ]);
     };
 
-    /* ---------------- PRODUCT CARD ---------------- */
+
+
     const renderItem = ({ item }) => (
         <View style={styles.card}>
             {item.image ? (
@@ -147,24 +237,14 @@ const SalonProduct = () => {
                 </View>
 
                 <View style={styles.row}>
-                    <Text
-                        style={[
-                            styles.availability,
-                            { color: item.available ? '#4CAF50' : '#F44336' },
-                        ]}
-                    >
+                    <Text style={[styles.availability, { color: item.available ? '#4CAF50' : '#F44336' }]}>
                         {item.available ? 'In Stock' : 'Out of Stock'}
                     </Text>
-
                     <Switch
                         value={item.available}
                         onValueChange={() =>
                             setProducts(prev =>
-                                prev.map(p =>
-                                    p.id === item.id
-                                        ? { ...p, available: !p.available }
-                                        : p
-                                )
+                                prev.map(p => (p.id === item.id ? { ...p, available: !p.available } : p))
                             )
                         }
                     />
@@ -174,10 +254,10 @@ const SalonProduct = () => {
                     <TouchableOpacity onPress={() => editProduct(item)}>
                         <Ionicons name="create-outline" size={18} color="#E0B973" />
                     </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => deleteProduct(item.id)}>
+                    <TouchableOpacity onPress={() => handleDeleteProduct(item.id)}>
                         <Ionicons name="trash-outline" size={18} color="#F44336" />
                     </TouchableOpacity>
+
                 </View>
             </View>
         </View>
@@ -194,43 +274,23 @@ const SalonProduct = () => {
                         numColumns={2}
                         columnWrapperStyle={{ justifyContent: 'space-between' }}
                         contentContainerStyle={{ paddingBottom: 120 }}
-                        ListEmptyComponent={
-                            <Text style={styles.empty}>No products added</Text>
-                        }
+                        ListEmptyComponent={<Text style={styles.empty}>No products available</Text>}
                     />
 
-                    {/* ADD BUTTON */}
-                    <TouchableOpacity
-                        style={styles.addBtn}
-                        onPress={() => setModalVisible(true)}
-                    >
+                    <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
                         <Ionicons name="add" size={28} color="#000" />
                     </TouchableOpacity>
 
-                    {/* MODAL */}
                     <Modal visible={modalVisible} transparent animationType="slide">
                         <View style={styles.modalOverlay}>
                             <View style={styles.modal}>
-                                <Text style={styles.modalTitle}>
-                                    {editId ? 'Edit Product' : 'Add Product'}
-                                </Text>
-
+                                <Text style={styles.modalTitle}>{editId ? 'Edit Product' : 'Add Product'}</Text>
                                 <ScrollView>
-                                    <TouchableOpacity
-                                        style={styles.imagePicker}
-                                        onPress={pickImage}
-                                    >
-                                        {image ? (
-                                            <Image
-                                                source={{ uri: image }}
-                                                style={styles.pickedImage}
-                                            />
+                                    <TouchableOpacity style={styles.imagePicker} onPress={pickAndUploadImage}>
+                                        {productForm.productImage ? (
+                                            <Image source={{ uri: productForm.productImage }} style={styles.pickedImage} />
                                         ) : (
-                                            <Ionicons
-                                                name="camera-outline"
-                                                size={26}
-                                                color="#999"
-                                            />
+                                            <Ionicons name="camera-outline" size={26} color="#999" />
                                         )}
                                     </TouchableOpacity>
 
@@ -238,8 +298,8 @@ const SalonProduct = () => {
                                         placeholder="Product Name"
                                         placeholderTextColor="#999"
                                         style={styles.input}
-                                        value={name}
-                                        onChangeText={setName}
+                                        value={productForm.productName}
+                                        onChangeText={text => setProductForm(prev => ({ ...prev, productName: text }))}
                                     />
 
                                     <TextInput
@@ -247,33 +307,31 @@ const SalonProduct = () => {
                                         placeholderTextColor="#999"
                                         keyboardType="numeric"
                                         style={styles.input}
-                                        value={price}
-                                        onChangeText={setPrice}
+                                        value={productForm.price}
+                                        onChangeText={text => setProductForm(prev => ({ ...prev, price: text }))}
                                     />
 
                                     <TextInput
-                                        placeholder="Rating (0 - 5)"
+                                        placeholder="Rating (0-5)"
                                         placeholderTextColor="#999"
                                         keyboardType="numeric"
                                         style={styles.input}
-                                        value={rating}
+                                        value={productForm.rating}
                                         onChangeText={text => {
-                                            if (Number(text) <= 5) setRating(text);
+                                            if (Number(text) <= 5) setProductForm(prev => ({ ...prev, rating: text }));
                                         }}
                                     />
 
                                     <View style={styles.switchRow}>
                                         <Text style={{ color: '#fff' }}>Available</Text>
-                                        <Switch value={available} onValueChange={setAvailable} />
+                                        <Switch
+                                            value={productForm.isAvailable}
+                                            onValueChange={value => setProductForm(prev => ({ ...prev, isAvailable: value }))}
+                                        />
                                     </View>
 
-                                    <TouchableOpacity
-                                        style={styles.saveBtn}
-                                        onPress={saveProduct}
-                                    >
-                                        <Text style={styles.saveText}>
-                                            {editId ? 'UPDATE PRODUCT' : 'ADD PRODUCT'}
-                                        </Text>
+                                    <TouchableOpacity style={styles.saveBtn} onPress={saveProduct}>
+                                        <Text style={styles.saveText}>{editId ? 'UPDATE PRODUCT' : 'ADD PRODUCT'}</Text>
                                     </TouchableOpacity>
 
                                     <TouchableOpacity onPress={resetForm}>

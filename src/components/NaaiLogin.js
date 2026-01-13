@@ -42,6 +42,8 @@ const NaaiLogin = ({ navigation }) => {
       const payload = { phoneNumber: mobile };
       const res = await communication.SalonLogin(payload);
       if (res?.status === 'SUCCESS') {
+        console.log("res?.otp", res?.otp);
+
         Alert.alert(
           'OTP Sent',
           res?.otp,

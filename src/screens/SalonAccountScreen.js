@@ -10,6 +10,7 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -154,6 +155,20 @@ const SalonAccountScreen = ({ navigation }) => {
   };
 
 
+  const handleRefreshProfile = async () => {
+    if (!salonId) return;
+
+    try {
+      setProfileLoading(true);
+      await salonProfile(salonId);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to refresh profile');
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+
   const dayMap = {
     Sunday: 0,
     Monday: 1,
@@ -170,30 +185,6 @@ const SalonAccountScreen = ({ navigation }) => {
     return date.toTimeString().slice(0, 8);
   };
 
-
-  const uploadImages = async (fileUri) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', {
-        uri: fileUri,
-        type: 'image/jpeg', // adjust if needed
-        name: `salon_${Date.now()}.jpg`,
-      });
-
-
-      const response = await communication.uploadImages(formData);
-
-
-      if (response.data?.status === 'SUCCESS') {
-        return response.data.filePath; // returned path to use in payload
-      } else {
-        throw new Error(response.data?.message || 'Upload failed');
-      }
-    } catch (error) {
-      console.log('Upload Error:', error);
-      throw error;
-    }
-  };
 
 
   /* ---------------- UPDATE PROFILE ---------------- */
@@ -249,11 +240,14 @@ const SalonAccountScreen = ({ navigation }) => {
             profileImageUrl:
               b.image?.startsWith('file://')
                 ? await uploadImages(b.image)
-                : b.image,
+                : b.image || null,
             ratingAverage: String(b.rating || '0.0'),
-            isAvailable: b.isAvailable, // ✅ ONLY FIELD ALLOWED
+            isAvailable: b.isAvailable,
           }))
       );
+
+
+
 
       const newBarbers = await Promise.all(
         barbers
@@ -265,9 +259,11 @@ const SalonAccountScreen = ({ navigation }) => {
                 ? await uploadImages(b.image)
                 : null,
             ratingAverage: String(b.rating || '0.0'),
-            isAvailable: b.isAvailable, // ✅
+            isAvailable: b.isAvailable,
           }))
       );
+
+
 
 
       // Final payload
@@ -358,6 +354,31 @@ const SalonAccountScreen = ({ navigation }) => {
       ? { uri: `${getServerUrl()}${path}` }
       : require('../assets/my_naai.jpeg');
   };
+
+
+  const uploadImages = async (fileUri) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', {
+        uri: Platform.OS === 'android' ? fileUri : fileUri.replace('file://', ''),
+        type: 'image/jpeg',
+        name: `image_${Date.now()}.jpg`,
+      });
+
+      const response = await communication.uploadImages(formData);
+
+      if (response?.success && response?.url) {
+        return response.url; // ✅ return only the path
+      }
+
+      throw new Error('Image upload failed');
+    } catch (error) {
+      console.log('UPLOAD ERROR:', error?.response?.data || error.message || error);
+      throw error;
+    }
+  };
+
+
 
   /* ---------------- LOGOUT ---------------- */
   const handleLogout = () => {
@@ -457,7 +478,16 @@ const SalonAccountScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={profileLoading}
+            onRefresh={handleRefreshProfile}
+            tintColor={GOLD}
+          />
+        }
+      >
+
 
         {/* PROFILE */}
         <View style={styles.profileCard}>
@@ -483,6 +513,15 @@ const SalonAccountScreen = ({ navigation }) => {
           >
             <Text style={styles.editText}>Edit Salon Profile</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.editBtn, { marginTop: 10, backgroundColor: '#2A2A2A' }]}
+            onPress={handleRefreshProfile}
+          >
+            <Text style={[styles.editText, { color: GOLD }]}>
+              Refresh Account Details
+            </Text>
+          </TouchableOpacity>
+
         </View>
 
         {/* STATUS */}
@@ -721,14 +760,16 @@ const SalonAccountScreen = ({ navigation }) => {
                     }
                   >
 
+
                     <Image
                       source={
                         b.image
-                          ? { uri: `${getServerUrl()}/getfiles/${b.image}` }
+                          ? { uri: b.image.startsWith('file://') ? b.image : `${getServerUrl()}${b.image}` }
                           : require('../assets/my_naai.jpeg')
                       }
                       style={styles.barberImg}
                     />
+
 
 
 

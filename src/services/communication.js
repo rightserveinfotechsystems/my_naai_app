@@ -321,7 +321,7 @@ export const communication = {
             throw error;
         }
     },
-    //
+
     uploadImages: async (payload) => {
         try {
             const response = await axios.post(`${getServerUrl()}/api/upload/upload-image`, payload, {
@@ -330,6 +330,79 @@ export const communication = {
                     "Authorization": `Bearer ${await getCookie()}`
                 },
             });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    userProductList: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/products/get-all-salons-products-list`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    salonProductList: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/products/list`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    // /api/products/create
+    createProductList: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/products/create`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            console.log("response.data", response.data);
+
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    updateProductList: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/products/update`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            console.log("response.data", response.data);
+
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    deleteProduct: async (productId) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/products/delete`, { productId }, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            console.log("response.data", response.data);
+
             return response.data;
         } catch (error) {
             throw error;
