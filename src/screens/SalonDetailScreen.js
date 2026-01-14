@@ -373,6 +373,18 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         </TouchableOpacity>
                       ))}
                     </ScrollView> */}
+                    <View style={styles.staticInfoBox}>
+                      <Text style={styles.staticText}>
+                        • Please arrive at least 10 minutes before your scheduled time.
+                      </Text>
+                      <Text style={styles.staticText}>
+                        • Service duration may vary based on requirements.
+                      </Text>
+                      <Text style={styles.staticText}>
+                        • Walk-ins are subject to availability and waiting time.
+                      </Text>
+                    </View>
+
                   </View>
                 </ScrollView>
               </SafeAreaView>
@@ -544,5 +556,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  staticInfoBox: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+  },
+
+  staticText: {
+    color: '#AAA',
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+
 
 });

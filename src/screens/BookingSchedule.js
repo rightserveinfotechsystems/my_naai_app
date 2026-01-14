@@ -197,9 +197,10 @@ Total: ₹${totalAmount}`,
 
         {/* -------------------- BARBERS -------------------- */}
         <View style={styles.card}>
-          <Text style={styles.section}>
+          {salon?.barbers.length > 0 && (<Text style={styles.section}>
             Select Barber (Optional)
-          </Text>
+          </Text>)}
+
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {salon?.barbers?.map(b => {
@@ -321,7 +322,7 @@ Total: ₹${totalAmount}`,
             <ActivityIndicator color="#000" />
           ) : (
             <Text style={styles.confirmText}>
-              Confirm Booking ₹{totalAmount}
+              Confirm Booking
             </Text>
           )}
 

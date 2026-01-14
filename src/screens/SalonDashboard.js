@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,14 +16,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication } from '../services/communication';
 import Skeleton from '../utilities/Skeleton';
-
+import { useFocusEffect } from '@react-navigation/native';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
 const SalonDashboard = ({ navigation }) => {
   const [customers, setCustomers] = useState([]);
   const [salonId, setSalonId] = useState(null);
-  const [bookingId, setBookingId] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -32,18 +31,34 @@ const SalonDashboard = ({ navigation }) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  /* ---------------- GET USER INFO ---------------- */
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  /* ---------------- USER INFO ---------------- */
   const userByIdInfo = async () => {
     try {
       const userData = await AsyncStorage.getItem('mynaaiUser');
       const parsedUser = JSON.parse(userData);
       setSalonId(parsedUser?.salon?.salonId);
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to fetch user info');
     }
   };
 
-  /* ---------------- GET CUSTOMER LIST ---------------- */
+  /* ---------------- NOTIFICATION COUNT ---------------- */
+  const fetchNotificationCount = useCallback(async () => {
+    if (!salonId) return;
+
+    try {
+      const response = await communication.userNotificationCount({ salonId });
+      if (response?.status === 'SUCCESS') {
+        setNotificationCount(response?.notification || 0);
+      }
+    } catch (error) {
+      console.log('Notification count error', error);
+    }
+  }, [salonId]);
+
+  /* ---------------- CUSTOMER LIST ---------------- */
   const getCustomerList = async (pageNo = 1, loadMore = false) => {
     if (loadingMore || (loadMore && !hasMore)) return;
 
@@ -61,20 +76,15 @@ const SalonDashboard = ({ navigation }) => {
 
         setCustomers(prev => {
           const merged = loadMore ? [...prev, ...newData] : newData;
-
           const uniqueMap = new Map();
-          merged.forEach(item => {
-            uniqueMap.set(item.bookingId, item);
-          });
-
+          merged.forEach(item => uniqueMap.set(item.bookingId, item));
           return Array.from(uniqueMap.values());
         });
-
 
         setPage(pagination.page);
         setHasMore(pagination.page < pagination.totalPages);
       } else {
-        if (!loadMore) setCustomers([]);
+        setCustomers([]);
         setHasMore(false);
       }
     } catch (error) {
@@ -89,38 +99,27 @@ const SalonDashboard = ({ navigation }) => {
     }
   };
 
-
-  /* ---------------- Service done api  ---------------- */
-
-
-  const handleBookingDone = (bookingId) => {
+  /* ---------------- SERVICE DONE ---------------- */
+  const handleBookingDone = bookingId => {
     Alert.alert(
       'Confirm Service',
       'Are you sure you want to mark this service as completed?',
       [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Done',
           style: 'destructive',
           onPress: async () => {
             try {
-              const payload = {
+              const response = await communication.bookingDone({
                 salonId,
                 bookingId,
-              };
-
-              const response = await communication.bookingDone(payload);
+              });
 
               if (response?.status === 'SUCCESS') {
                 Alert.alert('Success', 'Service completed successfully');
-
-                // 🔔 Auto refresh queue after done
-                // getCustomerList(1);
                 getCustomerList(1, false);
-
+                fetchNotificationCount();
               } else {
                 Alert.alert('Error', 'Unable to complete service');
               }
@@ -132,8 +131,7 @@ const SalonDashboard = ({ navigation }) => {
             }
           },
         },
-      ],
-      { cancelable: true }
+      ]
     );
   };
 
@@ -143,18 +141,27 @@ const SalonDashboard = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    if (salonId) {
-      getCustomerList();
-    }
-  }, [salonId]);
+    if (!salonId) return;
+    getCustomerList();
+    fetchNotificationCount();
+  }, [salonId, fetchNotificationCount]);
+
+  /* 🔥 REFRESH COUNT WHEN SCREEN FOCUSED */
+  useFocusEffect(
+    useCallback(() => {
+      if (salonId) {
+        fetchNotificationCount();
+      }
+    }, [salonId, fetchNotificationCount])
+  );
 
   /* ---------------- REFRESH ---------------- */
   const onRefresh = () => {
     setRefreshing(true);
     setHasMore(true);
-    getCustomerList(1, false); // page 1, replace data
+    getCustomerList(1, false);
+    fetchNotificationCount();
   };
-
 
   /* ---------------- LOAD MORE ---------------- */
   const handleLoadMore = () => {
@@ -173,16 +180,16 @@ const SalonDashboard = ({ navigation }) => {
           {item?.userPhone && (
             <View style={styles.row}>
               <Ionicons name="call-outline" size={14} color="#E8B97E" />
-
-              <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.userPhone}`)}>
+              <TouchableOpacity
+                onPress={() => Linking.openURL(`tel:${item.userPhone}`)}
+              >
                 <Text style={styles.subText}>{item.userPhone}</Text>
               </TouchableOpacity>
             </View>
-
           )}
+
           <View style={styles.row}>
             <Ionicons name="cut-outline" size={14} color="#E8B97E" />
-
             <Text style={styles.subText}>{item?.serviceNames}</Text>
           </View>
 
@@ -197,12 +204,10 @@ const SalonDashboard = ({ navigation }) => {
         >
           <Text style={styles.doneText}>Done</Text>
         </TouchableOpacity>
-
       </View>
     </View>
   );
 
-  /* ---------------- EMPTY STATE ---------------- */
   const EmptyState = () => (
     <View style={styles.empty}>
       <Ionicons name="people-outline" size={60} color="#666" />
@@ -210,42 +215,47 @@ const SalonDashboard = ({ navigation }) => {
     </View>
   );
 
-  /* ---------------- SKELETON ---------------- */
-  // const Skeleton = () => <View style={styles.skeletonCard} />;
-
   return (
-    <ImageBackground
-      source={BG_IMAGE}
-      style={styles.bg}
-      resizeMode="cover"
-    >
-      {/* Black Overlay */}
+    <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
         <SafeAreaView style={styles.container}>
-          {/* 🔝 Top Right Actions */}
+          {/* TOP BAR */}
           <View style={styles.topBar}>
             <Text style={styles.title}>Customer Queue</Text>
 
             <View style={styles.actions}>
               <TouchableOpacity
                 style={styles.iconBtn}
-                onPress={() => navigation.navigate('AddOfflineCustomer', { salonId })}
+                onPress={() =>
+                  navigation.navigate('AddOfflineCustomer', { salonId })
+                }
               >
                 <Ionicons name="add" size={22} color="#000" />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.iconBtn}>
+              <TouchableOpacity
+                style={styles.iconBtn}
+                onPress={() =>
+                  navigation.navigate('SalonNotifications', {
+                    salonId,
+                    onReadComplete: fetchNotificationCount, // ✅ FIX
+                  })
+                }
+              >
                 <Ionicons name="notifications-outline" size={20} color="#000" />
+                {notificationCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                      {notificationCount}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* CONTENT */}
           {loading ? (
             <>
-              <Skeleton />
-              <Skeleton />
-              <Skeleton />
               <Skeleton />
               <Skeleton />
               <Skeleton />
@@ -253,9 +263,8 @@ const SalonDashboard = ({ navigation }) => {
           ) : (
             <FlatList
               data={customers}
-              keyExtractor={(item, index) => `${item.bookingId || index}`}
+              keyExtractor={item => item.bookingId.toString()}
               renderItem={renderSalon}
-              showsVerticalScrollIndicator={false}
               refreshControl={
                 <RefreshControl
                   refreshing={refreshing}
@@ -296,14 +305,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 14,
   },
-  title: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  actions: {
-    flexDirection: 'row',
-  },
+  title: { color: '#fff', fontSize: 22, fontWeight: '700' },
+
+  actions: { flexDirection: 'row' },
   iconBtn: {
     backgroundColor: '#E1B378',
     width: 36,
@@ -313,6 +317,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 10,
   },
+
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: 'red',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
 
   card: {
     backgroundColor: '#1E1E1E',
@@ -336,16 +353,5 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', marginTop: 80 },
   emptyText: { color: '#777', marginTop: 10 },
 
-  skeletonCard: {
-    height: 90,
-    backgroundColor: '#2A2A2A',
-    borderRadius: 16,
-    marginBottom: 16,
-    opacity: 0.6,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    // marginTop: 2,
-  },
+  row: { flexDirection: 'row', alignItems: 'center' },
 });

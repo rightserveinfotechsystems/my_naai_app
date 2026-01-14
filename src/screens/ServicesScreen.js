@@ -204,6 +204,16 @@ const ServicesScreen = () => {
                 {formatDateReadable(item.bookingDate)}
                 {/* • {formatTime(item.bookingTime)} */}
               </Text>
+              {item.bookingTime && (
+                <View style={[styles.dateRow, { marginLeft: 4 }]}>
+                  <Ionicons name="time-outline" size={14} color="#E1B378" />
+                  <Text style={styles.dateText}>
+                    {formatTime(item.bookingTime)}
+                  </Text>
+                </View>
+              )}
+
+
             </View>
 
           </View>

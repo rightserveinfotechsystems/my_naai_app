@@ -31,6 +31,7 @@ import SalonBookingHistory from './src/screens/SalonBookingHistory';
 import SalonProduct from './src/screens/SalonProduct';
 import SalonAccountScreen from './src/screens/SalonAccountScreen';
 import AddOfflineCustomer from './src/components/AddOfflineCustomer';
+import SalonNotifications from './src/screens/SalonNotifications';
 
 
 const Stack = createNativeStackNavigator();
@@ -170,7 +171,7 @@ const App = () => {
           options={{ headerShown: false }}
         />
         {/*  */}
-         <Stack.Screen
+        <Stack.Screen
           name="UserLogin"
           component={UserLogin}
           options={{ headerShown: false }}
@@ -195,7 +196,7 @@ const App = () => {
           component={BookingSchedule}
           options={{ headerShown: false }}
         />
-       
+
         <Stack.Screen
           name="UserSignup"
           component={UserSignup}
@@ -240,6 +241,11 @@ const App = () => {
         <Stack.Screen
           name="AddOfflineCustomer"
           component={AddOfflineCustomer}
+        // options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="SalonNotifications"
+          component={SalonNotifications}
         />
 
 
