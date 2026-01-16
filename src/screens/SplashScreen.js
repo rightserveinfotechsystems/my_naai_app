@@ -103,14 +103,6 @@ const SplashScreen = ({ navigation }) => {
           <Text style={styles.skipText}>Skip</Text>
         </TouchableOpacity>
 
-        {/* Logo only on first slide */}
-        {/* {item.id === '1' && (
-          <Image
-            source={require('../assets/my_naai.png')}
-            style={styles.logo}
-          />
-        )} */}
-
         {/* Text */}
         <View style={styles.textBox}>
           <Text style={styles.title}>{item.title}</Text>

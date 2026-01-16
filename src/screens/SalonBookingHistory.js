@@ -65,6 +65,7 @@ const CustomerBookingHistory = () => {
       const response = await communication.salonQueueHistory({
         page: pageNo,
       });
+      console.log("salonQueueHistory", response?.bookings);
 
       if (response?.status === 'SUCCESS') {
         const data = response?.bookings || [];
@@ -134,11 +135,11 @@ const CustomerBookingHistory = () => {
               {item.userName || 'Guest'}
             </Text>
 
-            {item.barberName && (
+            {item?.barberName && (
               <View style={styles.row}>
                 <Ionicons name="person-outline" size={14} color="#E8B97E" />
                 <Text style={styles.barber}>
-                  Barber: {item.barberName}
+                  Barber: {item?.barberName}
                 </Text>
               </View>
 
@@ -235,7 +236,11 @@ const CustomerBookingHistory = () => {
           ) : (
             <FlatList
               data={userList}
-              keyExtractor={(item) => item.bookingId}
+              // keyExtractor={(item) => item.bookingId}
+              keyExtractor={(item, index) =>
+                `${item.bookingId}-${index}`
+              }
+
               renderItem={renderItem}
               refreshControl={
                 <RefreshControl

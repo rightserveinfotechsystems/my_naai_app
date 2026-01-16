@@ -69,6 +69,8 @@ const SalonDashboard = ({ navigation }) => {
         salonId,
         page: pageNo,
       });
+      console.log("customerList", response?.data);
+
 
       if (response?.status === 'SUCCESS') {
         const newData = response?.data || [];
@@ -176,7 +178,15 @@ const SalonDashboard = ({ navigation }) => {
       <View style={styles.infoRow}>
         <View style={styles.infoLeft}>
           <Text style={styles.name}>{item?.userName || 'Guest'}</Text>
+          {item?.barberName && (
+            <View style={styles.row}>
+              <Ionicons name="person-outline" size={14} color="#E8B97E" />
+              <Text style={styles.barber}>
+                Barber: {item?.barberName}
+              </Text>
+            </View>
 
+          )}
           {item?.userPhone && (
             <View style={styles.row}>
               <Ionicons name="call-outline" size={14} color="#E8B97E" />
@@ -354,4 +364,12 @@ const styles = StyleSheet.create({
   emptyText: { color: '#777', marginTop: 10 },
 
   row: { flexDirection: 'row', alignItems: 'center' },
+  barber: {
+    color: '#E8B97E',
+    fontSize: 13,
+    // marginBottom: 6,
+    fontWeight: '600',
+    textTransform: "capitalize",
+    marginLeft: 8,
+  },
 });

@@ -2,8 +2,8 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
-const serverUrl = "http://192.168.1.8:5000";
-// const serverUrl = "http://72.60.195.95:3006";
+// const serverUrl = "http://192.168.1.8:5000";
+const serverUrl = "http://72.60.195.95:3006";
 // const serverUrl = "http://localhost:5000";
 // const serverUrl = "https://backend.vidyacurasolutions.com"
 
@@ -424,7 +424,7 @@ export const communication = {
     userNotificationCount: async (payload) => {
         try {
             const response = await axios.get(`${getServerUrl()}/api/notifications/get-notification-count`, {
-                params: { payload },
+                params: payload,
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`

@@ -1,5 +1,7 @@
 import 'react-native-gesture-handler'; // MUST be first
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NotificationProvider } from './src/components/NotificationContext';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -32,7 +34,6 @@ import SalonProduct from './src/screens/SalonProduct';
 import SalonAccountScreen from './src/screens/SalonAccountScreen';
 import AddOfflineCustomer from './src/components/AddOfflineCustomer';
 import SalonNotifications from './src/screens/SalonNotifications';
-
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -156,101 +157,126 @@ function SalonTabs() {
 }
 
 /* 🔷 Root App */
+
 const App = () => {
+  const [userId, setUserId] = useState("");
+  const [loadingUserId, setLoadingUserId] = useState(true);
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('mynaaiUser');
+        console.log("userData for socket", userData);
+
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          // Try userId from user or salon object
+          setUserId(parsed?.userId || parsed?.salon?.salonId || "");
+        } else {
+          setUserId("");
+        }
+      } catch {
+        setUserId("");
+      } finally {
+        setLoadingUserId(false);
+      }
+    };
+    fetchUserId();
+  }, []);
+
+  if (loadingUserId) return null; // or a splash/loading indicator
+
   return (
-    <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator initialRouteName="SplashLogo">
-        <Stack.Screen
-          name="SplashLogo"
-          component={SplashLogoScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="SplashScreen"
-          component={SplashScreen}
-          options={{ headerShown: false }}
-        />
-        {/*  */}
-        <Stack.Screen
-          name="UserLogin"
-          component={UserLogin}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Main"
-          component={MainTabs}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Salon"
-          component={SalonTabs}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="SalonDetail"
-          component={SalonDetailScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="BookingSchedule"
-          component={BookingSchedule}
-          options={{ headerShown: false }}
-        />
-
-        <Stack.Screen
-          name="UserSignup"
-          component={UserSignup}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="OtpScreen"
-          component={OtpScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="FAQScreen"
-          component={FAQScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="TermsScreen"
-          component={TermsScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="AboutScreen"
-          component={AboutScreen}
-          options={{ headerShown: false }}
-        />
-        {/*Naai routes  */}
-        <Stack.Screen
-          name="NaaiLogin"
-          component={NaaiLogin}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="NaaiRequest"
-          component={NaaiRequest}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="SalonOtpScreen"
-          component={SalonOtpScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="AddOfflineCustomer"
-          component={AddOfflineCustomer}
-        // options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="SalonNotifications"
-          component={SalonNotifications}
-        />
-
-
-      </Stack.Navigator>
-    </NavigationContainer>
+    <NotificationProvider userId={userId}>
+      <NavigationContainer ref={navigationRef}>
+        <Stack.Navigator initialRouteName="SplashLogo">
+          {/* ...existing Stack.Screen components... */}
+          <Stack.Screen
+            name="SplashLogo"
+            component={SplashLogoScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="SplashScreen"
+            component={SplashScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="UserLogin"
+            component={UserLogin}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Main"
+            component={MainTabs}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Salon"
+            component={SalonTabs}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="SalonDetail"
+            component={SalonDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="BookingSchedule"
+            component={BookingSchedule}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="UserSignup"
+            component={UserSignup}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="OtpScreen"
+            component={OtpScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="FAQScreen"
+            component={FAQScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="TermsScreen"
+            component={TermsScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AboutScreen"
+            component={AboutScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="NaaiLogin"
+            component={NaaiLogin}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="NaaiRequest"
+            component={NaaiRequest}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="SalonOtpScreen"
+            component={SalonOtpScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AddOfflineCustomer"
+            component={AddOfflineCustomer}
+          />
+          <Stack.Screen
+            name="SalonNotifications"
+            component={SalonNotifications}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </NotificationProvider>
   );
 };
 
