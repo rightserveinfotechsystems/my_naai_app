@@ -12,6 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication } from '../services/communication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import messaging from '@react-native-firebase/messaging';
+
 
 const RESEND_TIME = 30; // seconds
 
@@ -19,6 +21,8 @@ const SalonOtpScreen = ({ route, navigation }) => {
     const { mobile } = route.params;
 
     const [otp, setOtp] = useState('');
+    const [deviceToken, setDeviceToken] = useState(null);
+
     const [loading, setLoading] = useState(false);
     const [secondsLeft, setSecondsLeft] = useState(RESEND_TIME);
     const [canResend, setCanResend] = useState(false);
@@ -53,10 +57,13 @@ const SalonOtpScreen = ({ route, navigation }) => {
             const payload = {
                 phoneNumber: mobile,
                 otp: otp.toString(),
-                deviceToken: 'test-device-token-123',
+                deviceToken: deviceToken,
             };
+            console.log("verifySalonLogin payload", payload);
 
             const res = await communication.verifySalonLogin(payload);
+            console.log("verifySalonLogin res", res);
+
 
             if (res?.status === 'SUCCESS') {
                 if (res?.data?.token) {
@@ -114,6 +121,20 @@ const SalonOtpScreen = ({ route, navigation }) => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        const getDeviceToken = async () => {
+            try {
+                const token = await messaging().getToken();
+                console.log('FCM DEVICE TOKEN salon otpScreen:', token);
+                setDeviceToken(token);
+            } catch (e) {
+                console.log('FCM token error', e);
+            }
+        };
+
+        getDeviceToken();
+    }, []);
 
     return (
         <SafeAreaView style={styles.container}>

@@ -7,6 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { enableScreens } from 'react-native-screens';
 enableScreens();
+import messaging from '@react-native-firebase/messaging';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -161,6 +162,28 @@ function SalonTabs() {
 const App = () => {
   const [userId, setUserId] = useState("");
   const [loadingUserId, setLoadingUserId] = useState(true);
+  
+ useEffect(() => {
+    // Request notification permission & get token
+    const getDeviceToken = async () => {
+      const authStatus = await messaging().requestPermission();
+      if (authStatus === messaging.AuthorizationStatus.AUTHORIZED || authStatus === messaging.AuthorizationStatus.PROVISIONAL) {
+        const token = await messaging().getToken();
+        console.log('Device token:', token);
+        // TODO: Send this token to your backend
+      }
+    };
+
+    getDeviceToken();
+
+    // Listen for token refresh
+    const unsubscribe = messaging().onTokenRefresh(token => {
+      console.log('Refreshed token:', token);
+      // TODO: Send refreshed token to your backend
+    });
+
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -185,6 +208,9 @@ const App = () => {
   }, []);
 
   if (loadingUserId) return null; // or a splash/loading indicator
+
+
+
 
   return (
     <NotificationProvider userId={userId}>

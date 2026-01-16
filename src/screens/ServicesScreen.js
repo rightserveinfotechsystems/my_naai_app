@@ -204,14 +204,22 @@ const ServicesScreen = () => {
                 {formatDateReadable(item.bookingDate)}
                 {/* • {formatTime(item.bookingTime)} */}
               </Text>
-              {item.bookingTime && (
+              {item.queueNumber && (
+                <View style={[styles.dateRow, { marginLeft: 4 }]}>
+                  <Ionicons name="time-outline" size={14} color="#E1B378" />
+                  <Text style={styles.dateText}>
+                    Queue:{item.queueNumber} People
+                  </Text>
+                </View>
+              )}
+              {/* {item.bookingTime && (
                 <View style={[styles.dateRow, { marginLeft: 4 }]}>
                   <Ionicons name="time-outline" size={14} color="#E1B378" />
                   <Text style={styles.dateText}>
                     {formatTime(item.bookingTime)}
                   </Text>
                 </View>
-              )}
+              )} */}
 
 
             </View>
@@ -357,7 +365,7 @@ const styles = StyleSheet.create({
   dateText: {
     color: '#E1B378',
     fontSize: 12,
-    marginLeft: 6,
+    marginLeft: 4,
   },
   statusBtn: {
     paddingHorizontal: 4,

@@ -13,6 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication, getServerUrl } from '../services/communication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
 
 const BookingSchedule = ({ route, navigation }) => {
   const { salon } = route.params;
@@ -24,6 +26,9 @@ const BookingSchedule = ({ route, navigation }) => {
   const [selectedBarber, setSelectedBarber] = useState(null);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedTime, setSelectedTime] = useState(null);
+
 
   useEffect(() => {
     const loadUser = async () => {
@@ -63,6 +68,16 @@ const BookingSchedule = ({ route, navigation }) => {
     .slice(0, 10); // YYYY-MM-DD
 
 
+  const formatBookingTime = time => {
+    if (!time) return null;
+
+    const hours = time.getHours().toString().padStart(2, '0');
+    const minutes = time.getMinutes().toString().padStart(2, '0');
+
+    return `${hours}:${minutes}:00`;
+  };
+
+
   /* -------------------- CONFIRM -------------------- */
   const handleConfirm = async () => {
     if (selectedServices.length === 0) {
@@ -79,6 +94,7 @@ const BookingSchedule = ({ route, navigation }) => {
         salonId: salon?.salonId,
         serviceIds: selectedServices.map(s => s.serviceId),
         bookingDate,
+        bookingTime: formatBookingTime(selectedTime),
         barberId: selectedBarber ? String(selectedBarber.barberId) : null,
 
       }
@@ -98,7 +114,7 @@ Barber: ${selectedBarber ? selectedBarber.fullName : 'Auto Assigned'
 Date: ${new Date(
             Date.now() + selectedDate * 86400000,
           ).toDateString()}
-Total: ₹${totalAmount}`,
+Time: ${formatTime(selectedTime)}`,
           [
             {
               text: 'OK',
@@ -128,6 +144,26 @@ Total: ₹${totalAmount}`,
 
   const getStatusColor = isAvailable =>
     isAvailable ? '#4CAF50' : '#F44336';
+
+
+  const onTimeChange = (event, time) => {
+    setShowTimePicker(false);
+
+    if (time) {
+      setSelectedTime(time);
+    }
+  };
+
+
+  const formatTime = date => {
+    if (!date) return 'Select Time';
+
+    return date.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -309,6 +345,30 @@ Total: ₹${totalAmount}`,
             })}
           </View>
         </View>
+        {/* -------------------- TIME -------------------- */}
+        <View style={styles.card}>
+          <Text style={styles.section}>Select Time</Text>
+
+          <TouchableOpacity
+            style={styles.timeInput}
+            onPress={() => setShowTimePicker(true)}
+          >
+            <Text style={styles.timeText}>
+              {formatTime(selectedTime)}
+            </Text>
+            <Ionicons name="time-outline" size={20} color="#E1B378" />
+          </TouchableOpacity>
+
+          {showTimePicker && (
+            <DateTimePicker
+              value={selectedTime || new Date()}
+              mode="time"
+              display="clock"
+              onChange={onTimeChange}
+            />
+          )}
+        </View>
+
       </ScrollView>
 
       {/* -------------------- CONFIRM -------------------- */}
@@ -436,4 +496,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 16,
   },
+  timeInput: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    padding: 16,
+    borderRadius: 14,
+  },
+
+  timeText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+
 });

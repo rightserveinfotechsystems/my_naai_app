@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { communication } from '../services/communication';
+import messaging from '@react-native-firebase/messaging';
 
 const RESEND_TIME = 30;
 
@@ -19,6 +20,7 @@ const OtpScreen = ({ route, navigation }) => {
   const { mobile, fullName } = route.params;
 
   const [otp, setOtp] = useState('');
+  const [deviceToken, setDeviceToken] = useState(null);
   const [loading, setLoading] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(RESEND_TIME);
   const [canResend, setCanResend] = useState(false);
@@ -52,7 +54,7 @@ const OtpScreen = ({ route, navigation }) => {
       const response = await communication.createUser({
         phoneNumber: mobile,
         fullName,
-        deviceToken: 'test-device-token-234',
+        deviceToken: deviceToken,
         otp,
       });
 
@@ -103,7 +105,7 @@ const OtpScreen = ({ route, navigation }) => {
         setCanResend(false);
         inputRef.current?.focus();
       } else {
-        Alert.alert('Error', res?.message || 'Failed to resend OTP');
+        Alert.alert('Errors', res?.message || 'Failed to resend OTP');
       }
     } catch (error) {
       Alert.alert(
@@ -114,7 +116,19 @@ const OtpScreen = ({ route, navigation }) => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    const getDeviceToken = async () => {
+      try {
+        const token = await messaging().getToken();
+        console.log('FCM DEVICE TOKEN user otpscreen:', token);
+        setDeviceToken(token);
+      } catch (e) {
+        console.log('FCM token error', e);
+      }
+    };
 
+    getDeviceToken();
+  }, []);
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Phone Verification</Text>

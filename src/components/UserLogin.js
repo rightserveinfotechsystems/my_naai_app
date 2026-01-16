@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import messaging from '@react-native-firebase/messaging';
 import { communication } from '../services/communication';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
@@ -21,6 +22,7 @@ const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 const UserLogin = ({ navigation }) => {
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
+  const [deviceToken, setDeviceToken] = useState(null);
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const RESEND_TIME = 30;
@@ -85,7 +87,7 @@ const UserLogin = ({ navigation }) => {
       const payload = {
         phoneNumber: mobile,
         otp: otp.toString(),
-        deviceToken: 'test-device-token-123',
+        deviceToken: deviceToken,
       };
 
       const res = await communication.verifyLogin(payload);
@@ -138,6 +140,19 @@ const UserLogin = ({ navigation }) => {
     }
   }, [otpSent, secondsLeft, canResend]);
 
+  useEffect(() => {
+    const getDeviceToken = async () => {
+      try {
+        const token = await messaging().getToken();
+        console.log('FCM DEVICE TOKEN userlogin:', token);
+        setDeviceToken(token);
+      } catch (e) {
+        console.log('FCM token error', e);
+      }
+    };
+
+    getDeviceToken();
+  }, []);
 
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>

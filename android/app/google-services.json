@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1045869182472",
+    "project_id": "mynaai-a444d",
+    "storage_bucket": "mynaai-a444d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1045869182472:android:a7247df764565f57541bbd",
+        "android_client_info": {
+          "package_name": "com.mynaai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-14Ts3g_PYI5PIUv6CaR2nQu6NO20XrU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
