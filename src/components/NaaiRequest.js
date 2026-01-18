@@ -15,6 +15,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication } from '../services/communication';
+import { CITY_OPTIONS } from '../utilities/citiesRequestArray';
+import RNPickerSelect from 'react-native-picker-select';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
@@ -23,6 +25,7 @@ const NaaiRequest = ({ navigation }) => {
   const [salonName, setSalonName] = useState('');
   const [mobile, setMobile] = useState('');
   const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
   const [loading, setLoading] = useState(false);
 
   /* ---------------- VALIDATION ---------------- */
@@ -44,6 +47,12 @@ const NaaiRequest = ({ navigation }) => {
       Alert.alert('Validation', 'Please enter address');
       return false;
     }
+    if (!city) {
+      Alert.alert('Validation', 'Please select a city');
+      return false;
+    }
+
+
     return true;
   };
 
@@ -61,7 +70,8 @@ const NaaiRequest = ({ navigation }) => {
         fullName: naaiName,
         phoneNumber: mobile,
         salonName: salonName,
-        address: address
+        address: address,
+        city: city,
       }
       console.log("payload", payload);
 
@@ -143,6 +153,20 @@ const NaaiRequest = ({ navigation }) => {
                 value={address}
                 onChangeText={setAddress}
                 style={styles.input}
+              />
+            </View>
+            <View style={styles.inputBox}>
+              <RNPickerSelect
+                placeholder={{ label: 'Select City', value: null }}
+                value={city}
+                onValueChange={setCity}
+                items={CITY_OPTIONS}
+                style={{
+                  inputAndroid: styles.pickerInput,
+                  inputIOS: styles.pickerInput,
+                  placeholder: { color: '#999' },
+                }}
+                useNativeAndroidPickerStyle={false}
               />
             </View>
 
@@ -259,4 +283,12 @@ const styles = StyleSheet.create({
     color: '#E8B97E',
     fontWeight: '600',
   },
+  pickerInput: {
+    color: '#fff',          // 👈 IMPORTANT
+    fontSize: 15,
+    height: 50,
+    paddingVertical: 12,
+  },
+
+
 });

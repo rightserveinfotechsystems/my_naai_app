@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler'; // MUST be first
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import notifee, { AndroidImportance } from '@notifee/react-native';
 import { NotificationProvider } from './src/components/NotificationContext';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -35,6 +36,11 @@ import SalonProduct from './src/screens/SalonProduct';
 import SalonAccountScreen from './src/screens/SalonAccountScreen';
 import AddOfflineCustomer from './src/components/AddOfflineCustomer';
 import SalonNotifications from './src/screens/SalonNotifications';
+
+import { requestNotificationPermission } from './src/utilities/notificationPermission';
+import { initTTS, speakNewBooking  } from './src/utilities/tts';
+import { Alert, Linking } from 'react-native';
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -162,28 +168,117 @@ function SalonTabs() {
 const App = () => {
   const [userId, setUserId] = useState("");
   const [loadingUserId, setLoadingUserId] = useState(true);
-  
- useEffect(() => {
-    // Request notification permission & get token
-    const getDeviceToken = async () => {
+
+  // Create default channel for Android
+  useEffect(() => {
+    async function createChannel() {
+      await notifee.createChannel({
+        id: 'default_channel',
+        name: 'Default Notifications',
+        importance: AndroidImportance.HIGH,
+        // sound: 'buzzer',
+        vibrationPattern: [300, 200, 300, 200, 600, 400]
+      });
+    }
+    createChannel();
+  }, []);
+
+  // Request permission + get token
+useEffect(() => {
+  let unsubscribeTokenRefresh;
+
+  const initFCM = async () => {
+    try {
+      // 🔔 Request permission
       const authStatus = await messaging().requestPermission();
-      if (authStatus === messaging.AuthorizationStatus.AUTHORIZED || authStatus === messaging.AuthorizationStatus.PROVISIONAL) {
-        const token = await messaging().getToken();
-        console.log('Device token:', token);
-        // TODO: Send this token to your backend
+      const enabled =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+      if (!enabled) {
+        Alert.alert(
+          'Enable Notifications',
+          'Please enable notifications to receive updates.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          ]
+        );
+        return;
       }
-    };
 
-    getDeviceToken();
+      // ⏳ Small delay prevents SERVICE_NOT_AVAILABLE
+      await new Promise(res => setTimeout(res, 1500));
 
-    // Listen for token refresh
-    const unsubscribe = messaging().onTokenRefresh(token => {
-      console.log('Refreshed token:', token);
-      // TODO: Send refreshed token to your backend
+      // 📲 Get token safely
+      const token = await messaging().getToken();
+      console.log('✅ Device token:', token);
+
+      // ✅ SEND TO BACKEND HERE
+      // await communication.saveFcmToken(token);
+
+      // 🔁 Token refresh listener
+      unsubscribeTokenRefresh = messaging().onTokenRefresh(newToken => {
+        console.log('🔄 Refreshed token:', newToken);
+        // await communication.saveFcmToken(newToken);
+      });
+
+    } catch (error) {
+      console.log('❌ FCM init error:', error.message);
+      // ❗ Never crash app
+    }
+  };
+
+  initFCM();
+
+  return () => {
+    if (unsubscribeTokenRefresh) unsubscribeTokenRefresh();
+  };
+}, []);
+
+
+  // Foreground notifications
+  useEffect(() => {
+    const unsubscribe = messaging().onMessage(async remoteMessage => {
+      speakNewBooking();
+      console.log('Foreground notification:', remoteMessage);
+      await notifee.displayNotification({
+        title: remoteMessage.notification?.title,
+        body: remoteMessage.notification?.body,
+        android: {
+          channelId: 'default_channel',
+          pressAction: { id: 'default' },
+          //  sound: 'buzzer',
+        },
+        data: remoteMessage.data,
+      });
     });
-
     return unsubscribe;
   }, []);
+
+  // Killed / background notifications
+  useEffect(() => {
+    messaging()
+      .getInitialNotification()
+      .then(remoteMessage => {
+        if (remoteMessage) {
+          console.log('App opened from notification (killed):', remoteMessage);
+          // Navigate to a screen if included in data
+          const screen = remoteMessage.data?.screen;
+          if (screen) navigationRef.current?.navigate(screen);
+        }
+      });
+
+    // Background handler (Android)
+    messaging().setBackgroundMessageHandler(async remoteMessage => {
+      console.log('Background notification:', remoteMessage);
+      // Optional: handle background notification data
+    });
+  }, []);
+
+  useEffect(() => {
+  initTTS();
+}, []);
 
   useEffect(() => {
     const fetchUserId = async () => {

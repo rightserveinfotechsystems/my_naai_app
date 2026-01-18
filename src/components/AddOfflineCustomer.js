@@ -14,7 +14,9 @@ import { communication } from '../services/communication';
 
 const AddOfflineCustomer = ({ route, navigation }) => {
   const { salonId } = route.params;
-  const [count, setCount] = useState('');
+  // const [count, setCount] = useState('');
+  const [customer, setCustomer] = useState('');
+  const [serviceTime, setServiceTime] = useState('');
 
   const [loading, setLoading] = useState(false);
   useLayoutEffect(() => {
@@ -26,18 +28,18 @@ const AddOfflineCustomer = ({ route, navigation }) => {
   }, [navigation]);
 
   const handleAddCustomers = async () => {
-    if (!count || isNaN(count) || count <= 0) {
-      Alert.alert(
-        'Invalid Number',
-        'Please enter a valid number of customers'
-      );
-      return;
-    }
+    // if (!count || isNaN(count) || count <= 0) {
+    //   Alert.alert(
+    //     'Invalid Number',
+    //     'Please enter a valid number of customers'
+    //   );
+    //   return;
+    // }
     setLoading(true);
     try {
       const payload = {
-        salonId: salonId,
-        count: Number(count),
+        customerName: customer,
+        serviceDuration: serviceTime,
       }
       console.log("payload", payload);
 
@@ -75,22 +77,32 @@ const AddOfflineCustomer = ({ route, navigation }) => {
       <View style={styles.formCard}>
         <Text style={styles.title}>Walk-in Customers</Text>
         <Text style={styles.subtitle}>
-          Enter number of customers who came directly to the salon
+          Enter name and total service duration of customers who came directly to the salon
         </Text>
 
         {/* COUNT INPUT */}
         <View style={styles.inputBox}>
           <Ionicons name="people-outline" size={20} color="#999" />
           <TextInput
-            placeholder="Number of Customers"
+            placeholder="Customer Name"
             placeholderTextColor="#999"
             style={styles.input}
-            value={count}
-            onChangeText={text =>
-              setCount(text.replace(/[^0-9]/g, ''))
-            }
+            value={customer}
+            onChangeText={setCustomer}
+          // keyboardType="number-pad"
+          // maxLength={3}
+          />
+        </View>
+        <View style={styles.inputBox}>
+          <Ionicons name="time-outline" size={20} color="#999" />
+          <TextInput
+            placeholder="Duration in minutes"
+            placeholderTextColor="#999"
+            style={styles.input}
+            value={serviceTime}
+            onChangeText={setServiceTime}
             keyboardType="number-pad"
-            maxLength={3}
+          // maxLength={3}
           />
         </View>
 

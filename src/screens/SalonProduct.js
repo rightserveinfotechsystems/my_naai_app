@@ -63,29 +63,47 @@ const SalonProduct = () => {
 
     const pickAndUploadImage = async () => {
         try {
-            const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.7 });
-            if (result.didCancel) return;
-
-            const selected = result.assets[0];
-            const formData = new FormData();
-            formData.append('file', {
-                uri: selected.uri,
-                type: selected.type || 'image/jpeg',
-                name: selected.fileName || `photo_${Date.now()}.jpg`,
+            const result = await launchImageLibrary({
+                mediaType: 'photo',
+                quality: 0.7,
             });
 
+            if (result.didCancel || !result.assets?.length) return;
+
+            const asset = result.assets[0];
+
+            const formData = new FormData();
+
+            formData.append('image', {
+                uri: asset.uri,
+                type: asset.type || 'image/jpeg',
+                name: asset.fileName || `photo_${Date.now()}.jpg`,
+            });
+
+            console.log('Uploading image:', asset.uri);
+
             const uploadResponse = await communication.uploadImages(formData);
-            if (uploadResponse?.status === 'SUCCESS') {
-                const imageUrl = `${getServerUrl()}${uploadResponse.data.imageUrl}`;
-                setProductForm(prev => ({ ...prev, productImage: imageUrl }));
+
+            console.log('Upload response:', uploadResponse);
+
+            if (uploadResponse?.success) {
+                const imageUrl = `${getServerUrl()}${uploadResponse.url}`;
+                setProductForm(prev => ({
+                    ...prev,
+                    productImage: imageUrl,
+                }));
             } else {
-                Alert.alert('Upload Failed', uploadResponse?.message || 'Failed to upload image');
+                Alert.alert(
+                    'Upload Failed',
+                    uploadResponse?.message || 'Failed to upload image'
+                );
             }
         } catch (error) {
             console.log('Image upload error:', error);
             Alert.alert('Error', 'Failed to upload image');
         }
     };
+
 
     const saveProduct = async () => {
         if (!name || !price) {
@@ -101,7 +119,7 @@ const SalonProduct = () => {
             price: parseFloat(price),
             rating: safeRating,
             isAvailable: available,
-            productImage: image?.replace(getServerUrl(), '') || '', // remove server URL if needed
+            productImage: image?.replace(getServerUrl(), '') || '',
         };
 
         try {
@@ -351,8 +369,8 @@ export default SalonProduct;
 
 
 const styles = StyleSheet.create({
-    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.80)' },
-    container: { flex: 1, padding: 16 },
+    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.80)', paddingTop: 50 },
+    container: { flex: 1, paddingHorizontal: 14, },
 
     card: {
         backgroundColor: '#1C1C1C',

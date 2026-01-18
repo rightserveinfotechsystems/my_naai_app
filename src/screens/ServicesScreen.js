@@ -164,14 +164,14 @@ const ServicesScreen = () => {
 
     return (
       <TouchableOpacity style={styles.card}>
-        <Image
+        {/* <Image
           source={
             item.imageUrl
               ? { uri: item.imageUrl }
               : require('../assets/naai/naai1.jpg')
           }
           style={styles.image}
-        />
+        /> */}
 
         <View style={styles.infoContainer}>
           <View style={styles.info}>
