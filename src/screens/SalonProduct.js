@@ -13,10 +13,13 @@ import {
     Alert,
     ImageBackground,
     Dimensions,
+    ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { communication, getServerUrl } from '../services/communication';
+import axios from 'axios';
+import RNBlobUtil from 'react-native-blob-util';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -26,6 +29,7 @@ const SalonProduct = () => {
     const [products, setProducts] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [editId, setEditId] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     const [productForm, setProductForm] = useState({
         productName: '',
@@ -36,9 +40,18 @@ const SalonProduct = () => {
         phoneNumber: '',
     });
 
+
+    const buildImageUrl = path => {
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
+        return `${getServerUrl()}/getFiles/${path}`;
+    };
+
     const fetchProducts = async () => {
         try {
             const response = await communication.salonProductList({});
+            console.log("salonProductList", response);
+
             if (response?.status === 'SUCCESS') {
                 const apiProducts = response?.data?.products.map(p => ({
                     id: p.productId,
@@ -65,48 +78,63 @@ const SalonProduct = () => {
         try {
             const result = await launchImageLibrary({
                 mediaType: 'photo',
-                quality: 0.7,
+                quality: 0.8,
             });
 
             if (result.didCancel || !result.assets?.length) return;
 
             const asset = result.assets[0];
+            console.log('Selected image:', asset);
 
-            const formData = new FormData();
+            // Show a preview instantly before upload
+            setProductForm(prev => ({
+                ...prev,
+                productImage: asset.uri,
+            }));
 
-            formData.append('image', {
-                uri: asset.uri,
-                type: asset.type || 'image/jpeg',
-                name: asset.fileName || `photo_${Date.now()}.jpg`,
-            });
+            // Upload using Blob Util
+            const response = await RNBlobUtil.fetch(
+                'POST',
+                `${getServerUrl()}/api/upload/upload-image`,
+                {
+                    'Content-Type': 'multipart/form-data',
+                },
+                [
+                    {
+                        name: 'image', // backend field
+                        filename: asset.fileName || `image_${Date.now()}.jpg`,
+                        type: asset.type || 'image/jpeg',
+                        data: RNBlobUtil.wrap(asset.uri.replace('file://', '')),
+                    },
+                ]
+            );
 
-            console.log('Uploading image:', asset.uri);
+            const data = response.json();
+            console.log('Upload success:', data);
 
-            const uploadResponse = await communication.uploadImages(formData);
-
-            console.log('Upload response:', uploadResponse);
-
-            if (uploadResponse?.success) {
-                const imageUrl = `${getServerUrl()}${uploadResponse.url}`;
+            if (data?.success) {
+                // const imageUrl = `${getServerUrl()}${data.url}`;
+                // Update productForm with the final uploaded URL
                 setProductForm(prev => ({
                     ...prev,
-                    productImage: imageUrl,
+                    productImage: data.url.replace(/^\/+/, ''),
                 }));
             } else {
-                Alert.alert(
-                    'Upload Failed',
-                    uploadResponse?.message || 'Failed to upload image'
-                );
+                Alert.alert('Upload Failed', data?.message || 'Failed to upload image');
             }
         } catch (error) {
-            console.log('Image upload error:', error);
+            console.log('Upload error:', error);
             Alert.alert('Error', 'Failed to upload image');
         }
     };
 
 
     const saveProduct = async () => {
-        if (!name || !price) {
+        if (isSaving) return; // ✅ prevent double click
+
+        const { productName, price, rating, isAvailable, productImage, phoneNumber } = productForm;
+
+        if (!productName || !price) {
             Alert.alert('Required', 'Product name and price are required');
             return;
         }
@@ -114,69 +142,64 @@ const SalonProduct = () => {
         const safeRating = Math.min(Math.max(parseFloat(rating) || 0, 0), 5);
 
         const payload = {
-            productId: editId,        // <-- the product you are editing
-            productName: name,
-            price: parseFloat(price),
+            productId: editId || null,
+            productName,
+            price,
             rating: safeRating,
-            isAvailable: available,
-            productImage: image?.replace(getServerUrl(), '') || '',
+            isAvailable,
+            productImage,
+            phoneNumber,
         };
 
         try {
+            setIsSaving(true); // 🔒 LOCK BUTTON
+
             let response;
             if (editId) {
-                // Update existing product
                 response = await communication.updateProductList(payload);
             } else {
-                // Create new product
                 response = await communication.createProductList(payload);
             }
 
             if (response?.status === 'SUCCESS') {
                 const updated = response.data;
 
+                const newProduct = {
+                    id: updated.productId,
+                    name: updated.productName,
+                    price: updated.price,
+                    rating: parseFloat(updated.rating),
+                    available: updated.isAvailable,
+                    image: updated.productImage
+                        ? `${getServerUrl()}/getFiles/${updated.productImage}`
+                        : null,
+                };
+
                 if (editId) {
                     setProducts(prev =>
-                        prev.map(p =>
-                            p.id === editId
-                                ? {
-                                    id: updated.productId,
-                                    name: updated.productName,
-                                    price: updated.price,
-                                    rating: parseFloat(updated.rating),
-                                    available: updated.isAvailable,
-                                    image: updated.productImage
-                                        ? `${getServerUrl()}/getfiles/${updated.productImage}`
-                                        : null,
-                                }
-                                : p
-                        )
+                        prev.map(p => (p.id === editId ? newProduct : p))
                     );
                 } else {
-                    setProducts(prev => [
-                        {
-                            id: updated.productId,
-                            name: updated.productName,
-                            price: updated.price,
-                            rating: parseFloat(updated.rating),
-                            available: updated.isAvailable,
-                            image: updated.productImage
-                                ? `${getServerUrl()}/getfiles/${updated.productImage}`
-                                : null,
-                        },
-                        ...prev,
-                    ]);
+                    setProducts(prev => [newProduct, ...prev]);
                 }
 
-                Alert.alert('Success', editId ? 'Product updated successfully' : 'Product added successfully');
+                Alert.alert(
+                    'Success',
+                    editId ? 'Product updated successfully' : 'Product added successfully'
+                );
+
                 resetForm();
             } else {
                 Alert.alert('Error', response?.message || 'Something went wrong');
             }
         } catch (error) {
             Alert.alert('Error', error?.response?.data?.message || 'Failed to save product');
+        } finally {
+            setIsSaving(false); // 🔓 UNLOCK BUTTON
         }
     };
+
+
 
 
     const resetForm = () => {
@@ -199,7 +222,9 @@ const SalonProduct = () => {
             price: item.price,
             rating: String(item.rating),
             isAvailable: item.available,
-            productImage: item.image,
+            productImage: item.image
+                ? item.image.replace(`${getServerUrl()}/getFiles/`, '')
+                : '',
             phoneNumber: '',
         });
         setModalVisible(true);
@@ -240,7 +265,6 @@ const SalonProduct = () => {
                     <Ionicons name="image-outline" size={30} color="#777" />
                 </View>
             )}
-
             <View style={styles.cardContent}>
                 <Text style={styles.productName} numberOfLines={1}>
                     {item.name}
@@ -306,7 +330,11 @@ const SalonProduct = () => {
                                 <ScrollView>
                                     <TouchableOpacity style={styles.imagePicker} onPress={pickAndUploadImage}>
                                         {productForm.productImage ? (
-                                            <Image source={{ uri: productForm.productImage }} style={styles.pickedImage} />
+                                            <Image
+                                                source={{ uri: buildImageUrl(productForm.productImage) }}
+                                                style={styles.pickedImage}
+                                            />
+
                                         ) : (
                                             <Ionicons name="camera-outline" size={26} color="#999" />
                                         )}
@@ -348,9 +376,23 @@ const SalonProduct = () => {
                                         />
                                     </View>
 
-                                    <TouchableOpacity style={styles.saveBtn} onPress={saveProduct}>
-                                        <Text style={styles.saveText}>{editId ? 'UPDATE PRODUCT' : 'ADD PRODUCT'}</Text>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.saveBtn,
+                                            isSaving && { opacity: 0.6 }
+                                        ]}
+                                        onPress={saveProduct}
+                                        disabled={isSaving}
+                                    >
+                                        {isSaving ? (
+                                            <ActivityIndicator color="#000" />
+                                        ) : (
+                                            <Text style={styles.saveText}>
+                                                {editId ? 'UPDATE PRODUCT' : 'ADD PRODUCT'}
+                                            </Text>
+                                        )}
                                     </TouchableOpacity>
+
 
                                     <TouchableOpacity onPress={resetForm}>
                                         <Text style={styles.cancelText}>Cancel</Text>

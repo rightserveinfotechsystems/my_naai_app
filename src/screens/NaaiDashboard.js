@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { communication, getServerUrl } from '../services/communication';
+import { getUserLocation } from '../utilities/getUserLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CITIES from '../utilities/CitiesArray';
 
@@ -106,7 +107,6 @@ const NaaiDashboard = ({ navigation }) => {
     return () => clearInterval(timer);
   }, [adIndex, paused, ads]);
 
-
   /* -------- FETCH SALONS -------- */
   const getSalonList = async (pageNo = 1, refresh = false) => {
     if (loading) return;
@@ -114,17 +114,23 @@ const NaaiDashboard = ({ navigation }) => {
     setLoading(true);
 
     try {
-
+      const { latitude, longitude } = await getUserLocation();
       const payload = {
         page: pageNo,
         searchString: search,
+        latitude,
+        longitude,
       };
+      console.log("payload", payload.latitude);
+
 
       if (locationFilter !== 'All') {
         payload.cityFilter = locationFilter;
       }
 
       const response = await communication.userSalonList(payload);
+      console.log("userSalonList", response);
+
 
       if (response?.status === 'SUCCESS') {
         const convertedData = convertSalonApiData(response.data);

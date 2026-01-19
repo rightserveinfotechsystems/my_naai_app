@@ -13,5 +13,5 @@ export const initTTS = async () => {
 
 export const speakNewBooking = () => {
   Tts.stop();
-  Tts.speak('New booking received');
+  Tts.speak('You have received a new booking request');
 };

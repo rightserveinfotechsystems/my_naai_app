@@ -1,19 +1,17 @@
-import messaging from '@react-native-firebase/messaging';
-import { Alert, Linking } from 'react-native';
+import notifee, { AuthorizationStatus } from '@notifee/react-native';
+import { Alert, Linking, Platform } from 'react-native';
 
 export async function requestNotificationPermission() {
-  const authStatus = await messaging().requestPermission();
+  if (Platform.OS === 'android') {
+    const settings = await notifee.requestPermission();
 
-  const enabled =
-    authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-    authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    if (settings.authorizationStatus === AuthorizationStatus.AUTHORIZED) {
+      console.log('🔔 Notification permission granted');
+      return true;
+    }
 
-  if (enabled) {
-    console.log('🔔 Notification permission granted');
-  } else {
     console.log('🚫 Notification permission denied');
 
-    // Optional UX fallback
     Alert.alert(
       'Enable Notifications',
       'Please enable notifications to receive booking and queue updates.',
@@ -22,7 +20,10 @@ export async function requestNotificationPermission() {
         { text: 'Open Settings', onPress: () => Linking.openSettings() },
       ]
     );
+
+    return false;
   }
 
-  return enabled;
+  // iOS fallback (optional)
+  return true;
 }

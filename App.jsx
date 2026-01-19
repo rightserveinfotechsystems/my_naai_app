@@ -184,6 +184,11 @@ const App = () => {
   }, []);
 
   // Request permission + get token
+
+  useEffect(() => {
+  requestNotificationPermission();
+}, []);
+
 useEffect(() => {
   let unsubscribeTokenRefresh;
 

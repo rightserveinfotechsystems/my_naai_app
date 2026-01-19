@@ -19,6 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { communication, getServerUrl } from '../services/communication';
 import { DAYS } from '../utilities/DaysArray';
+import RNBlobUtil from 'react-native-blob-util';
 
 const GOLD = '#E8B97E';
 const DARK = '#121212';
@@ -54,6 +55,27 @@ const SalonAccountScreen = ({ navigation }) => {
 
 
   /* ---------------- GET USER FROM STORAGE ---------------- */
+
+  // const buildImageUrl = (path) => {
+  //   if (!path) return null;
+  //   if (path.startsWith('http')) return path;
+  //   return `${getServerUrl()}/getFiles/${path}`;
+  // };
+
+  const buildImageUrl = (path) => {
+    if (!path) return null;
+
+    // ✅ local image (picked from gallery)
+    if (path.startsWith('file://')) return path;
+
+    // ✅ already full URL
+    if (path.startsWith('http')) return path;
+
+    // ✅ server relative path
+    return `${getServerUrl()}/getFiles/${path}`;
+  };
+
+
 
   const userByIdInfo = async () => {
     try {
@@ -186,6 +208,17 @@ const SalonAccountScreen = ({ navigation }) => {
   };
 
 
+  const formatTime12Hour = (date) => {
+    if (!date) return '';
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+
+
 
   /* ---------------- UPDATE PROFILE ---------------- */
   const handleSaveProfile = async () => {
@@ -241,6 +274,7 @@ const SalonAccountScreen = ({ navigation }) => {
               b.image?.startsWith('file://')
                 ? await uploadImages(b.image)
                 : b.image || null,
+
             ratingAverage: String(b.rating || '0.0'),
             isAvailable: b.isAvailable,
           }))
@@ -258,6 +292,7 @@ const SalonAccountScreen = ({ navigation }) => {
               b.image?.startsWith('file://')
                 ? await uploadImages(b.image)
                 : null,
+
             ratingAverage: String(b.rating || '0.0'),
             isAvailable: b.isAvailable,
           }))
@@ -267,10 +302,18 @@ const SalonAccountScreen = ({ navigation }) => {
 
 
       // Final payload
-      const imagePath =
-        salonImage && salonImage.startsWith('file://')
-          ? await uploadImages(salonImage)
-          : salonImage; // already uploaded path
+      // const imagePath =
+      //   salonImage?.startsWith('file://')
+      //     ? await uploadImages(salonImage)
+      //     : salonImage;
+
+      let imagePath = salonImage;
+
+      // Upload only if local image
+      if (salonImage && salonImage.startsWith('file://')) {
+        imagePath = await uploadImages(salonImage);
+      }
+
 
       const imagesArray = imagePath ? [imagePath] : [];
 
@@ -356,28 +399,40 @@ const SalonAccountScreen = ({ navigation }) => {
   };
 
 
-  const uploadImages = async (fileUri) => {
+
+
+  const uploadImages = async (localUri) => {
     try {
-      const formData = new FormData();
-      formData.append('image', {
-        uri: Platform.OS === 'android' ? fileUri : fileUri.replace('file://', ''),
-        type: 'image/jpeg',
-        name: `image_${Date.now()}.jpg`,
-      });
+      const response = await RNBlobUtil.fetch(
+        'POST',
+        `${getServerUrl()}/api/upload/upload-image`,
+        {
+          'Content-Type': 'multipart/form-data',
+        },
+        [
+          {
+            name: 'image',
+            filename: `image_${Date.now()}.jpg`,
+            type: 'image/jpeg',
+            data: RNBlobUtil.wrap(localUri.replace('file://', '')),
+          },
+        ]
+      );
 
-      const response = await communication.uploadImages(formData);
+      const data = response.json();
 
-      if (response?.success && response?.url) {
-        return response.url; // ✅ return only the path
+      if (data?.success) {
+        // RETURN RELATIVE PATH ONLY
+        return data.url.replace(/^\/+/, '');
       }
 
-      throw new Error('Image upload failed');
-    } catch (error) {
-      console.log('UPLOAD ERROR:', error?.response?.data || error.message || error);
-      throw error;
+      throw new Error('Upload failed');
+    } catch (err) {
+      console.log('Upload error:', err);
+      Alert.alert('Error', 'Image upload failed');
+      return null;
     }
   };
-
 
 
   /* ---------------- LOGOUT ---------------- */
@@ -416,17 +471,24 @@ const SalonAccountScreen = ({ navigation }) => {
   // const formatDate = date => date.toISOString().split('T')[0];
 
   /* ---------------- IMAGE PICKER ---------------- */
-  const pickImage = callback => {
-    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, res => {
-      if (res.didCancel || !res.assets?.length) return;
-      const asset = res.assets[0];
-      if (asset.fileSize / (1024 * 1024) > MAX_IMAGE_MB) {
-        Alert.alert('Image Too Large', 'Select image below 2MB');
-        return;
+  const pickImage = (callback) => {
+    launchImageLibrary(
+      { mediaType: 'photo', quality: 0.8 },
+      (res) => {
+        if (res.didCancel || !res.assets?.length) return;
+
+        const asset = res.assets[0];
+
+        if (asset.fileSize / (1024 * 1024) > MAX_IMAGE_MB) {
+          Alert.alert('Image Too Large', 'Select image below 2MB');
+          return;
+        }
+
+        callback(asset.uri); // ✅ file://...
       }
-      callback(asset.uri);
-    });
+    );
   };
+
 
   const selectHoliday = dayValue => {
     setHoliday(Number(dayValue));
@@ -498,9 +560,10 @@ const SalonAccountScreen = ({ navigation }) => {
           <Image
             source={
               salonImage
-                ? { uri: `${getServerUrl()}/getfiles/${salonImage}` }
+                ? { uri: buildImageUrl(salonImage) }
                 : require('../assets/my_naai.png')
             }
+
             style={styles.salonImage}
           />
 
@@ -584,9 +647,10 @@ const SalonAccountScreen = ({ navigation }) => {
                 <Image
                   source={
                     salonImage
-                      ? { uri: `${getServerUrl()}/getfiles/${salonImage}` }
+                      ? { uri: buildImageUrl(salonImage) }
                       : require('../assets/my_naai.png')
                   }
+
                   style={styles.salonImage}
                 />
 
@@ -617,7 +681,7 @@ const SalonAccountScreen = ({ navigation }) => {
                 onPress={() => setPickerType('open')}
               >
                 <Text style={styles.timeText}>
-                  Open: {formatTime(openTime)}
+                  Open: {formatTime12Hour(openTime)}
                 </Text>
               </TouchableOpacity>
 
@@ -626,7 +690,7 @@ const SalonAccountScreen = ({ navigation }) => {
                 onPress={() => setPickerType('close')}
               >
                 <Text style={styles.timeText}>
-                  Close: {formatTime(closeTime)}
+                  Close: {formatTime12Hour(closeTime)}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -767,9 +831,10 @@ const SalonAccountScreen = ({ navigation }) => {
                     <Image
                       source={
                         b.image
-                          ? { uri: b.image.startsWith('file://') ? b.image : `${getServerUrl()}${b.image}` }
+                          ? { uri: b.image.startsWith('file://') ? b.image : buildImageUrl(b.image) }
                           : require('../assets/my_naai.png')
                       }
+
                       style={styles.barberImg}
                     />
 

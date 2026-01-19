@@ -2,7 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
-// const serverUrl = "http://192.168.1.12:5000";
+// const serverUrl = "http://192.168.1.26:5000";
 // const serverUrl = "http://localhost:5000";
 const serverUrl = "https://backend.mynaai.in"
 
@@ -32,8 +32,7 @@ export async function getCookie() {
             const parsed = JSON.parse(asyncStorageData);
             return parsed?.token || null;
         } catch (parseError) {
-            // If JSON parse fails, assume it's a plain string token (legacy format)
-            console.log("Data is not JSON, treating as plain string token");
+            // console.log("Data is not JSON, treating as plain string token");
             return asyncStorageData; // Return the raw string as token
         }
     } catch (error) {
@@ -324,13 +323,9 @@ export const communication = {
     uploadImages: async (formData) => {
         try {
             const response = await axios.post(`${getServerUrl()}/api/upload/upload-image`, formData, {
-                headers: {
-                    // "Content-Type": "multipart/form-data",
-                    "Authorization": `Bearer ${await getCookie()}`
-                },
+                transformRequest: () => formData,
+                timeout: 30000,
             });
-            console.log("response.data", response.data);
-
             return response.data;
         } catch (error) {
             throw error;
