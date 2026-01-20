@@ -104,7 +104,7 @@ const SalonOtpScreen = ({ route, navigation }) => {
             const res = await communication.SalonLogin(payload);
 
             if (res?.status === 'SUCCESS') {
-                Alert.alert('OTP code', res?.otp?.toString()); // DEV ONLY
+                Alert.alert('OTP Send Successfully!'); // DEV ONLY
                 setOtp('');
                 setSecondsLeft(RESEND_TIME);
                 setCanResend(false);

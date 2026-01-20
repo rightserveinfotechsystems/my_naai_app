@@ -44,19 +44,20 @@ const NaaiLogin = ({ navigation }) => {
       if (res?.status === 'SUCCESS') {
         console.log("res?.otp", res?.otp);
 
-        Alert.alert(
-          'OTP Sent',
-          res?.otp,
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                navigation.navigate('SalonOtpScreen', { mobile });
-              },
-            },
-          ],
-          { cancelable: false }
-        );
+       Alert.alert(
+  'OTP Sent Successfully!',
+  '',
+  [
+    {
+      text: 'OK',
+      onPress: () => {
+        navigation.navigate('SalonOtpScreen', { mobile });
+      },
+    },
+  ],
+  { cancelable: false }
+);
+
       } else {
         Alert.alert('Error', res?.message || 'Failed to send OTP');
       }

@@ -99,7 +99,7 @@ const OtpScreen = ({ route, navigation }) => {
       const res = await communication.sendRegisterOtp(payload);
 
       if (res?.status === 'SUCCESS') {
-        Alert.alert('OTP code', res?.otp?.toString()); // DEV ONLY
+        Alert.alert('OTP Send Successfully!'); // DEV ONLY
         setOtp('');
         setSecondsLeft(RESEND_TIME);
         setCanResend(false);

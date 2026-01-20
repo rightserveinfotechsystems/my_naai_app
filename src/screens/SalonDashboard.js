@@ -172,6 +172,17 @@ const SalonDashboard = ({ navigation }) => {
     }
   };
 
+  const formatDateReadable = (dateStr) => {
+  if (!dateStr) return '';
+
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
   /* ---------------- RENDER ITEM ---------------- */
   const renderSalon = ({ item }) => (
     <View style={styles.card}>
@@ -201,6 +212,10 @@ const SalonDashboard = ({ navigation }) => {
           <View style={styles.row}>
             <Ionicons name="cut-outline" size={14} color="#E8B97E" />
             <Text style={styles.subText}>{item?.serviceNames}</Text>
+          </View>
+          <View style={styles.row}>
+            <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
+            <Text style={styles.subText}>{formatDateReadable(item?.bookingDate)}, token: {item?.queueNumber}</Text>
           </View>
 
           {item?.barber && (

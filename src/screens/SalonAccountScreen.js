@@ -321,7 +321,7 @@ const SalonAccountScreen = ({ navigation }) => {
         salonId,
         salonName,
         ownerName: profileData.ownerName,
-        phoneNumber: profileData.phoneNumber,
+        // phoneNumber: profileData.phoneNumber,
         email: profileData.email,
         addressLine1: salonAddress,
         addressLine2: '',
