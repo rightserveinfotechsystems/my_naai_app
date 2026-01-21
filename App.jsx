@@ -188,7 +188,7 @@ const App = () => {
         id: 'default_channel',
         name: 'Default Notifications',
         importance: AndroidImportance.HIGH,
-        // sound: 'buzzer',
+        sound: 'buzzer',
         vibrationPattern: [300, 200, 300, 200, 600, 400]
       });
     }
@@ -257,7 +257,7 @@ const App = () => {
   // Foreground notifications
   useEffect(() => {
     const unsubscribe = messaging().onMessage(async remoteMessage => {
-      speakNewBooking();
+      // speakNewBooking();
       console.log('Foreground notification:', remoteMessage);
       await notifee.displayNotification({
         title: remoteMessage.notification?.title,
@@ -277,12 +277,14 @@ const App = () => {
   useEffect(() => {
     const unsubscribeForeground = notifee.onForegroundEvent(({ type }) => {
       if (type === EventType.PRESS) {
+        notifee.cancelAllNotifications();
         navigateToSalonDashboard();
       }
     });
 
     const unsubscribeBackground = notifee.onBackgroundEvent(async ({ type }) => {
       if (type === EventType.PRESS) {
+        await notifee.cancelAllNotifications();
         navigateToSalonDashboard();
       }
     });

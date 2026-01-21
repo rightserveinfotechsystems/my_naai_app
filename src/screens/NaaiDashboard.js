@@ -114,28 +114,27 @@ const NaaiDashboard = ({ navigation }) => {
     setLoading(true);
 
     try {
-      const { latitude, longitude } = await getUserLocation();
+      const location = await getUserLocation();
+
       const payload = {
         page: pageNo,
         searchString: search,
-        latitude,
-        longitude,
       };
-      console.log("payload", payload.latitude);
 
+      // ✅ Add location ONLY if available
+      if (location) {
+        payload.latitude = location.latitude;
+        payload.longitude = location.longitude;
+      }
 
       if (locationFilter !== 'All') {
         payload.cityFilter = locationFilter;
       }
 
       const response = await communication.userSalonList(payload);
-      console.log("userSalonList", response);
-
 
       if (response?.status === 'SUCCESS') {
         const convertedData = convertSalonApiData(response.data);
-        console.log("convertedData", convertedData);
-
         const pagination = response.pagination;
 
         if (refresh) {
@@ -144,7 +143,6 @@ const NaaiDashboard = ({ navigation }) => {
           setPlans(prev => [...prev, ...convertedData]);
         }
 
-        // 🔑 pagination control
         setTotalPages(pagination?.totalPages || 1);
         setHasMore(pageNo < (pagination?.totalPages || 1));
       } else {
@@ -152,12 +150,13 @@ const NaaiDashboard = ({ navigation }) => {
         setHasMore(false);
       }
     } catch (error) {
-      Alert.alert('Error', error?.message || 'Failed to fetch salons');
+      Alert.alert('Error', 'Failed to fetch salons');
     } finally {
       setLoading(false);
       if (refresh) setRefreshing(false);
     }
   };
+
   // ads
   const userAds = async () => {
     try {
