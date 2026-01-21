@@ -1,7 +1,11 @@
 import 'react-native-gesture-handler'; // MUST be first
+
+
 import React, { useEffect, useState } from 'react';
+export const navigationRef = React.createRef();
+export const isNavReadyRef = React.createRef();
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import notifee, { AndroidImportance } from '@notifee/react-native';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import { NotificationProvider } from './src/components/NotificationContext';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -38,13 +42,14 @@ import AddOfflineCustomer from './src/components/AddOfflineCustomer';
 import SalonNotifications from './src/screens/SalonNotifications';
 
 import { requestNotificationPermission } from './src/utilities/notificationPermission';
-import { initTTS, speakNewBooking  } from './src/utilities/tts';
+import { initTTS, speakNewBooking } from './src/utilities/tts';
 import { Alert, Linking } from 'react-native';
 
+// const isNavReady = React.useRef(false);
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-const navigationRef = React.createRef();
+// const navigationRef = React.createRef();
 
 /* 🎨 Salon Theme Colors */
 const COLORS = {
@@ -164,6 +169,13 @@ function SalonTabs() {
 }
 
 /* 🔷 Root App */
+const navigateToSalonDashboard = () => {
+  if (isNavReadyRef.current && navigationRef.current) {
+    navigationRef.current.navigate('Salon', {
+      screen: 'Queue',
+    });
+  }
+};
 
 const App = () => {
   const [userId, setUserId] = useState("");
@@ -186,60 +198,60 @@ const App = () => {
   // Request permission + get token
 
   useEffect(() => {
-  requestNotificationPermission();
-}, []);
+    requestNotificationPermission();
+  }, []);
 
-useEffect(() => {
-  let unsubscribeTokenRefresh;
+  useEffect(() => {
+    let unsubscribeTokenRefresh;
 
-  const initFCM = async () => {
-    try {
-      // 🔔 Request permission
-      const authStatus = await messaging().requestPermission();
-      const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    const initFCM = async () => {
+      try {
+        // 🔔 Request permission
+        const authStatus = await messaging().requestPermission();
+        const enabled =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-      if (!enabled) {
-        Alert.alert(
-          'Enable Notifications',
-          'Please enable notifications to receive updates.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Open Settings', onPress: () => Linking.openSettings() },
-          ]
-        );
-        return;
+        if (!enabled) {
+          Alert.alert(
+            'Enable Notifications',
+            'Please enable notifications to receive updates.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Open Settings', onPress: () => Linking.openSettings() },
+            ]
+          );
+          return;
+        }
+
+        // ⏳ Small delay prevents SERVICE_NOT_AVAILABLE
+        await new Promise(res => setTimeout(res, 1500));
+
+        // 📲 Get token safely
+        const token = await messaging().getToken();
+        console.log('✅ Device token:', token);
+
+        // ✅ SEND TO BACKEND HERE
+        // await communication.saveFcmToken(token);
+
+        // 🔁 Token refresh listener
+        unsubscribeTokenRefresh = messaging().onTokenRefresh(newToken => {
+          console.log('🔄 Refreshed token:', newToken);
+          // await communication.saveFcmToken(newToken);
+        });
+
+      } catch (error) {
+        console.log('❌ FCM init error:', error.message);
+        // ❗ Never crash app
       }
+    };
 
-      // ⏳ Small delay prevents SERVICE_NOT_AVAILABLE
-      await new Promise(res => setTimeout(res, 1500));
+    initFCM();
 
-      // 📲 Get token safely
-      const token = await messaging().getToken();
-      console.log('✅ Device token:', token);
-
-      // ✅ SEND TO BACKEND HERE
-      // await communication.saveFcmToken(token);
-
-      // 🔁 Token refresh listener
-      unsubscribeTokenRefresh = messaging().onTokenRefresh(newToken => {
-        console.log('🔄 Refreshed token:', newToken);
-        // await communication.saveFcmToken(newToken);
-      });
-
-    } catch (error) {
-      console.log('❌ FCM init error:', error.message);
-      // ❗ Never crash app
-    }
-  };
-
-  initFCM();
-
-  return () => {
-    if (unsubscribeTokenRefresh) unsubscribeTokenRefresh();
-  };
-}, []);
+    return () => {
+      if (unsubscribeTokenRefresh) unsubscribeTokenRefresh();
+    };
+  }, []);
 
 
   // Foreground notifications
@@ -261,6 +273,26 @@ useEffect(() => {
     return unsubscribe;
   }, []);
 
+
+  useEffect(() => {
+    const unsubscribeForeground = notifee.onForegroundEvent(({ type }) => {
+      if (type === EventType.PRESS) {
+        navigateToSalonDashboard();
+      }
+    });
+
+    const unsubscribeBackground = notifee.onBackgroundEvent(async ({ type }) => {
+      if (type === EventType.PRESS) {
+        navigateToSalonDashboard();
+      }
+    });
+
+    return () => {
+      unsubscribeForeground();
+      unsubscribeBackground();
+    };
+  }, []);
+
   // Killed / background notifications
   useEffect(() => {
     messaging()
@@ -268,9 +300,9 @@ useEffect(() => {
       .then(remoteMessage => {
         if (remoteMessage) {
           console.log('App opened from notification (killed):', remoteMessage);
-          // Navigate to a screen if included in data
-          const screen = remoteMessage.data?.screen;
-          if (screen) navigationRef.current?.navigate(screen);
+          navigateToSalonDashboard();
+          // const screen = remoteMessage.data?.screen;
+          // if (screen) navigationRef.current?.navigate(screen);
         }
       });
 
@@ -282,8 +314,8 @@ useEffect(() => {
   }, []);
 
   useEffect(() => {
-  initTTS();
-}, []);
+    initTTS();
+  }, []);
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -314,7 +346,14 @@ useEffect(() => {
 
   return (
     <NotificationProvider userId={userId}>
-      <NavigationContainer ref={navigationRef}>
+      {/* <NavigationContainer ref={navigationRef}> */}
+      <NavigationContainer
+        ref={navigationRef}
+        onReady={() => {
+          isNavReadyRef.current = true;
+        }}
+      >
+
         <Stack.Navigator initialRouteName="SplashLogo">
           {/* ...existing Stack.Screen components... */}
           <Stack.Screen
@@ -405,5 +444,8 @@ useEffect(() => {
     </NotificationProvider>
   );
 };
+
+
+
 
 export default App;

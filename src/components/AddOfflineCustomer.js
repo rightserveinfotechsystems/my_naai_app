@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,15 +10,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import RNPickerSelect from 'react-native-picker-select';
 import { communication } from '../services/communication';
 
 const AddOfflineCustomer = ({ route, navigation }) => {
   const { salonId } = route.params;
-  // const [count, setCount] = useState('');
+
   const [customer, setCustomer] = useState('');
   const [serviceTime, setServiceTime] = useState('');
-
+  const [barbers, setBarbers] = useState([]);     // barber dropdown list
+  const [barberId, setBarberId] = useState(null); // selected barber
   const [loading, setLoading] = useState(false);
+
   useLayoutEffect(() => {
     navigation.setOptions({
       title: 'Add Walk-in Customers',
@@ -27,21 +30,63 @@ const AddOfflineCustomer = ({ route, navigation }) => {
     });
   }, [navigation]);
 
+  /* =========================
+     FETCH BARBERS LIST
+     ========================= */
+  useEffect(() => {
+    getBarbersList();
+  }, []);
+
+  const getBarbersList = async () => {
+    try {
+      const payload = { salonId };
+
+      const res = await communication.getBarbersList(payload);
+
+      if (res?.status === 'SUCCESS') {
+        const formatted = res.data.map(item => ({
+          label: item.fullName,
+          value: item.barberId,
+        }));
+        setBarbers(formatted);
+      } else {
+        Alert.alert('Error', res?.message || 'Failed to fetch barbers');
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Something went wrong'
+      );
+    }
+  };
+
+  /* =========================
+     SUBMIT WALK-IN CUSTOMER
+     ========================= */
   const handleAddCustomers = async () => {
-    // if (!count || isNaN(count) || count <= 0) {
-    //   Alert.alert(
-    //     'Invalid Number',
-    //     'Please enter a valid number of customers'
-    //   );
-    //   return;
-    // }
+    if (!customer.trim()) {
+      Alert.alert('Validation', 'Please enter customer name');
+      return;
+    }
+
+    if (!serviceTime) {
+      Alert.alert('Validation', 'Please enter service duration');
+      return;
+    }
+
+    if (!barberId) {
+      Alert.alert('Validation', 'Please select a barber');
+      return;
+    }
+
     setLoading(true);
+
     try {
       const payload = {
         customerName: customer,
-        serviceDuration: serviceTime,
-      }
-      console.log("payload", payload);
+        serviceDuration: Number(serviceTime),
+        barberId: barberId,
+      };
 
       const res = await communication.walkInBooking(payload);
 
@@ -49,26 +94,18 @@ const AddOfflineCustomer = ({ route, navigation }) => {
         Alert.alert(
           'Success',
           res?.message || 'Added to queue successfully',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.goBack(),
-            },
-          ]
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
-
-
       } else {
-        Alert.alert('Error', res?.message || 'failed');
+        Alert.alert('Error', res?.message || 'Failed');
       }
     } catch (error) {
       Alert.alert(
         'Error',
         error?.response?.data?.message || 'Something went wrong'
       );
-
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
@@ -77,22 +114,22 @@ const AddOfflineCustomer = ({ route, navigation }) => {
       <View style={styles.formCard}>
         <Text style={styles.title}>Walk-in Customers</Text>
         <Text style={styles.subtitle}>
-          Enter name and total service duration of customers who came directly to the salon
+          Enter name and service duration of walk-in customers
         </Text>
 
-        {/* COUNT INPUT */}
+        {/* CUSTOMER NAME */}
         <View style={styles.inputBox}>
-          <Ionicons name="people-outline" size={20} color="#999" />
+          <Ionicons name="person-outline" size={20} color="#999" />
           <TextInput
             placeholder="Customer Name"
             placeholderTextColor="#999"
             style={styles.input}
             value={customer}
             onChangeText={setCustomer}
-          // keyboardType="number-pad"
-          // maxLength={3}
           />
         </View>
+
+        {/* SERVICE DURATION */}
         <View style={styles.inputBox}>
           <Ionicons name="time-outline" size={20} color="#999" />
           <TextInput
@@ -102,19 +139,33 @@ const AddOfflineCustomer = ({ route, navigation }) => {
             value={serviceTime}
             onChangeText={setServiceTime}
             keyboardType="number-pad"
-          // maxLength={3}
           />
         </View>
 
-        {/* SUBMIT */}
+        {/* BARBER DROPDOWN */}
+        <View style={styles.inputBox}>
+          <Ionicons name="cut-outline" size={20} color="#999" />
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <RNPickerSelect
+              placeholder={{ label: 'Select Barber', value: null }}
+              value={barberId}
+              onValueChange={setBarberId}
+              items={barbers}
+              style={{
+                inputAndroid: styles.pickerInput,
+                inputIOS: styles.pickerInput,
+                placeholder: { color: '#999' },
+              }}
+              useNativeAndroidPickerStyle={false}
+            />
+          </View>
+        </View>
+
+        {/* SUBMIT BUTTON */}
         <TouchableOpacity
-          style={[
-            styles.addBtn,
-            loading && { opacity: 0.6 },
-          ]}
+          style={[styles.addBtn, loading && { opacity: 0.6 }]}
           onPress={handleAddCustomers}
           disabled={loading}
-          activeOpacity={0.8}
         >
           {loading ? (
             <ActivityIndicator color="#000" />
@@ -122,7 +173,6 @@ const AddOfflineCustomer = ({ route, navigation }) => {
             <Text style={styles.addText}>Add to Queue</Text>
           )}
         </TouchableOpacity>
-
       </View>
     </SafeAreaView>
   );
@@ -130,6 +180,9 @@ const AddOfflineCustomer = ({ route, navigation }) => {
 
 export default AddOfflineCustomer;
 
+/* =========================
+   STYLES
+   ========================= */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -137,13 +190,11 @@ const styles = StyleSheet.create({
     padding: 16,
     justifyContent: 'center',
   },
-
   formCard: {
     backgroundColor: '#1E1E1E',
     borderRadius: 18,
     padding: 20,
   },
-
   title: {
     color: '#fff',
     fontSize: 20,
@@ -151,14 +202,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 6,
   },
-
   subtitle: {
     color: '#aaa',
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 18,
   },
-
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -168,26 +217,27 @@ const styles = StyleSheet.create({
     height: 52,
     marginBottom: 20,
   },
-
   input: {
     flex: 1,
     marginLeft: 12,
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
-
+  pickerInput: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   addBtn: {
     backgroundColor: '#E1B378',
     borderRadius: 28,
     paddingVertical: 14,
     alignItems: 'center',
   },
-
   addText: {
     color: '#000',
     fontSize: 16,
     fontWeight: '800',
-    letterSpacing: 0.5,
   },
 });

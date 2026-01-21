@@ -204,22 +204,19 @@ const ServicesScreen = () => {
                 {formatDateReadable(item.bookingDate)}
                 {/* • {formatTime(item.bookingTime)} */}
               </Text>
-              {item.queueNumber && (
+              {/* {item.queueNumber && (
                 <View style={[styles.dateRow, { marginLeft: 4 }]}>
                   <Ionicons name="time-outline" size={14} color="#E1B378" />
                   <Text style={styles.dateText}>
                     Queue:{item.queueNumber} People
                   </Text>
                 </View>
-              )}
-              {/* {item.bookingTime && (
-                <View style={[styles.dateRow, { marginLeft: 4 }]}>
-                  <Ionicons name="time-outline" size={14} color="#E1B378" />
-                  <Text style={styles.dateText}>
-                    {formatTime(item.bookingTime)}
-                  </Text>
-                </View>
               )} */}
+              {/* <View style={styles.dateRow}> */}
+              <Text style={styles.dateText}>
+                ,Token Number: {item.queueNumber}
+              </Text>
+              {/* </View> */}
 
 
             </View>

@@ -69,10 +69,12 @@ const SalonDashboard = ({ navigation }) => {
         salonId,
         page: pageNo,
       });
-      console.log("customerList", response?.data);
+      // console.log("customerList", response?.data);
 
 
       if (response?.status === 'SUCCESS') {
+        console.log("customerList", response);
+
         const newData = response?.data || [];
         const pagination = response?.pagination || {};
 
@@ -173,15 +175,15 @@ const SalonDashboard = ({ navigation }) => {
   };
 
   const formatDateReadable = (dateStr) => {
-  if (!dateStr) return '';
+    if (!dateStr) return '';
 
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-};
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
 
   /* ---------------- RENDER ITEM ---------------- */
   const renderSalon = ({ item }) => (

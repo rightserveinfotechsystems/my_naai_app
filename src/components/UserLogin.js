@@ -63,7 +63,7 @@ const UserLogin = ({ navigation }) => {
         setSecondsLeft(RESEND_TIME);
         setCanResend(false);
 
-        Alert.alert('OTP Send Successfully!'); // dev only
+        Alert.alert('OTP Sent Successfully!'); // dev only
       } else {
         Alert.alert('Error', res?.message || 'Failed to send OTP');
       }

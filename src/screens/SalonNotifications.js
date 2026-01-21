@@ -47,6 +47,8 @@ const SalonNotifications = ({ route, navigation }) => {
             });
 
             if (res?.status === 'SUCCESS') {
+                console.log("userNotificationList", res);
+
                 const newData = res.data.notifications || [];
                 const pagination = res.data.pagination || {};
 

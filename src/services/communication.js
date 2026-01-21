@@ -228,9 +228,9 @@ export const communication = {
             throw error;
         }
     },
-    customerList: async ({ salonId }) => {
+    customerList: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/booking/get-booking-list`, { salonId }, {
+            const response = await axios.post(`${getServerUrl()}/api/booking/get-booking-list`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -296,6 +296,20 @@ export const communication = {
     bookingDone: async (payload) => {
         try {
             const response = await axios.post(`${getServerUrl()}/api/booking/booking-complete`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    getBarbersList: async (payload) => {
+        try {
+            const response = await axios.get(`${getServerUrl()}/api/barbers/get-salon-barbers`, {
+                params: payload,
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`

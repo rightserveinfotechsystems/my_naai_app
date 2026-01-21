@@ -34,6 +34,12 @@ const SLIDES = [
     desc: 'Look sharp, feel confident every day.',
     image: require('../assets/naai/naai1.jpg'),
   },
+  {
+    id: '4',
+    title: 'Location Permission Access',
+    desc: 'We use your location to find nearby salons and provide accurate service availability, even when the app is not in use.',
+    image: require('../assets/naai/naai1.jpg'),
+  },
 ];
 
 
