@@ -139,6 +139,7 @@ const AddOfflineCustomer = ({ route, navigation }) => {
             value={serviceTime}
             onChangeText={setServiceTime}
             keyboardType="number-pad"
+            maxLength={2}
           />
         </View>
 

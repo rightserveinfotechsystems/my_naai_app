@@ -220,6 +220,14 @@ const ServicesScreen = () => {
 
 
             </View>
+            {item.status === "pending" &&
+              <View style={styles.dateRow}>
+                <Ionicons name="time-outline" size={14} color="#E1B378" />
+                <Text style={styles.dateText}>
+                  Waiting Time: {item?.waitingTimeDisplay}
+                </Text>
+              </View>}
+
 
           </View>
 

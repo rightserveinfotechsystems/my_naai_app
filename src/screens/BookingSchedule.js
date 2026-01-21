@@ -156,7 +156,7 @@ Time: ${formatTime(selectedTime)}`,
 
 
   const formatTime = date => {
-    if (!date) return 'Select Time';
+    if (!date) return 'Time';
 
     return date.toLocaleTimeString('en-IN', {
       hour: '2-digit',
@@ -347,7 +347,7 @@ Time: ${formatTime(selectedTime)}`,
         </View>
         {/* -------------------- TIME -------------------- */}
         <View style={styles.card}>
-          <Text style={styles.section}>Select Time</Text>
+          <Text style={styles.section}>Select Time for Appointment</Text>
 
           <TouchableOpacity
             style={styles.timeInput}
