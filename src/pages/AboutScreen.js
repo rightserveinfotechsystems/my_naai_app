@@ -71,8 +71,8 @@ const AboutScreen = ({ navigation }) => {
             salon owners who want better control over bookings and daily operations.
           </Text>
 
-          <Text style={styles.subTitle}>Version</Text>
-          <Text style={styles.text}>App Version 1.0.0</Text>
+          {/* <Text style={styles.subTitle}>Version</Text> */}
+          {/* <Text style={styles.text}>App Version 1.0.0</Text> */}
         </View>
 
       </ScrollView>

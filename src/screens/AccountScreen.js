@@ -199,7 +199,7 @@ const AccountScreen = ({ navigation }) => {
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>App Version 1.0.1</Text>
+        {/* <Text style={styles.version}>App Version 1.0.1</Text> */}
       </ScrollView>
 
       {/* EDIT PROFILE MODAL */}
