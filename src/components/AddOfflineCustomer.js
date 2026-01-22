@@ -19,7 +19,7 @@ const AddOfflineCustomer = ({ route, navigation }) => {
   const [customer, setCustomer] = useState('');
   const [serviceTime, setServiceTime] = useState('');
   const [barbers, setBarbers] = useState([]);     // barber dropdown list
-  const [barberId, setBarberId] = useState(null); // selected barber
+  const [barberId, setBarberId] = useState(""); // selected barber
   const [loading, setLoading] = useState(false);
 
   useLayoutEffect(() => {
@@ -43,15 +43,18 @@ const AddOfflineCustomer = ({ route, navigation }) => {
 
       const res = await communication.getBarbersList(payload);
 
-      if (res?.status === 'SUCCESS') {
+      if (res?.status === 'SUCCESS' && Array.isArray(res.data) && res.data.length > 0) {
         const formatted = res.data.map(item => ({
           label: item.fullName,
-          value: item.barberId,
+          value: String(item.barberId),
         }));
         setBarbers(formatted);
       } else {
-        Alert.alert('Error', res?.message || 'Failed to fetch barbers');
+        console.log('No barbers found', res);
+        setBarbers([]);
+        Alert.alert('Info', 'No barbers available for this salon');
       }
+
     } catch (error) {
       Alert.alert(
         'Error',
@@ -74,10 +77,10 @@ const AddOfflineCustomer = ({ route, navigation }) => {
       return;
     }
 
-    if (!barberId) {
-      Alert.alert('Validation', 'Please select a barber');
-      return;
-    }
+    // if (!barberId) {
+    //   Alert.alert('Validation', 'Please select a barber');
+    //   return;
+    // }
 
     setLoading(true);
 
@@ -85,8 +88,10 @@ const AddOfflineCustomer = ({ route, navigation }) => {
       const payload = {
         customerName: customer,
         serviceDuration: Number(serviceTime),
-        barberId: barberId,
       };
+      if (barberId) {
+        payload.barberId = String(barberId)
+      }
 
       const res = await communication.walkInBooking(payload);
 
@@ -148,7 +153,7 @@ const AddOfflineCustomer = ({ route, navigation }) => {
           <Ionicons name="cut-outline" size={20} color="#999" />
           <View style={{ flex: 1, marginLeft: 12 }}>
             <RNPickerSelect
-              placeholder={{ label: 'Select Barber', value: null }}
+              placeholder={{ label: 'Select Barber', value: "" }}
               value={barberId}
               onValueChange={setBarberId}
               items={barbers}

@@ -10,6 +10,7 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  DeviceEventEmitter,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -20,9 +21,9 @@ const DARK = '#121212';
 const CARD = '#1E1E1E';
 
 const MENUS = [
+  { label: 'About', screen: 'AboutScreen', icon: 'information-circle-outline' },
   { label: 'FAQ', screen: 'FAQScreen', icon: 'help-circle-outline' },
   { label: 'Terms & Conditions', screen: 'TermsScreen', icon: 'document-text-outline' },
-  { label: 'About', screen: 'AboutScreen', icon: 'information-circle-outline' },
 ];
 
 const AccountScreen = ({ navigation }) => {
@@ -112,6 +113,7 @@ const AccountScreen = ({ navigation }) => {
   }, [userId]);
 
   /* ---------------- LOGOUT ---------------- */
+
   const handleLogout = () => {
     Alert.alert(
       'Logout',
@@ -122,7 +124,6 @@ const AccountScreen = ({ navigation }) => {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-
             await AsyncStorage.multiRemove([
               'mynaai',
               'mynaaiUser',
@@ -131,11 +132,8 @@ const AccountScreen = ({ navigation }) => {
               'token',
             ]);
 
-
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'UserLogin' }],
-            });
+            // 🔥 Notify App.js immediately
+            DeviceEventEmitter.emit('AUTH_CHANGED');
           },
         },
       ],

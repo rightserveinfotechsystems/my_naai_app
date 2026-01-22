@@ -44,7 +44,7 @@ const UserSignup = ({ navigation }) => {
 
       if (response?.status === 'SUCCESS') {
         Alert.alert(response.otp)
-        navigation.navigate('OtpScreen', {
+        navigation.replace('OtpScreen', {
           mobile,
           fullName: name,
         });
@@ -66,7 +66,7 @@ const UserSignup = ({ navigation }) => {
       <View style={styles.overlay}>
         <SafeAreaView style={{ flex: 1 }}>
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
+            <TouchableOpacity onPress={() => navigation.replace('UserLogin')}>
               <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
           </View>

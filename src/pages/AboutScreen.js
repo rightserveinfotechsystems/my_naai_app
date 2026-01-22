@@ -34,30 +34,47 @@ const AboutScreen = ({ navigation }) => {
         contentContainerStyle={{ paddingBottom: 30 }}
       >
         <View style={styles.card}>
-          <Text style={styles.title}>About Naai</Text>
+          <Text style={styles.title}>About MyNaai</Text>
 
           <Text style={styles.text}>
-            Naai Salon App helps users discover and book trusted salons nearby
-            with ease and confidence.
+            MyNaai is a smart salon booking and queue management platform designed to
+            connect customers with nearby salons while simplifying day-to-day salon
+            operations.
+          </Text>
+
+          <Text style={styles.subTitle}>What We Do</Text>
+          <Text style={styles.text}>
+            MyNaai allows customers to discover salons, book services, and join a
+            real-time service queue. Salon owners can request account creation through
+            the admin, manage their salon profile, add barbers, and efficiently handle
+            customer queues.
           </Text>
 
           <Text style={styles.subTitle}>Our Mission</Text>
           <Text style={styles.text}>
-            To simplify salon discovery and booking while empowering local
-            salon owners.
+            To reduce waiting time, improve transparency, and empower local salons with
+            simple and reliable digital tools.
           </Text>
 
-          <Text style={styles.subTitle}>Why Choose Naai?</Text>
+          <Text style={styles.subTitle}>Why Choose MyNaai?</Text>
           <Text style={styles.text}>
-            • Trusted salons{'\n'}
-            • Easy booking{'\n'}
-            • Transparent pricing{'\n'}
-            • Quality grooming experience
+            • Live queue-based appointments{'\n'}
+            • Easy salon discovery near you{'\n'}
+            • Hassle-free booking experience{'\n'}
+            • Tools for salon owners to manage customers{'\n'}
+            • Admin-verified salon accounts
+          </Text>
+
+          <Text style={styles.subTitle}>Who Can Use MyNaai?</Text>
+          <Text style={styles.text}>
+            MyNaai is built for customers looking for convenient grooming services and
+            salon owners who want better control over bookings and daily operations.
           </Text>
 
           <Text style={styles.subTitle}>Version</Text>
           <Text style={styles.text}>App Version 1.0.0</Text>
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );

@@ -11,6 +11,7 @@ import {
   Image,
   ActivityIndicator,
   RefreshControl,
+  DeviceEventEmitter,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -27,9 +28,9 @@ const CARD = '#1E1E1E';
 const MAX_IMAGE_MB = 2;
 
 const MENUS = [
+  { label: 'About', screen: 'AboutScreen', icon: 'information-circle-outline' },
   { label: 'FAQ', screen: 'FAQScreen', icon: 'help-circle-outline' },
   { label: 'Terms & Conditions', screen: 'TermsScreen', icon: 'document-text-outline' },
-  { label: 'About', screen: 'AboutScreen', icon: 'information-circle-outline' },
 ];
 
 const SalonAccountScreen = ({ navigation }) => {
@@ -316,6 +317,7 @@ const SalonAccountScreen = ({ navigation }) => {
 
 
       const imagesArray = imagePath ? [imagePath] : [];
+      console.log("profileData.businessHours", profileData.businessHours)
 
       const payload = {
         salonId,
@@ -342,7 +344,7 @@ const SalonAccountScreen = ({ navigation }) => {
 
         businessHours: [
           {
-            scheduleId: profileData.businessHours?.[0]?.scheduleId,
+            scheduleId: profileData.businessHours[0]?.scheduleId,
             openingTime: formatTimeForApi(openTime),
             closingTime: formatTimeForApi(closeTime),
             breakStartTime: '13:00:00',
@@ -452,10 +454,11 @@ const SalonAccountScreen = ({ navigation }) => {
             await AsyncStorage.removeItem('userType');
             await AsyncStorage.removeItem('token');
 
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'UserLogin' }],
-            });
+            // navigation.reset({
+            //   index: 0,
+            //   routes: [{ name: 'UserLogin' }],
+            // });
+            DeviceEventEmitter.emit('AUTH_CHANGED');
           },
         },
       ],

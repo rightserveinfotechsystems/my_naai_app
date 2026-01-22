@@ -7,6 +7,7 @@ import {
     StyleSheet,
     ActivityIndicator,
     Alert,
+    DeviceEventEmitter,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -76,10 +77,11 @@ const SalonOtpScreen = ({ route, navigation }) => {
                     await AsyncStorage.setItem('userType', 'SALON');
 
                 }
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Salon' }],
-                });
+                // navigation.reset({
+                //     index: 0,
+                //     routes: [{ name: 'Salon' }],
+                // });
+                DeviceEventEmitter.emit('AUTH_CHANGED');
 
             } else {
                 Alert.alert('Invalid OTP', res?.message || 'OTP verification failed');
@@ -104,7 +106,7 @@ const SalonOtpScreen = ({ route, navigation }) => {
             const res = await communication.SalonLogin(payload);
 
             if (res?.status === 'SUCCESS') {
-                Alert.alert('OTP Sent Successfully!'); // DEV ONLY
+                // Alert.alert('OTP Sent Successfully!'); 
                 setOtp('');
                 setSecondsLeft(RESEND_TIME);
                 setCanResend(false);

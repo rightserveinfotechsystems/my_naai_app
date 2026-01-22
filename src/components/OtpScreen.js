@@ -16,7 +16,7 @@ import messaging from '@react-native-firebase/messaging';
 
 const RESEND_TIME = 30;
 
-const OtpScreen = ({ route, navigation }) => {
+const OtpScreen = ({ route, onLoginSuccess }) => {
   const { mobile, fullName } = route.params;
 
   const [otp, setOtp] = useState('');
@@ -54,33 +54,28 @@ const OtpScreen = ({ route, navigation }) => {
       const response = await communication.createUser({
         phoneNumber: mobile,
         fullName,
-        deviceToken: deviceToken,
+        deviceToken,
         otp,
       });
 
       if (response?.status === 'SUCCESS') {
-        console.log("response", response);
-
         await AsyncStorage.setItem('mynaai', response?.data?.token);
-        const savedToken = await AsyncStorage.getItem('mynaai');
-        console.log('SAVED TOKEN:', savedToken);
-
-
         await AsyncStorage.setItem(
           'mynaaiUser',
-          JSON.stringify(response?.data),
+          JSON.stringify(response?.data)
         );
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Main' }],
-        });
-      } else {
+        await AsyncStorage.setItem('isLoggedIn', 'true');
+        await AsyncStorage.setItem('userType', 'USER');
+
+        onLoginSuccess(); // 🔥 THIS SWITCHES TO DASHBOARD
+      }
+      else {
         Alert.alert('Error', response?.message || 'Invalid OTP');
       }
     } catch (error) {
       Alert.alert(
         'Verification Failed',
-        error?.response?.data?.message || error.message,
+        error?.response?.data?.message || error.message
       );
     } finally {
       setLoading(false);
@@ -99,7 +94,7 @@ const OtpScreen = ({ route, navigation }) => {
       const res = await communication.sendRegisterOtp(payload);
 
       if (res?.status === 'SUCCESS') {
-        Alert.alert('OTP Send Successfully!'); // DEV ONLY
+        // Alert.alert('OTP Send Successfully!');
         setOtp('');
         setSecondsLeft(RESEND_TIME);
         setCanResend(false);

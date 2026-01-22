@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  DeviceEventEmitter,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -62,8 +63,7 @@ const UserLogin = ({ navigation }) => {
         setOtp('');
         setSecondsLeft(RESEND_TIME);
         setCanResend(false);
-
-        Alert.alert('OTP Sent Successfully!'); // dev only
+        // Alert.alert('OTP Sent Successfully!'); 
       } else {
         Alert.alert('Error', res?.message || 'Failed to send OTP');
       }
@@ -109,10 +109,12 @@ const UserLogin = ({ navigation }) => {
         // navigation.replace('Main');
 
 
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Main' }],
-        });
+        // navigation.reset({
+        //   index: 0,
+        //   routes: [{ name: 'Main' }],
+        // });
+        DeviceEventEmitter.emit('AUTH_CHANGED');
+
       } else {
         Alert.alert('Invalid OTP', res?.message || 'OTP verification failed');
       }

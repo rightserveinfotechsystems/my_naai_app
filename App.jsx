@@ -1,39 +1,47 @@
 import 'react-native-gesture-handler'; // MUST be first
 
-
 import React, { useEffect, useState } from 'react';
-export const navigationRef = React.createRef();
-export const isNavReadyRef = React.createRef();
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppState, DeviceEventEmitter } from 'react-native';
+
 import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
-import { NotificationProvider } from './src/components/NotificationContext';
+import messaging from '@react-native-firebase/messaging';
+
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { enableScreens } from 'react-native-screens';
 enableScreens();
-import messaging from '@react-native-firebase/messaging';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-// Screens
-import SplashScreen from './src/screens/SplashScreen';
+/* ---------- CONTEXT / UTILS ---------- */
+import { NotificationProvider } from './src/components/NotificationContext';
+import { requestNotificationPermission } from './src/utilities/notificationPermission';
+import { initTTS } from './src/utilities/tts';
+
+/* ---------- AUTH SCREENS ---------- */
 import SplashLogoScreen from './src/screens/SplashLogoScreen';
+import SplashScreen from './src/screens/SplashScreen';
+import UserLogin from './src/components/UserLogin';
+import UserSignup from './src/components/UserSignup';
+import OtpScreen from './src/components/OtpScreen';
+import NaaiLogin from './src/components/NaaiLogin';
+import NaaiRequest from './src/components/NaaiRequest';
+import SalonOtpScreen from './src/components/SalonOtpScreen';
+
+/* ---------- USER SCREENS ---------- */
 import NaaiDashboard from './src/screens/NaaiDashboard';
 import ServicesScreen from './src/screens/ServicesScreen';
 import AccountScreen from './src/screens/AccountScreen';
 import UserProduct from './src/screens/UserProduct';
 import SalonDetailScreen from './src/screens/SalonDetailScreen';
 import BookingSchedule from './src/screens/BookingSchedule';
-import UserLogin from './src/components/UserLogin';
-import UserSignup from './src/components/UserSignup';
-import OtpScreen from './src/components/OtpScreen';
-import SalonOtpScreen from './src/components/SalonOtpScreen';
 import FAQScreen from './src/pages/FAQScreen';
 import TermsScreen from './src/pages/TermsScreen';
 import AboutScreen from './src/pages/AboutScreen';
-import NaaiLogin from './src/components/NaaiLogin';
-import NaaiRequest from './src/components/NaaiRequest';
+
+/* ---------- SALON SCREENS ---------- */
 import SalonDashboard from './src/screens/SalonDashboard';
 import SalonBookingHistory from './src/screens/SalonBookingHistory';
 import SalonProduct from './src/screens/SalonProduct';
@@ -41,413 +49,204 @@ import SalonAccountScreen from './src/screens/SalonAccountScreen';
 import AddOfflineCustomer from './src/components/AddOfflineCustomer';
 import SalonNotifications from './src/screens/SalonNotifications';
 
-import { requestNotificationPermission } from './src/utilities/notificationPermission';
-import { initTTS, speakNewBooking } from './src/utilities/tts';
-import { Alert, Linking } from 'react-native';
+/* ---------- NAV REFS ---------- */
+export const navigationRef = React.createRef();
 
-// const isNavReady = React.useRef(false);
-
+/* ---------- NAV ---------- */
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-// const navigationRef = React.createRef();
 
-/* 🎨 Salon Theme Colors */
+/* ---------- THEME ---------- */
 const COLORS = {
-  primary: '#0F0F0F',   // Black
-  accent: '#E1B378',    // Gold  E1B378 
-  inactive: '#9E9E9E',  // Grey
-  background: '#FFFFFF',
+  primary: '#0F0F0F',
+  accent: '#E1B378',
+  inactive: '#9E9E9E',
 };
 
-/* 🔻 Bottom Tabs */
+/* ---------- TAB OPTIONS ---------- */
+const tabOptions = ({ route }) => ({
+  headerShown: false,
+  tabBarStyle: {
+    backgroundColor: COLORS.primary,
+    height: 70,
+    borderTopWidth: 0,
+  },
+  tabBarActiveTintColor: COLORS.accent,
+  tabBarInactiveTintColor: COLORS.inactive,
+  tabBarLabelStyle: {
+    fontSize: 13,
+    marginBottom: 6,
+  },
+  tabBarIcon: ({ color }) => {
+    const icons = {
+      'Salon Naai': 'list-circle',
+      'Booked Salon': 'cut',
+      'Products': 'storefront-outline',
+      'Queue': 'list-circle',
+      'Queue History': 'cut',
+      'Product': 'storefront-outline',
+      'Account': 'person',
+    };
+    return <Ionicons name={icons[route.name]} size={22} color={color} />;
+  },
+});
+
+/* ---------- USER TABS ---------- */
 function MainTabs() {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: COLORS.primary,
-          borderTopWidth: 0,
-          height: 70,
-        },
-        tabBarActiveTintColor: COLORS.accent,
-        tabBarInactiveTintColor: COLORS.inactive,
-        tabBarLabelStyle: {
-          fontSize: 13,
-          marginBottom: 6,
-        },
-        tabBarIcon: ({ color, size }) => {
-          let iconName;
-          if (route.name === 'Salon Naai') {
-            iconName = 'list-circle';
-          } else if (route.name === 'Booked Salon') {
-            iconName = 'cut';
-          } else if (route.name === 'Products') {
-            iconName = 'storefront-outline';
-          } else if (route.name === 'Account') {
-            iconName = 'person';
-          }
-
-          return <Ionicons name={iconName} size={22} color={color} />;
-        },
-      })}
-    >
-      <Tab.Screen
-        name="Salon Naai"
-        component={NaaiDashboard}
-      />
-
-      <Tab.Screen
-        name="Booked Salon"
-        component={ServicesScreen}
-      />
-      <Tab.Screen
-        name="Products"
-        component={UserProduct}
-      />
-
-      <Tab.Screen
-        name="Account"
-        component={AccountScreen}
-      />
+    <Tab.Navigator screenOptions={tabOptions}>
+      <Tab.Screen name="Salon Naai" component={NaaiDashboard} />
+      <Tab.Screen name="Booked Salon" component={ServicesScreen} />
+      <Tab.Screen name="Products" component={UserProduct} />
+      <Tab.Screen name="Account" component={AccountScreen} />
     </Tab.Navigator>
   );
 }
 
+/* ---------- SALON TABS ---------- */
 function SalonTabs() {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: COLORS.primary,
-          borderTopWidth: 0,
-          height: 70,
-        },
-        tabBarActiveTintColor: COLORS.accent,
-        tabBarInactiveTintColor: COLORS.inactive,
-        tabBarLabelStyle: {
-          fontSize: 13,
-          marginBottom: 6,
-        },
-        tabBarIcon: ({ color, size }) => {
-          let iconName;
-          if (route.name === 'Queue') {
-            iconName = 'list-circle';
-          } else if (route.name === 'Queue History') {
-            iconName = 'cut';
-          } else if (route.name === 'Product') {
-            iconName = 'storefront-outline';
-          } else if (route.name === 'Account') {
-            iconName = 'person';
-          }
-
-          return <Ionicons name={iconName} size={22} color={color} />;
-        },
-      })}
-    >
-      <Tab.Screen
-        name="Queue"
-        component={SalonDashboard}
-      />
-
-      <Tab.Screen
-        name="Queue History"
-        component={SalonBookingHistory}
-      />
-      <Tab.Screen
-        name="Product"
-        component={SalonProduct}
-      />
-
-      <Tab.Screen
-        name="Account"
-        component={SalonAccountScreen}
-      />
+    <Tab.Navigator screenOptions={tabOptions}>
+      <Tab.Screen name="Queue" component={SalonDashboard} />
+      <Tab.Screen name="Queue History" component={SalonBookingHistory} />
+      <Tab.Screen name="Product" component={SalonProduct} />
+      <Tab.Screen name="Account" component={SalonAccountScreen} />
     </Tab.Navigator>
   );
 }
 
-/* 🔷 Root App */
-const navigateToSalonDashboard = () => {
-  if (isNavReadyRef.current && navigationRef.current) {
-    navigationRef.current.navigate('Salon', {
-      screen: 'Queue',
-    });
-  }
-};
+/* ---------- AUTH STACK ---------- */
+function AuthStack({ onLoginSuccess }) {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="SplashLogo" component={SplashLogoScreen} />
+      <Stack.Screen name="SplashScreen" component={SplashScreen} />
+      <Stack.Screen name="UserLogin">
+        {props => <UserLogin {...props} onLoginSuccess={onLoginSuccess} />}
+      </Stack.Screen>
+      <Stack.Screen name="UserSignup" component={UserSignup} />
+      <Stack.Screen name="OtpScreen">
+        {props => <OtpScreen {...props} onLoginSuccess={onLoginSuccess} />}
+      </Stack.Screen>
+      <Stack.Screen name="NaaiLogin" component={NaaiLogin} />
+      <Stack.Screen name="NaaiRequest" component={NaaiRequest} />
+      <Stack.Screen name="SalonOtpScreen" component={SalonOtpScreen} />
+    </Stack.Navigator>
+  );
+}
 
-const App = () => {
-  const [userId, setUserId] = useState("");
-  const [loadingUserId, setLoadingUserId] = useState(true);
+/* ---------- APP STACK ---------- */
+function AppStack({ userType }) {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {userType === 'USER' ? (
+        <Stack.Screen name="Main" component={MainTabs} />
+      ) : (
+        <Stack.Screen name="Salon" component={SalonTabs} />
+      )}
+      <Stack.Screen name="SalonDetail" component={SalonDetailScreen} />
+      <Stack.Screen name="BookingSchedule" component={BookingSchedule} />
+      <Stack.Screen name="FAQScreen" component={FAQScreen} />
+      <Stack.Screen name="TermsScreen" component={TermsScreen} />
+      <Stack.Screen name="AboutScreen" component={AboutScreen} />
+      <Stack.Screen name="AddOfflineCustomer" component={AddOfflineCustomer} />
+      <Stack.Screen name="SalonNotifications" component={SalonNotifications} />
+    </Stack.Navigator>
+  );
+}
 
-  // Create default channel for Android
+/* ---------- ROOT APP ---------- */
+export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [userType, setUserType] = useState(null);
+  const [userId, setUserId] = useState('');
+
+  /* ---------- AUTH CHECK ---------- */
   useEffect(() => {
-    async function createChannel() {
-      await notifee.createChannel({
-        id: 'default_channel',
-        name: 'Default Notifications',
-        importance: AndroidImportance.HIGH,
-        sound: 'buzzer',
-        vibrationPattern: [300, 200, 300, 200, 600, 400]
-      });
-    }
-    createChannel();
-  }, []);
+    let isMounted = true;
 
-  // Request permission + get token
-
-  useEffect(() => {
-    requestNotificationPermission();
-  }, []);
-
-  useEffect(() => {
-    let unsubscribeTokenRefresh;
-
-    const initFCM = async () => {
+    const checkAuth = async () => {
       try {
-        // 🔔 Request permission
-        const authStatus = await messaging().requestPermission();
-        const enabled =
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+        const data = await AsyncStorage.getItem('mynaaiUser');
+        const type = await AsyncStorage.getItem('userType');
 
-        if (!enabled) {
-          Alert.alert(
-            'Enable Notifications',
-            'Please enable notifications to receive updates.',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Open Settings', onPress: () => Linking.openSettings() },
-            ]
-          );
-          return;
-        }
-
-        // ⏳ Small delay prevents SERVICE_NOT_AVAILABLE
-        await new Promise(res => setTimeout(res, 1500));
-
-        // 📲 Get token safely
-        const token = await messaging().getToken();
-        console.log('✅ Device token:', token);
-
-        // ✅ SEND TO BACKEND HERE
-        // await communication.saveFcmToken(token);
-
-        // 🔁 Token refresh listener
-        unsubscribeTokenRefresh = messaging().onTokenRefresh(newToken => {
-          console.log('🔄 Refreshed token:', newToken);
-          // await communication.saveFcmToken(newToken);
-        });
-
-      } catch (error) {
-        console.log('❌ FCM init error:', error.message);
-        // ❗ Never crash app
-      }
-    };
-
-    initFCM();
-
-    return () => {
-      if (unsubscribeTokenRefresh) unsubscribeTokenRefresh();
-    };
-  }, []);
-
-
-  // Foreground notifications
-  useEffect(() => {
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
-      // speakNewBooking();
-      console.log('Foreground notification:', remoteMessage);
-      await notifee.displayNotification({
-        title: remoteMessage.notification?.title,
-        body: remoteMessage.notification?.body,
-        android: {
-          channelId: 'default_channel',
-          pressAction: { id: 'default' },
-          //  sound: 'buzzer',
-        },
-        data: remoteMessage.data,
-      });
-    });
-    return unsubscribe;
-  }, []);
-
-
-  useEffect(() => {
-    const unsubscribeForeground = notifee.onForegroundEvent(({ type }) => {
-      if (type === EventType.PRESS) {
-        notifee.cancelAllNotifications();
-        navigateToSalonDashboard();
-      }
-    });
-
-    const unsubscribeBackground = notifee.onBackgroundEvent(async ({ type }) => {
-      if (type === EventType.PRESS) {
-        await notifee.cancelAllNotifications();
-        navigateToSalonDashboard();
-      }
-    });
-
-    return () => {
-      unsubscribeForeground();
-      unsubscribeBackground();
-    };
-  }, []);
-
-  // Killed / background notifications
-  useEffect(() => {
-    messaging()
-      .getInitialNotification()
-      .then(remoteMessage => {
-        if (remoteMessage) {
-          console.log('App opened from notification (killed):', remoteMessage);
-          navigateToSalonDashboard();
-          // const screen = remoteMessage.data?.screen;
-          // if (screen) navigationRef.current?.navigate(screen);
-        }
-      });
-
-    // Background handler (Android)
-    messaging().setBackgroundMessageHandler(async remoteMessage => {
-      console.log('Background notification:', remoteMessage);
-      // Optional: handle background notification data
-    });
-  }, []);
-
-  useEffect(() => {
-    initTTS();
-  }, []);
-
-  useEffect(() => {
-    const fetchUserId = async () => {
-      try {
-        const userData = await AsyncStorage.getItem('mynaaiUser');
-        console.log("userData for socket", userData);
-
-        if (userData) {
-          const parsed = JSON.parse(userData);
-          // Try userId from user or salon object
-          setUserId(parsed?.userId || parsed?.salon?.salonId || "");
+        if (data && type) {
+          const parsed = JSON.parse(data);
+          if (!isMounted) return;
+          setUserId(parsed?.userId || parsed?.salon?.salonId || '');
+          setUserType(type);
+          setIsLoggedIn(true);
         } else {
-          setUserId("");
+          if (!isMounted) return;
+          setUserId('');
+          setUserType(null);
+          setIsLoggedIn(false);
         }
-      } catch {
-        setUserId("");
+      } catch (e) {
+        if (!isMounted) return;
+        setUserId('');
+        setUserType(null);
+        setIsLoggedIn(false);
       } finally {
-        setLoadingUserId(false);
+        if (isMounted) setLoading(false);
       }
     };
-    fetchUserId();
+
+    checkAuth();
+
+    const appStateSub = AppState.addEventListener('change', state => {
+      if (state === 'active') checkAuth();
+    });
+
+    const authSub = DeviceEventEmitter.addListener('AUTH_CHANGED', checkAuth);
+
+    return () => {
+      isMounted = false;
+      appStateSub.remove();
+      authSub.remove();
+    };
   }, []);
 
-  if (loadingUserId) return null; // or a splash/loading indicator
+  /* ---------- NOTIFICATIONS ---------- */
+  useEffect(() => {
+    notifee.createChannel({
+      id: 'default_channel',
+      name: 'Default Notifications',
+      importance: AndroidImportance.HIGH,
+      sound: 'buzzer',
+    });
 
+    requestNotificationPermission();
+    initTTS();
 
+    messaging().onMessage(async msg => {
+      await notifee.displayNotification({
+        title: msg.notification?.title,
+        body: msg.notification?.body,
+        android: { channelId: 'default_channel' },
+        data: msg.data,
+      });
+    });
 
+    notifee.onForegroundEvent(({ type }) => {
+      if (type === EventType.PRESS) {
+        navigationRef.current?.navigate('Salon');
+      }
+    });
+  }, []);
+
+  if (loading) return null;
 
   return (
     <NotificationProvider userId={userId}>
-      {/* <NavigationContainer ref={navigationRef}> */}
-      <NavigationContainer
-        ref={navigationRef}
-        onReady={() => {
-          isNavReadyRef.current = true;
-        }}
-      >
-
-        <Stack.Navigator initialRouteName="SplashLogo">
-          {/* ...existing Stack.Screen components... */}
-          <Stack.Screen
-            name="SplashLogo"
-            component={SplashLogoScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="SplashScreen"
-            component={SplashScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="UserLogin"
-            component={UserLogin}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Main"
-            component={MainTabs}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Salon"
-            component={SalonTabs}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="SalonDetail"
-            component={SalonDetailScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="BookingSchedule"
-            component={BookingSchedule}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="UserSignup"
-            component={UserSignup}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="OtpScreen"
-            component={OtpScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="FAQScreen"
-            component={FAQScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="TermsScreen"
-            component={TermsScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="AboutScreen"
-            component={AboutScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="NaaiLogin"
-            component={NaaiLogin}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="NaaiRequest"
-            component={NaaiRequest}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="SalonOtpScreen"
-            component={SalonOtpScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="AddOfflineCustomer"
-            component={AddOfflineCustomer}
-          />
-          <Stack.Screen
-            name="SalonNotifications"
-            component={SalonNotifications}
-          />
-        </Stack.Navigator>
+      <NavigationContainer ref={navigationRef}>
+        {isLoggedIn ? (
+          <AppStack userType={userType} />
+        ) : (
+          <AuthStack onLoginSuccess={() => setIsLoggedIn(true)} />
+        )}
       </NavigationContainer>
     </NotificationProvider>
   );
-};
-
-
-
-
-export default App;
+}
