@@ -298,7 +298,7 @@ Time: ${formatTime(selectedTime)}`,
 
         {/* -------------------- DATE -------------------- */}
         <View style={styles.card}>
-          <Text style={styles.section}>Select Date</Text>
+          <Text style={styles.section}>Select Date for Direct to Line</Text>
 
           <View style={styles.dateRow}>
             {[0, 1, 2].map(i => {
