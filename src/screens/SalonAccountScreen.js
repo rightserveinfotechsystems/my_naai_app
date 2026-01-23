@@ -26,6 +26,9 @@ const GOLD = '#E8B97E';
 const DARK = '#121212';
 const CARD = '#1E1E1E';
 const MAX_IMAGE_MB = 2;
+const MAX_IMAGES = 4;
+// const [salonImages, setSalonImages] = useState([]);
+
 
 const MENUS = [
   { label: 'About', screen: 'AboutScreen', icon: 'information-circle-outline' },
@@ -35,6 +38,7 @@ const MENUS = [
 
 const SalonAccountScreen = ({ navigation }) => {
   const [editVisible, setEditVisible] = useState(false);
+  const [salonImages, setSalonImages] = useState([]);
   const [salonName, setSalonName] = useState('');
   const [salonAddress, setSalonAddress] = useState('');
   const [salonImage, setSalonImage] = useState(null);
@@ -104,7 +108,7 @@ const SalonAccountScreen = ({ navigation }) => {
 
       if (response?.status === 'SUCCESS') {
         const data = response.data;
-        console.log("data", data);
+        console.log("salonProfile", data);
 
 
         setProfileData(data);
@@ -117,6 +121,7 @@ const SalonAccountScreen = ({ navigation }) => {
         );
 
         // SALON IMAGE
+        setSalonImages(data?.imagesArray?.length ? data.imagesArray : []);
         setSalonImage(data?.imageUrl || null);
 
         // BUSINESS HOURS
@@ -271,6 +276,7 @@ const SalonAccountScreen = ({ navigation }) => {
           .filter(b => isValidGuid(b.id))
           .map(async b => ({
             barberId: b.id,
+            fullName: b.name,
             profileImageUrl:
               b.image?.startsWith('file://')
                 ? await uploadImages(b.image)
@@ -308,15 +314,28 @@ const SalonAccountScreen = ({ navigation }) => {
       //     ? await uploadImages(salonImage)
       //     : salonImage;
 
-      let imagePath = salonImage;
 
-      // Upload only if local image
-      if (salonImage && salonImage.startsWith('file://')) {
-        imagePath = await uploadImages(salonImage);
-      }
+      const uploadSalonImages = async () => {
+        const uploaded = [];
 
+        for (const img of salonImages) {
+          if (!img) continue;
 
-      const imagesArray = imagePath ? [imagePath] : [];
+          if (img.startsWith('file://')) {
+            const path = await uploadImages(img);
+            if (path) uploaded.push(path);
+          } else {
+            // already server image
+            uploaded.push(img);
+          }
+        }
+
+        return uploaded;
+      };
+
+      const imagesArray = await uploadSalonImages();
+      const imageUrl = imagesArray[0] || null;
+
       console.log("profileData.businessHours", profileData.businessHours)
 
       const payload = {
@@ -333,7 +352,7 @@ const SalonAccountScreen = ({ navigation }) => {
         genderType: profileData.genderType || 'UNISEX',
         isActive: true,
 
-        imageUrl: imagePath,
+        imageUrl,
         imagesArray, // ✅ THIS FIXES THE ERROR
 
         existingServices,
@@ -437,6 +456,9 @@ const SalonAccountScreen = ({ navigation }) => {
   };
 
 
+
+
+
   /* ---------------- LOGOUT ---------------- */
   const handleLogout = () => {
     Alert.alert(
@@ -490,6 +512,30 @@ const SalonAccountScreen = ({ navigation }) => {
         callback(asset.uri); // ✅ file://...
       }
     );
+  };
+
+  const addSalonImage = () => {
+    if (salonImages.length >= MAX_IMAGES) {
+      Alert.alert('Limit reached', 'You can upload maximum 4 photos');
+      return;
+    }
+
+    pickImage((uri) => {
+      setSalonImages(prev => {
+        if (prev.length >= MAX_IMAGES) return prev;
+        return [...prev, uri];
+      });
+    });
+  };
+
+  const replaceSalonImage = (index) => {
+    pickImage((uri) => {
+      setSalonImages(prev => {
+        const updated = [...prev];
+        updated[index] = uri;
+        return updated;
+      });
+    });
   };
 
 
@@ -643,23 +689,78 @@ const SalonAccountScreen = ({ navigation }) => {
 
             <Text style={styles.modalTitle}>Salon Settings</Text>
 
-            <View style={styles.profileCard}>
+            <View style={styles.profileCardEdit}>
+              {Array.from({
+                length: Math.min(salonImages.length + 1, MAX_IMAGES),
+              }).map((_, index) => {
+                const image = salonImages[index];
 
-              <TouchableOpacity onPress={() => pickImage(setSalonImage)}>
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => {
+                      if (image) {
+                        replaceSalonImage(index);
+                      } else {
+                        addSalonImage();
+                      }
+                    }}
+                    onLongPress={() => {
+                      if (!image) return;
 
-                <Image
-                  source={
-                    salonImage
-                      ? { uri: buildImageUrl(salonImage) }
-                      : require('../assets/my_naai.png')
-                  }
+                      Alert.alert(
+                        'Remove Image',
+                        'Long press detected.\nDo you want to remove this image?',
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          {
+                            text: 'Remove',
+                            style: 'destructive',
+                            onPress: () =>
+                              setSalonImages(prev =>
+                                prev.filter((_, i) => i !== index)
+                              ),
+                          },
+                        ]
+                      );
+                    }}
+                    style={{ alignItems: 'center' }}
+                  >
+                    {image ? (
+                      <>
+                        <View style={{ position: 'relative' }}>
+                          <Image
+                            source={{ uri: buildImageUrl(image) }}
+                            style={styles.salonImage}
+                          />
 
-                  style={styles.salonImage}
-                />
+                          {/* <View style={styles.removeHintIcon}>
+          <Ionicons name="close" size={12} color="#fff" />
+        </View> */}
+                        </View>
 
-                <Text style={styles.changeImg}>Change Image</Text>
-              </TouchableOpacity>
+                        <Text style={styles.changeImg}>Change Image</Text>
+
+                        {/* 🧠 USER GUIDANCE */}
+                        <Text style={styles.longPressHint}>
+                          Long press to remove
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        <View style={styles.addImageBox}>
+                          <Ionicons name="add" size={32} color={GOLD} />
+                        </View>
+                        <Text style={styles.changeImg}>Add Image</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+
+
+                );
+              })}
             </View>
+
 
             <TextInput
               style={styles.input}
@@ -1016,10 +1117,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     elevation: 4,
   },
+  profileCardEdit: {
+    backgroundColor: CARD,
+    borderRadius: 20,
+    alignItems: 'center',
+    padding: 20,
+    marginBottom: 20,
+    elevation: 4,
+    flexDirection: "row",
+    gap: 10,
+  },
 
   salonImage: {
-    width: 96,
-    height: 96,
+    width: 70,
+    height: 70,
     borderRadius: 48,
     marginBottom: 8,
     borderWidth: 2,
@@ -1390,6 +1501,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  addImageBox: {
+    width: 70,
+    height: 70,
+    borderRadius: 48,
+    borderWidth: 2,
+    borderColor: GOLD,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+
+  removeHintIcon: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#E53935',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  longPressHint: {
+    fontSize: 10,
+    color: '#999',
+    marginTop: -4,
+  },
+
 
 
 });

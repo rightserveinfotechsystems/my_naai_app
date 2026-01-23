@@ -87,7 +87,7 @@ const UserLogin = ({ navigation }) => {
       const payload = {
         phoneNumber: mobile,
         otp: otp.toString(),
-        deviceToken: deviceToken,
+        deviceToken: await messaging().getToken(),
       };
 
       const res = await communication.verifyLogin(payload);
@@ -120,7 +120,7 @@ const UserLogin = ({ navigation }) => {
       }
     } catch (error) {
       Alert.alert(
-        'Error',
+        'Errors',
         error?.response?.data?.message || 'Something went wrong'
       );
     } finally {

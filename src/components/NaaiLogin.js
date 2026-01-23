@@ -40,7 +40,10 @@ const NaaiLogin = ({ navigation }) => {
     setLoading(true);
     try {
       const payload = { phoneNumber: mobile };
+      console.log("payload", payload)
+
       const res = await communication.SalonLogin(payload);
+      console.log("res", res)
       if (res?.status === 'SUCCESS') {
         console.log("res?.otp", res?.otp);
 
