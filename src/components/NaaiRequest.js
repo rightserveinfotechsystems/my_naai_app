@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
 
   terms: {
     color: '#999',
-    fontSize: 12,
+    fontSize: 14,
     textAlign: 'center',
     marginTop: 16,
     lineHeight: 18,
@@ -274,9 +274,10 @@ const styles = StyleSheet.create({
 
   footer: {
     color: '#aaa',
-    fontSize: 13,
+    fontSize: 15,
     textAlign: 'center',
     marginTop: 24,
+    fontWeight: '500',
   },
 
   link: {

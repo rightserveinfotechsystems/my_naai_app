@@ -205,7 +205,8 @@ const styles = StyleSheet.create({
 
   footerText: {
     color: '#aaa',
-    fontSize: 13,
+    fontSize: 15,
+    fontWeight: '500',
   },
 
   signup: {

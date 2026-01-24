@@ -263,6 +263,9 @@ const ServicesScreen = () => {
               <Skeleton />
               <Skeleton />
               <Skeleton />
+              <Skeleton />
+              <Skeleton />
+              <Skeleton />
             </>
           ) : (
             <FlatList

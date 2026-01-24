@@ -54,7 +54,7 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
       const response = await communication.createUser({
         phoneNumber: mobile,
         fullName,
-        deviceToken,
+        deviceToken: await messaging().getToken(),
         otp,
       });
 
@@ -67,7 +67,9 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
         await AsyncStorage.setItem('isLoggedIn', 'true');
         await AsyncStorage.setItem('userType', 'USER');
 
-        onLoginSuccess(); // 🔥 THIS SWITCHES TO DASHBOARD
+        // onLoginSuccess(); 
+        onLoginSuccess('USER');
+
       }
       else {
         Alert.alert('Error', response?.message || 'Invalid OTP');

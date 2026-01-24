@@ -742,9 +742,9 @@ const SalonAccountScreen = ({ navigation }) => {
                         <Text style={styles.changeImg}>Change Image</Text>
 
                         {/* 🧠 USER GUIDANCE */}
-                        <Text style={styles.longPressHint}>
+                        {/* <Text style={styles.longPressHint}>
                           Long press to remove
-                        </Text>
+                        </Text> */}
                       </>
                     ) : (
                       <>
@@ -754,16 +754,19 @@ const SalonAccountScreen = ({ navigation }) => {
                         <Text style={styles.changeImg}>Add Image</Text>
                       </>
                     )}
+
                   </TouchableOpacity>
 
 
                 );
               })}
+
             </View>
-
-
+            <Text style={styles.longPressHint}>
+              Note: Long press on image to remove
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { marginTop: 20 }]}
               value={salonName}
               onChangeText={setSalonName}
               placeholder="Salon Name"
@@ -1118,19 +1121,19 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   profileCardEdit: {
-    backgroundColor: CARD,
-    borderRadius: 20,
+    // backgroundColor: CARD,
+    // borderRadius: 20,
     alignItems: 'center',
-    padding: 20,
-    marginBottom: 20,
+    padding: 2,
+    marginBottom: 1,
     elevation: 4,
     flexDirection: "row",
-    gap: 10,
+    gap: 5,
   },
 
   salonImage: {
-    width: 70,
-    height: 70,
+    width: 60,
+    height: 60,
     borderRadius: 48,
     marginBottom: 8,
     borderWidth: 2,
@@ -1139,7 +1142,7 @@ const styles = StyleSheet.create({
 
   changeImg: {
     color: GOLD,
-    fontSize: 12,
+    fontSize: 10,
     textAlign: 'center',
     marginBottom: 8,
     fontWeight: '600',
@@ -1502,8 +1505,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   addImageBox: {
-    width: 70,
-    height: 70,
+    width: 60,
+    height: 60,
     borderRadius: 48,
     borderWidth: 2,
     borderColor: GOLD,
@@ -1526,7 +1529,7 @@ const styles = StyleSheet.create({
   },
 
   longPressHint: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#999',
     marginTop: -4,
   },

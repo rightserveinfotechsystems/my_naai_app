@@ -137,6 +137,7 @@ function AuthStack({ onLoginSuccess }) {
 
 /* ---------- APP STACK ---------- */
 function AppStack({ userType }) {
+  if (!userType) return null;
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {userType === 'USER' ? (
@@ -229,11 +230,19 @@ export default function App() {
       });
     });
 
+    // notifee.onForegroundEvent(({ type }) => {
+    //   if (type === EventType.PRESS) {
+    //     navigationRef.current?.navigate('Salon');
+    //   }
+    // });
     notifee.onForegroundEvent(({ type }) => {
       if (type === EventType.PRESS) {
-        navigationRef.current?.navigate('Salon');
+        if (userType === 'SALON') {
+          navigationRef.current?.navigate('Salon');
+        }
       }
     });
+
   }, []);
 
   if (loading) return null;
@@ -244,7 +253,14 @@ export default function App() {
         {isLoggedIn ? (
           <AppStack userType={userType} />
         ) : (
-          <AuthStack onLoginSuccess={() => setIsLoggedIn(true)} />
+          // <AuthStack onLoginSuccess={() => setIsLoggedIn(true)} />
+          <AuthStack
+            onLoginSuccess={(type) => {
+              setUserType(type);
+              setIsLoggedIn(true);
+            }}
+          />
+
         )}
       </NavigationContainer>
     </NotificationProvider>

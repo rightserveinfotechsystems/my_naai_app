@@ -352,14 +352,15 @@ const styles = StyleSheet.create({
   },
 
   naaiFooter: {
-    marginTop: 10,
+    marginTop: 16,
     alignItems: 'center',
   },
 
   footerText: {
     color: '#9E9E9E',
-    fontSize: 13,
+    fontSize: 15,
     textAlign: 'center',
+    fontWeight: '500',
   },
 
   signup: {

@@ -58,7 +58,7 @@ const SalonOtpScreen = ({ route, navigation }) => {
             const payload = {
                 phoneNumber: mobile,
                 otp: otp.toString(),
-                deviceToken: deviceToken,
+                deviceToken: await messaging().getToken(),
             };
             console.log("verifySalonLogin payload", payload);
 

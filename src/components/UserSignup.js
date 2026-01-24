@@ -43,7 +43,7 @@ const UserSignup = ({ navigation }) => {
       console.log('sendRegisterOtp response:', response);
 
       if (response?.status === 'SUCCESS') {
-        Alert.alert(response.otp)
+        // Alert.alert(response.otp)
         navigation.replace('OtpScreen', {
           mobile,
           fullName: name,
@@ -176,9 +176,10 @@ const styles = StyleSheet.create({
   },
   footer: {
     color: '#aaa',
-    fontSize: 13,
+    fontSize: 16,
     textAlign: 'center',
     marginTop: 24,
+    fontWeight: '500',
   },
   link: {
     color: '#E8B97E',

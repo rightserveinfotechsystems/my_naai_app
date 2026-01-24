@@ -146,7 +146,7 @@ const CustomerBookingHistory = () => {
             )}
 
             {/* MOBILE */}
-            {item.userPhone && (
+            {item.userPhone !== "0000000000" && (
               <TouchableOpacity
                 style={styles.row}
                 onPress={() => Linking.openURL(`tel:${item.userPhone}`)}

@@ -190,7 +190,7 @@ const SalonDashboard = ({ navigation }) => {
             </View>
           )}
 
-          {item?.userPhone && (
+          {item.userPhone !== "0000000000" && (
             <View style={styles.row}>
               <Ionicons name="call-outline" size={14} color="#E8B97E" />
               <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.userPhone}`)}>
@@ -246,17 +246,20 @@ const SalonDashboard = ({ navigation }) => {
                 }
               >
                 <Ionicons name="notifications-outline" size={20} color="#000" />
-                {notificationCount > 0 && (
+                {/* {notificationCount > 0 && (
                   <View style={styles.badge}>
                     <Text style={styles.badgeText}>{notificationCount}</Text>
                   </View>
-                )}
+                )} */}
               </TouchableOpacity>
             </View>
           </View>
 
           {loading ? (
             <>
+              <Skeleton />
+              <Skeleton />
+              <Skeleton />
               <Skeleton />
               <Skeleton />
               <Skeleton />

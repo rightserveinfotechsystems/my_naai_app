@@ -52,7 +52,7 @@ const AddOfflineCustomer = ({ route, navigation }) => {
       } else {
         console.log('No barbers found', res);
         setBarbers([]);
-        Alert.alert('Info', 'No barbers available for this salon');
+        // Alert.alert('Info', 'No barbers available for this salon');
       }
 
     } catch (error) {
