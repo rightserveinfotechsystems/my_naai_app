@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler'; // MUST be first
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, DeviceEventEmitter } from 'react-native';
 
@@ -49,7 +49,7 @@ import SalonAccountScreen from './src/screens/SalonAccountScreen';
 import AddOfflineCustomer from './src/components/AddOfflineCustomer';
 import SalonNotifications from './src/screens/SalonNotifications';
 
-/* ---------- NAV REFS ---------- */
+/* ---------- NAV REF ---------- */
 export const navigationRef = React.createRef();
 
 /* ---------- NAV ---------- */
@@ -138,6 +138,7 @@ function AuthStack({ onLoginSuccess }) {
 /* ---------- APP STACK ---------- */
 function AppStack({ userType }) {
   if (!userType) return null;
+
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {userType === 'USER' ? (
@@ -163,6 +164,11 @@ export default function App() {
   const [userType, setUserType] = useState(null);
   const [userId, setUserId] = useState('');
 
+  const userTypeRef = useRef(null);
+  useEffect(() => {
+    userTypeRef.current = userType;
+  }, [userType]);
+
   /* ---------- AUTH CHECK ---------- */
   useEffect(() => {
     let isMounted = true;
@@ -179,16 +185,14 @@ export default function App() {
           setUserType(type);
           setIsLoggedIn(true);
         } else {
-          if (!isMounted) return;
-          setUserId('');
-          setUserType(null);
           setIsLoggedIn(false);
+          setUserType(null);
+          setUserId('');
         }
-      } catch (e) {
-        if (!isMounted) return;
-        setUserId('');
-        setUserType(null);
+      } catch {
         setIsLoggedIn(false);
+        setUserType(null);
+        setUserId('');
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -196,8 +200,8 @@ export default function App() {
 
     checkAuth();
 
-    const appStateSub = AppState.addEventListener('change', state => {
-      if (state === 'active') checkAuth();
+    const appStateSub = AppState.addEventListener('change', s => {
+      if (s === 'active') checkAuth();
     });
 
     const authSub = DeviceEventEmitter.addListener('AUTH_CHANGED', checkAuth);
@@ -221,7 +225,7 @@ export default function App() {
     requestNotificationPermission();
     initTTS();
 
-    messaging().onMessage(async msg => {
+    const unsubscribeMsg = messaging().onMessage(async msg => {
       await notifee.displayNotification({
         title: msg.notification?.title,
         body: msg.notification?.body,
@@ -230,19 +234,43 @@ export default function App() {
       });
     });
 
-    // notifee.onForegroundEvent(({ type }) => {
-    //   if (type === EventType.PRESS) {
-    //     navigationRef.current?.navigate('Salon');
-    //   }
-    // });
-    notifee.onForegroundEvent(({ type }) => {
+    const unsubscribeNotifee = notifee.onForegroundEvent(({ type }) => {
       if (type === EventType.PRESS) {
-        if (userType === 'SALON') {
+        if (userTypeRef.current === 'SALON') {
           navigationRef.current?.navigate('Salon');
         }
       }
     });
 
+    return () => {
+      unsubscribeMsg();
+      unsubscribeNotifee();
+    };
+  }, []);
+
+  /* ---------- FCM ---------- */
+  useEffect(() => {
+    const initFCM = async () => {
+      try {
+        const authStatus = await messaging().requestPermission();
+        const enabled =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+        if (enabled) {
+          const token = await messaging().getToken();
+          await AsyncStorage.setItem('FCM_TOKEN', token);
+        }
+      } catch {}
+    };
+
+    initFCM();
+
+    const unsubscribe = messaging().onTokenRefresh(async token => {
+      await AsyncStorage.setItem('FCM_TOKEN', token);
+    });
+
+    return unsubscribe;
   }, []);
 
   if (loading) return null;
@@ -253,14 +281,12 @@ export default function App() {
         {isLoggedIn ? (
           <AppStack userType={userType} />
         ) : (
-          // <AuthStack onLoginSuccess={() => setIsLoggedIn(true)} />
           <AuthStack
-            onLoginSuccess={(type) => {
+            onLoginSuccess={type => {
               setUserType(type);
               setIsLoggedIn(true);
             }}
           />
-
         )}
       </NavigationContainer>
     </NotificationProvider>

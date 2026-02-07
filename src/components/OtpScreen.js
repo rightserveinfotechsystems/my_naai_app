@@ -9,10 +9,8 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { communication } from '../services/communication';
-import messaging from '@react-native-firebase/messaging';
 
 const RESEND_TIME = 30;
 
@@ -20,7 +18,6 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
   const { mobile, fullName } = route.params;
 
   const [otp, setOtp] = useState('');
-  const [deviceToken, setDeviceToken] = useState(null);
   const [loading, setLoading] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(RESEND_TIME);
   const [canResend, setCanResend] = useState(false);
@@ -33,14 +30,20 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
       const timer = setTimeout(() => {
         setSecondsLeft(prev => prev - 1);
       }, 1000);
-
       return () => clearTimeout(timer);
     }
 
-    if (secondsLeft === 0) {
-      setCanResend(true);
-    }
+    if (secondsLeft === 0) setCanResend(true);
   }, [secondsLeft, canResend]);
+
+  /* 🔐 GET STORED FCM TOKEN */
+  const getStoredToken = async () => {
+    try {
+      return await AsyncStorage.getItem('FCM_TOKEN');
+    } catch {
+      return '';
+    }
+  };
 
   /* ✅ VERIFY OTP */
   const verifyOtp = async () => {
@@ -50,12 +53,14 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
     }
 
     setLoading(true);
+    const token = await getStoredToken();
+
     try {
       const response = await communication.createUser({
         phoneNumber: mobile,
         fullName,
-        deviceToken: await messaging().getToken(),
         otp,
+        deviceToken: token || '',
       });
 
       if (response?.status === 'SUCCESS') {
@@ -64,14 +69,10 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
           'mynaaiUser',
           JSON.stringify(response?.data)
         );
-        await AsyncStorage.setItem('isLoggedIn', 'true');
         await AsyncStorage.setItem('userType', 'USER');
 
-        // onLoginSuccess(); 
         onLoginSuccess('USER');
-
-      }
-      else {
+      } else {
         Alert.alert('Error', response?.message || 'Invalid OTP');
       }
     } catch (error) {
@@ -84,25 +85,23 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
     }
   };
 
-  /*  RESEND OTP */
-
+  /* 🔁 RESEND OTP */
   const resendOtp = async () => {
     if (!canResend || loading) return;
 
     setLoading(true);
-
     try {
-      const payload = { phoneNumber: mobile };
-      const res = await communication.sendRegisterOtp(payload);
+      const res = await communication.sendRegisterOtp({
+        phoneNumber: mobile,
+      });
 
       if (res?.status === 'SUCCESS') {
-        // Alert.alert('OTP Send Successfully!');
         setOtp('');
         setSecondsLeft(RESEND_TIME);
         setCanResend(false);
         inputRef.current?.focus();
       } else {
-        Alert.alert('Errors', res?.message || 'Failed to resend OTP');
+        Alert.alert('Error', res?.message || 'Failed to resend OTP');
       }
     } catch (error) {
       Alert.alert(
@@ -113,19 +112,7 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    const getDeviceToken = async () => {
-      try {
-        const token = await messaging().getToken();
-        console.log('FCM DEVICE TOKEN user otpscreen:', token);
-        setDeviceToken(token);
-      } catch (e) {
-        console.log('FCM token error', e);
-      }
-    };
 
-    getDeviceToken();
-  }, []);
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Phone Verification</Text>
@@ -165,6 +152,7 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
 };
 
 export default OtpScreen;
+
 
 
 const styles = StyleSheet.create({

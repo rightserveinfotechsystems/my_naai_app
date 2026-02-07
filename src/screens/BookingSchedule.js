@@ -8,6 +8,7 @@ import {
   Alert,
   ImageBackground,
   ActivityIndicator,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -177,199 +178,195 @@ Time: ${formatTime(selectedTime)}`,
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
-        {/* -------------------- SERVICES -------------------- */}
-        <View style={styles.card}>
-          <Text style={styles.section}>Select Services</Text>
+     <FlatList
+  data={salon?.services || []}
+  keyExtractor={item => item.serviceId.toString()}
+  numColumns={2}
+  columnWrapperStyle={{ justifyContent: 'space-between' }}
+  contentContainerStyle={{
+  paddingBottom: 160,
+  margin: 20,
+}}
+  showsVerticalScrollIndicator={false}
 
-          {salon?.services?.map(service => {
-            const selected = selectedServices.some(
-              s => s.serviceId === service.serviceId,
-            );
+  ListHeaderComponent={
+    <>
+      {/* -------------------- SERVICES HEADER -------------------- */}
+      <View style={styles.card}>
+        <Text style={styles.section}>Select Services</Text>
+      </View>
+    </>
+  }
+
+  renderItem={({ item: service }) => {
+    const selected = selectedServices.some(
+      s => s.serviceId === service.serviceId,
+    );
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.serviceBox,
+          selected && styles.optionActive,
+        ]}
+        onPress={() => toggleService(service)}
+      >
+        <Text
+          style={[
+            styles.serviceName,
+            selected && styles.activeText,
+          ]}
+          numberOfLines={1}
+        >
+          {service.serviceName}
+        </Text>
+
+        <View style={styles.serviceFooter}>
+          <Text
+            style={[
+              styles.servicePrice,
+              selected && styles.activeText,
+            ]}
+          >
+            ⏱ {service.durationMinutes} min
+          </Text>
+
+          {selected && (
+            <Ionicons
+              name="checkmark-circle"
+              size={18}
+              color="#000"
+            />
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  }}
+
+  ListFooterComponent={
+    <>
+      {/* -------------------- BARBERS -------------------- */}
+      <View style={styles.card}>
+        {salon?.barbers.length > 0 && (
+          <Text style={styles.section}>
+            Select Barber (Optional)
+          </Text>
+        )}
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {salon?.barbers?.map(b => {
+            const selected =
+              selectedBarber?.barberId === b.barberId;
 
             return (
               <TouchableOpacity
-                key={service.serviceId}
+                key={b.barberId}
                 style={[
-                  styles.optionRow,
-                  selected && styles.optionActive,
+                  styles.barberCard,
+                  selected && styles.barberActive,
                 ]}
-                onPress={() => toggleService(service)}
+                onPress={() =>
+                  setSelectedBarber(selected ? null : b)
+                }
               >
-                <View>
-                  <Text
+                <ImageBackground
+                  source={{
+                    uri: `${getServerUrl()}/getfiles/${b.profileImageUrl}`,
+                  }}
+                  style={styles.barberImg}
+                  imageStyle={{ borderRadius: 12 }}
+                />
+
+                <Text style={styles.barberName}>{b.fullName}</Text>
+
+                <View style={styles.statusRow}>
+                  <View
                     style={[
-                      styles.serviceName,
-                      selected && styles.activeText,
+                      styles.statusDot,
+                      { backgroundColor: getStatusColor(b.isAvailable) },
                     ]}
-                  >
-                    {service.serviceName}
+                  />
+                  <Text style={styles.statusText}>
+                    {b.isAvailable ? 'Available' : 'Not available'}
                   </Text>
                 </View>
 
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text
-                    style={[
-                      styles.servicePrice,
-                      selected && styles.activeText,
-                    ]}
-                  >
-                    ⏱ {service.durationMinutes} min
-                  </Text>
+                <Text style={styles.barberInfo}>
+                  ⭐ {b.ratingAverage || 0}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
 
+      {/* -------------------- DATE -------------------- */}
+      <View style={styles.card}>
+        <Text style={styles.section}>Select Date</Text>
+        <View style={styles.dateRow}>
+          {[0, 1, 2].map(i => {
+            const date = new Date(Date.now() + i * 86400000);
+            const label =
+              i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : 'Day After';
 
-                  {selected && (
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={20}
-                      color="#000"
-                    />
-                  )}
-                </View>
+            return (
+              <TouchableOpacity
+                key={i}
+                style={[
+                  styles.dateBox,
+                  selectedDate === i && styles.dateActive,
+                ]}
+                onPress={() => setSelectedDate(i)}
+              >
+                <Text
+                  style={[
+                    styles.dateDay,
+                    selectedDate === i && styles.activeText,
+                  ]}
+                >
+                  {label}
+                </Text>
+                <Text
+                  style={[
+                    styles.dateNum,
+                    selectedDate === i && styles.activeText,
+                  ]}
+                >
+                  {date.getDate()}
+                </Text>
               </TouchableOpacity>
             );
           })}
         </View>
+      </View>
 
-        {/* -------------------- BARBERS -------------------- */}
-        <View style={styles.card}>
-          {salon?.barbers.length > 0 && (<Text style={styles.section}>
-            Select Barber (Optional)
-          </Text>)}
+      {/* -------------------- TIME -------------------- */}
+      <View style={styles.card}>
+        <Text style={styles.section}>Select Time</Text>
 
+        <TouchableOpacity
+          style={styles.timeInput}
+          onPress={() => setShowTimePicker(true)}
+        >
+          <Text style={styles.timeText}>
+            {formatTime(selectedTime)}
+          </Text>
+          <Ionicons name="time-outline" size={20} color="#E1B378" />
+        </TouchableOpacity>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {salon?.barbers?.map(b => {
-              const selected =
-                selectedBarber?.barberId === b.barberId;
+        {showTimePicker && (
+          <DateTimePicker
+            value={selectedTime || new Date()}
+            mode="time"
+            display="clock"
+            onChange={onTimeChange}
+          />
+        )}
+      </View>
+    </>
+  }
+/>
 
-              return (
-                <TouchableOpacity
-                  key={b.barberId}
-                  style={[
-                    styles.barberCard,
-                    selected && styles.barberActive,
-                  ]}
-                  onPress={() =>
-                    setSelectedBarber(
-                      selected ? null : b,
-                    )
-                  }
-                >
-                  <ImageBackground
-                    source={{
-                      uri: `${getServerUrl()}/getfiles/${b.profileImageUrl}`,
-                    }}
-                    style={styles.barberImg}
-                    imageStyle={{ borderRadius: 12 }}
-                  />
-
-                  <Text style={styles.barberName}>
-                    {b.fullName}
-                  </Text>
-
-                  <View style={styles.statusRow}>
-                    <View
-                      style={[
-                        styles.statusDot,
-                        {
-                          backgroundColor: getStatusColor(
-                            b.isAvailable,
-                          ),
-                        },
-                      ]}
-                    />
-                    <Text style={styles.statusText}>
-                      {b.isAvailable
-                        ? 'Available'
-                        : 'Not available'}
-                    </Text>
-                  </View>
-
-                  <Text style={styles.barberInfo}>
-                    ⭐ {b.ratingAverage || 0} • ⏱{' '}
-                    {b.durationTime || '--'}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        {/* -------------------- DATE -------------------- */}
-        <View style={styles.card}>
-          <Text style={styles.section}>Select Date for Direct to Line</Text>
-
-          <View style={styles.dateRow}>
-            {[0, 1, 2].map(i => {
-              const date = new Date(
-                Date.now() + i * 86400000,
-              );
-              const label =
-                i === 0
-                  ? 'Today'
-                  : i === 1
-                    ? 'Tomorrow'
-                    : 'Day After';
-
-              return (
-                <TouchableOpacity
-                  key={i}
-                  style={[
-                    styles.dateBox,
-                    selectedDate === i &&
-                    styles.dateActive,
-                  ]}
-                  onPress={() => setSelectedDate(i)}
-                >
-                  <Text
-                    style={[
-                      styles.dateDay,
-                      selectedDate === i &&
-                      styles.activeText,
-                    ]}
-                  >
-                    {label}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.dateNum,
-                      selectedDate === i &&
-                      styles.activeText,
-                    ]}
-                  >
-                    {date.getDate()}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-        {/* -------------------- TIME -------------------- */}
-        <View style={styles.card}>
-          <Text style={styles.section}>Select Time for Appointment</Text>
-
-          <TouchableOpacity
-            style={styles.timeInput}
-            onPress={() => setShowTimePicker(true)}
-          >
-            <Text style={styles.timeText}>
-              {formatTime(selectedTime)}
-            </Text>
-            <Ionicons name="time-outline" size={20} color="#E1B378" />
-          </TouchableOpacity>
-
-          {showTimePicker && (
-            <DateTimePicker
-              value={selectedTime || new Date()}
-              mode="time"
-              display="clock"
-              onChange={onTimeChange}
-            />
-          )}
-        </View>
-
-      </ScrollView>
 
       {/* -------------------- CONFIRM -------------------- */}
       <View style={styles.bottomBar}>
@@ -411,7 +408,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    margin: 16,
+    marginVertical: 16,
     borderRadius: 18,
   },
 
@@ -510,5 +507,20 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
+
+  serviceBox: {
+  width: '48%',
+  backgroundColor: '#2A2A2A',
+  padding: 12,
+  borderRadius: 12,
+  marginBottom: 12,
+},
+
+serviceFooter: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+},
+
 
 });

@@ -362,15 +362,21 @@ const SalonAccountScreen = ({ navigation }) => {
         newBarbers,
 
         businessHours: [
-          {
-            scheduleId: profileData.businessHours[0]?.scheduleId,
-            openingTime: formatTimeForApi(openTime),
-            closingTime: formatTimeForApi(closeTime),
-            breakStartTime: '13:00:00',
-            breakEndTime: '15:00:00',
-            holidayDays: holiday !== null ? [holiday] : [],
-          },
-        ],
+  {
+    scheduleId: profileData.businessHours[0]?.scheduleId,
+    openingTime: formatTimeForApi(openTime),
+    closingTime: formatTimeForApi(closeTime),
+    breakStartTime: '13:00:00',
+    breakEndTime: '15:00:00',
+    holidayDays:
+      holiday === 'NONE'
+        ? []
+        : typeof holiday === 'number'
+          ? [holiday]
+          : [],
+  },
+],
+
       };
 
 
@@ -539,8 +545,8 @@ const SalonAccountScreen = ({ navigation }) => {
   };
 
 
-  const selectHoliday = dayValue => {
-    setHoliday(Number(dayValue));
+  const selectHoliday = (dayValue) => {
+    setHoliday(dayValue);
     setHolidayPickerVisible(false);
   };
 
@@ -814,6 +820,7 @@ const SalonAccountScreen = ({ navigation }) => {
                   ? `Week Off: ${DAYS.find(d => d.value === holiday)?.label}`
                   : '+ Add Week Off'}
               </Text>
+
 
 
 

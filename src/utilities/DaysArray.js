@@ -1,4 +1,5 @@
 export const DAYS = [
+    { label: 'No week off', value: 'NONE' },
   { label: 'Sunday', value: 0 },
   { label: 'Monday', value: 1 },
   { label: 'Tuesday', value: 2 },
