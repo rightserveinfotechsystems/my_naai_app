@@ -51,7 +51,13 @@ const convertSalonApiData = (apiData = []) => {
     waitTime: item.isOpen ? item.totalWaitTime?.display : 'Closed',
     imageUrl: item.imageUrl,
     imagesArray: item.imagesArray || [],
+    latitude: Number(item.latitude),
+    longitude: Number(item.longitude),
+
     raw: item,
+
+
+
   }));
 };
 
@@ -134,6 +140,8 @@ const NaaiDashboard = ({ navigation }) => {
       const response = await communication.userSalonList(payload);
 
       if (response?.status === 'SUCCESS') {
+        console.log("userSalonList response", response);
+
         const convertedData = convertSalonApiData(response.data);
         const pagination = response.pagination;
 
@@ -233,6 +241,16 @@ const NaaiDashboard = ({ navigation }) => {
     );
   };
 
+  // const openMap = () => {
+  //     if (!convertedData.latitude || !convertedData.longitude) {
+  //       Alert.alert('Location not available');
+  //       return;
+  //     }
+
+  //     Linking.openURL(
+  //       `https://www.google.com/maps/search/?api=1&query=${convertedData.latitude},${convertedData.longitude}`
+  //     );
+  //   };
 
   const renderEmpty = () => {
     if (loading) return null;
@@ -269,7 +287,7 @@ const NaaiDashboard = ({ navigation }) => {
             ? { uri: `${getServerUrl()}/getfiles/${item.imagesArray[0]}` }
             : item.imageUrl
               ? { uri: `${getServerUrl()}/getfiles/${item.imageUrl}` }
-              : require('../assets/my_naai.png')
+              : require('../assets/myNaai.jpeg')
         }
         style={styles.image}
       />
@@ -280,20 +298,40 @@ const NaaiDashboard = ({ navigation }) => {
         <View style={{ flex: 1 }}>
           <Text style={styles.name}>{item.name}</Text>
 
-          <View style={styles.ratingRow}>
+          {/* <View style={styles.ratingRow}>
             <Ionicons name="star" size={14} color="#E1B378" />
             <Text style={styles.ratingText}>
               {item.rating} ({item.reviews})
             </Text>
-          </View>
+          </View> */}
+          {/* LOCATION */}
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => {
+              if (!item.latitude || !item.longitude) {
+                Alert.alert('Location not available');
+                return;
+              }
 
-          <Text style={styles.address}>{item.address}</Text>
+              Linking.openURL(
+                `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`
+              );
+            }}
+          >
+            <Ionicons name="location-outline" size={18} color="#E1B378" />
+            <Text style={styles.linkText}>{item.address}</Text>
+            {/* <Ionicons name="open-outline" size={14} color="#AAA" style={{ marginLeft: 4 }} /> */}
+          </TouchableOpacity>
+          {/* <Text style={styles.address}>{item.address}</Text> */}
           <TouchableOpacity style={styles.row}
-            onPress={() => Linking.openURL(`tel:${item?.phoneNumbere}`)}
+            onPress={() => Linking.openURL(`tel:${item?.phoneNumber}`)}
           >
             <Ionicons name="call-outline" size={18} color="#E1B378" />
             <Text style={styles.linkText}>{item?.phoneNumber}</Text>
           </TouchableOpacity>
+
+
+
 
           <View style={styles.waitRow}>
             <View style={styles.waitTime}>

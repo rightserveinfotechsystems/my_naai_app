@@ -121,10 +121,14 @@ function AuthStack({ onLoginSuccess }) {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="SplashLogo" component={SplashLogoScreen} />
       <Stack.Screen name="SplashScreen" component={SplashScreen} />
-      <Stack.Screen name="UserLogin">
+      {/* <Stack.Screen name="UserLogin">
         {props => <UserLogin {...props} onLoginSuccess={onLoginSuccess} />}
+      </Stack.Screen> */}
+      <Stack.Screen name="UserSignup">
+        {props => <UserSignup {...props} onLoginSuccess={onLoginSuccess} />}
       </Stack.Screen>
-      <Stack.Screen name="UserSignup" component={UserSignup} />
+      {/* <Stack.Screen name="UserSignup" component={UserSignup} /> */}
+      <Stack.Screen name="UserLogin" component={UserLogin} />
       <Stack.Screen name="OtpScreen">
         {props => <OtpScreen {...props} onLoginSuccess={onLoginSuccess} />}
       </Stack.Screen>
@@ -261,7 +265,7 @@ export default function App() {
           const token = await messaging().getToken();
           await AsyncStorage.setItem('FCM_TOKEN', token);
         }
-      } catch {}
+      } catch { }
     };
 
     initFCM();

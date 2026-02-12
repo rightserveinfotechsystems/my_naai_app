@@ -252,9 +252,9 @@ const UserLogin = ({ navigation }) => {
                   </Text>
                 </View>
 
-                <View style={styles.naaiFooter}>
+                {/* <View style={styles.naaiFooter}>
                   <Text style={styles.footerText}>
-                    Login as salon owner / Naai?{' '}
+                   Salon Partner Login / Register{' '}
                     <Text
                       style={styles.signup}
                       onPress={() => navigation.navigate('NaaiLogin')}
@@ -262,7 +262,20 @@ const UserLogin = ({ navigation }) => {
                       Log In
                     </Text>
                   </Text>
-                </View>
+                </View> */}
+                <View style={styles.divider} />
+
+                <TouchableOpacity
+                  style={styles.partnerBtn}
+                  onPress={() => navigation.navigate('NaaiLogin')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.partnerBtnText}>
+                    Salon Partner Login / Register
+                  </Text>
+                </TouchableOpacity>
+
+
               </>
             )}
           </KeyboardAvoidingView>
@@ -373,5 +386,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
   },
+  partnerBtn: {
+    marginTop: 28,
+    height: 50,
+    borderRadius: 14,
+    borderWidth: 0.5,
+    borderColor: '#E8B97E',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+
+  partnerBtnText: {
+    color: '#E8B97E',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: '#2A2A2A',
+    marginVertical: 24,
+  }
+
 
 });

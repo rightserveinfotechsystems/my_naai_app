@@ -45,7 +45,7 @@ const SplashScreen = ({ navigation }) => {
 
   const completeOnboarding = async () => {
     await AsyncStorage.setItem('hasSeenOnboarding', 'true');
-    navigation.replace('UserLogin');
+    navigation.replace('UserSignup');
   };
   const goNext = () => {
     if (index < SLIDES.length - 1) {
@@ -84,7 +84,7 @@ const SplashScreen = ({ navigation }) => {
       else {
         navigation.reset({
           index: 0,
-          routes: [{ name: 'UserLogin' }],
+          routes: [{ name: 'UserSignup' }],
         });
       }
     };

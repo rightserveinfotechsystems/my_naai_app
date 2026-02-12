@@ -65,11 +65,11 @@ const UserSignup = ({ navigation }) => {
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
         <SafeAreaView style={{ flex: 1 }}>
-          <View style={styles.header}>
+          {/* <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.replace('UserLogin')}>
               <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -123,6 +123,19 @@ const UserSignup = ({ navigation }) => {
                 Sign In
               </Text>
             </Text>
+
+            <View style={styles.divider} />
+            <TouchableOpacity
+              style={styles.partnerBtn}
+              onPress={() => navigation.navigate('NaaiLogin')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.partnerBtnText}>
+                Salon Partner Login / Register
+              </Text>
+            </TouchableOpacity>
+
+
           </KeyboardAvoidingView>
         </SafeAreaView>
       </View>
@@ -185,4 +198,28 @@ const styles = StyleSheet.create({
     color: '#E8B97E',
     fontWeight: '600',
   },
+
+  partnerBtn: {
+    marginTop: 28,
+    height: 50,
+    borderRadius: 14,
+    borderWidth: 0.5,
+    borderColor: '#E8B97E',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+
+  partnerBtnText: {
+    color: '#E8B97E',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: '#2A2A2A',
+    marginVertical: 24,
+  }
 });

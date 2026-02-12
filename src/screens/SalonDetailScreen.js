@@ -101,16 +101,16 @@ const SalonDetailScreen = ({ route, navigation }) => {
 
 
   /* -------------------- HELPERS -------------------- */
-  const openMap = () => {
-    if (!salonDetails.latitude || !salonDetails.longitude) {
-      Alert.alert('Location not available');
-      return;
-    }
+  // const openMap = () => {
+  //   if (!salonDetails.latitude || !salonDetails.longitude) {
+  //     Alert.alert('Location not available');
+  //     return;
+  //   }
 
-    Linking.openURL(
-      `https://www.google.com/maps/search/?api=1&query=${salonDetails.latitude},${salonDetails.longitude}`
-    );
-  };
+  //   Linking.openURL(
+  //     `https://www.google.com/maps/search/?api=1&query=${salonDetails.latitude},${salonDetails.longitude}`
+  //   );
+  // };
 
 
   const callSalon = () => {
@@ -185,7 +185,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                   </View>
                 </View>
 
-                <ScrollView contentContainerStyle={{ paddingBottom: 180, marginTop: 50 }}>
+                <ScrollView contentContainerStyle={{ paddingBottom: 180, marginTop: 60 }}>
                   {/* -------------------- SLIDER -------------------- */}
                   <ScrollView
                     ref={scrollRef}
@@ -193,23 +193,46 @@ const SalonDetailScreen = ({ route, navigation }) => {
                     pagingEnabled
                     showsHorizontalScrollIndicator={false}
                   >
-                    {images.map((img, i) => (
+                    {images?.length > 0 ? (
+                      images.map((img, i) => (
+                        <TouchableOpacity
+                          key={i}
+                          activeOpacity={0.9}
+                          onPress={() => {
+                            setModalImage(img);
+                            setModalVisible(true);
+                          }}
+                        >
+                          <ImageBackground
+                            source={img}
+                            style={styles.sliderImage}
+                            imageStyle={{ borderRadius: 16 }}
+                          />
+                        </TouchableOpacity>
+                      ))
+                    ) : (
                       <TouchableOpacity
-                        key={i}
+                        activeOpacity={0.9}
                         onPress={() => {
-                          setModalImage(img);
+                          setModalImage(require('../assets/myNaai.jpeg'));
                           setModalVisible(true);
                         }}
                       >
-                        <ImageBackground source={img} style={styles.sliderImage} />
+                        <ImageBackground
+                          source={require('../assets/myNaai.jpeg')}
+                          style={styles.sliderImage}
+                          imageStyle={{ borderRadius: 16 }}
+                        />
                       </TouchableOpacity>
-                    ))}
+                    )}
                   </ScrollView>
+
+
 
 
                   {/* -------------------- DETAILS -------------------- */}
                   <View style={styles.card}>
-                    <View style={styles.ratingRow}>
+                    {/* <View style={styles.ratingRow}>
 
                       <View style={{ flexDirection: 'row' }}>
                         <Ionicons name="star" size={16} color="#FFD700" />
@@ -219,7 +242,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                       </View>
 
 
-                    </View>
+                    </View> */}
                     {salonDetails?.isOpen && (
                       <>
                         <View style={styles.waitRow}>
@@ -299,7 +322,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                     </View>
 
                     {/* LOCATION */}
-                    <TouchableOpacity style={styles.row} onPress={openMap}>
+                    {/* <TouchableOpacity style={styles.row} onPress={openMap}>
                       <Ionicons
                         name="location-outline"
                         size={18}
@@ -307,7 +330,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                       />
                       <Text style={styles.linkText}>{address}</Text>
                       <Ionicons name="open-outline" size={14} color="#AAA" />
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     {/* CALL */}
                     <TouchableOpacity style={styles.row} onPress={callSalon}>
@@ -431,7 +454,7 @@ const styles = StyleSheet.create({
 
   header: {
     position: 'absolute',
-    top: 30,
+    top: 10,
     left: 16,
     right: 16,
     zIndex: 10,
@@ -441,7 +464,7 @@ const styles = StyleSheet.create({
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700', marginLeft: 16 },
   salonType: { color: '#E1B378', fontSize: 13, marginLeft: 16 },
 
-  sliderImage: { width, height: 260 },
+  sliderImage: { width, height: 280 },
 
   card: { padding: 18 },
   ratingRow: {
