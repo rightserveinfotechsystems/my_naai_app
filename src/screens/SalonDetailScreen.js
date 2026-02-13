@@ -129,8 +129,11 @@ const SalonDetailScreen = ({ route, navigation }) => {
   };
 
   const handleContinue = () => {
-    navigation.navigate('BookingSchedule', { salon: salonDetails });
+    navigation.navigate('SalonServicesScreen', {
+      salon: salonDetails,
+    });
   };
+
 
 
   if (!salonDetails) {
@@ -206,7 +209,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                           <ImageBackground
                             source={img}
                             style={styles.sliderImage}
-                            imageStyle={{ borderRadius: 16 }}
+                          // imageStyle={{ borderRadius: 16 }}
                           />
                         </TouchableOpacity>
                       ))
@@ -221,7 +224,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         <ImageBackground
                           source={require('../assets/myNaai.jpeg')}
                           style={styles.sliderImage}
-                          imageStyle={{ borderRadius: 16 }}
+                          imageStyle={{ borderRadius: 12 }}
                         />
                       </TouchableOpacity>
                     )}

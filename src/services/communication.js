@@ -2,7 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
-// const serverUrl = "http://192.168.1.11:5000";
+// const serverUrl = "http://192.168.1.13:5000";
 // const serverUrl = "http://localhost:5000";
 const serverUrl = "https://backend.mynaai.in"
 
@@ -435,6 +435,32 @@ export const communication = {
         try {
             const response = await axios.get(`${getServerUrl()}/api/notifications/get-notification-count`, {
                 params: payload,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    saveSalon: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/users/save-salon`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    removeSalon: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/users/remove-salon`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`

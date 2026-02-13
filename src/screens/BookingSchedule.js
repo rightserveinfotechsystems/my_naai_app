@@ -18,12 +18,15 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 
 const BookingSchedule = ({ route, navigation }) => {
-  const { salon } = route.params;
+  // const { salon } = route.params;
+  const { salon, selectedServices } = route.params;
+
+
   console.log("salon", salon);
 
 
   const [selectedDate, setSelectedDate] = useState(0);
-  const [selectedServices, setSelectedServices] = useState([]);
+  // const [selectedServices, setSelectedServices] = useState([]);
   const [selectedBarber, setSelectedBarber] = useState(null);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
@@ -42,25 +45,9 @@ const BookingSchedule = ({ route, navigation }) => {
   }, []);
 
   /* -------------------- SERVICE TOGGLE (MULTI) -------------------- */
-  const toggleService = service => {
-    setSelectedServices(prev => {
-      const exists = prev.some(
-        s => s.serviceId === service.serviceId,
-      );
-      if (exists) {
-        return prev.filter(
-          s => s.serviceId !== service.serviceId,
-        );
-      }
-      return [...prev, service];
-    });
-  };
 
   /* -------------------- TOTAL -------------------- */
-  const totalAmount = selectedServices.reduce(
-    (sum, s) => sum + Number(s.price || 0),
-    0,
-  );
+
 
   const bookingDate = new Date(
     Date.now() + Number(selectedDate) * 24 * 60 * 60 * 1000
@@ -81,13 +68,13 @@ const BookingSchedule = ({ route, navigation }) => {
 
   /* -------------------- CONFIRM -------------------- */
   const handleConfirm = async () => {
-    if (selectedServices.length === 0) {
-      Alert.alert(
-        'Select Service',
-        'Please select at least one service.',
-      );
-      return;
-    }
+    // if (selectedServices.length === 0) {
+    //   Alert.alert(
+    //     'Select Service',
+    //     'Please select at least one service.',
+    //   );
+    //   return;
+    // }
     setLoading(true);
     try {
       const payload = {
@@ -150,10 +137,11 @@ Time: ${formatTime(selectedTime)}`,
   const onTimeChange = (event, time) => {
     setShowTimePicker(false);
 
-    if (time) {
+    if (event.type === 'set' && time) {
       setSelectedTime(time);
     }
   };
+
 
 
   const formatTime = date => {
@@ -178,194 +166,141 @@ Time: ${formatTime(selectedTime)}`,
         </Text>
       </View>
 
-     <FlatList
-  data={salon?.services || []}
-  keyExtractor={item => item.serviceId.toString()}
-  numColumns={2}
-  columnWrapperStyle={{ justifyContent: 'space-between' }}
-  contentContainerStyle={{
-  paddingBottom: 160,
-  margin: 20,
-}}
-  showsVerticalScrollIndicator={false}
+      <FlatList
+        data={salon?.services || []}
+        keyExtractor={item => item.serviceId.toString()}
+        numColumns={2}
+        columnWrapperStyle={{ justifyContent: 'space-between' }}
+        contentContainerStyle={{
+          paddingBottom: 160,
+          margin: 20,
+        }}
+        showsVerticalScrollIndicator={false}
 
-  ListHeaderComponent={
-    <>
-      {/* -------------------- SERVICES HEADER -------------------- */}
-      <View style={styles.card}>
-        <Text style={styles.section}>Select Services</Text>
-      </View>
-    </>
-  }
 
-  renderItem={({ item: service }) => {
-    const selected = selectedServices.some(
-      s => s.serviceId === service.serviceId,
-    );
+        ListFooterComponent={
+          <>
+            {/* -------------------- BARBERS -------------------- */}
+            <View style={styles.card}>
+              {salon?.barbers.length > 0 && (
+                <Text style={styles.section}>
+                  Select Barber (Optional)
+                </Text>
+              )}
 
-    return (
-      <TouchableOpacity
-        style={[
-          styles.serviceBox,
-          selected && styles.optionActive,
-        ]}
-        onPress={() => toggleService(service)}
-      >
-        <Text
-          style={[
-            styles.serviceName,
-            selected && styles.activeText,
-          ]}
-          numberOfLines={1}
-        >
-          {service.serviceName}
-        </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {salon?.barbers?.map(b => {
+                  const selected =
+                    selectedBarber?.barberId === b.barberId;
 
-        <View style={styles.serviceFooter}>
-          <Text
-            style={[
-              styles.servicePrice,
-              selected && styles.activeText,
-            ]}
-          >
-            ⏱ {service.durationMinutes} min
-          </Text>
+                  return (
+                    <TouchableOpacity
+                      key={b.barberId}
+                      style={[
+                        styles.barberCard,
+                        selected && styles.barberActive,
+                      ]}
+                      onPress={() =>
+                        setSelectedBarber(selected ? null : b)
+                      }
+                    >
+                      <ImageBackground
+                        source={{
+                          uri: `${getServerUrl()}/getfiles/${b.profileImageUrl}`,
+                        }}
+                        style={styles.barberImg}
+                        imageStyle={{ borderRadius: 12 }}
+                      />
 
-          {selected && (
-            <Ionicons
-              name="checkmark-circle"
-              size={18}
-              color="#000"
-            />
-          )}
-        </View>
-      </TouchableOpacity>
-    );
-  }}
+                      <Text style={styles.barberName}>{b.fullName}</Text>
 
-  ListFooterComponent={
-    <>
-      {/* -------------------- BARBERS -------------------- */}
-      <View style={styles.card}>
-        {salon?.barbers.length > 0 && (
-          <Text style={styles.section}>
-            Select Barber (Optional)
-          </Text>
-        )}
+                      <View style={styles.statusRow}>
+                        <View
+                          style={[
+                            styles.statusDot,
+                            { backgroundColor: getStatusColor(b.isAvailable) },
+                          ]}
+                        />
+                        <Text style={styles.statusText}>
+                          {b.isAvailable ? 'Available' : 'Not available'}
+                        </Text>
+                      </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {salon?.barbers?.map(b => {
-            const selected =
-              selectedBarber?.barberId === b.barberId;
+                      <Text style={styles.barberInfo}>
+                        ⭐ {b.ratingAverage || 0}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
 
-            return (
+            {/* -------------------- DATE -------------------- */}
+            <View style={styles.card}>
+              <Text style={styles.section}>Select Date</Text>
+              <View style={styles.dateRow}>
+                {[0, 1, 2].map(i => {
+                  const date = new Date(Date.now() + i * 86400000);
+                  const label =
+                    i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : 'Day After';
+
+                  return (
+                    <TouchableOpacity
+                      key={i}
+                      style={[
+                        styles.dateBox,
+                        selectedDate === i && styles.dateActive,
+                      ]}
+                      onPress={() => setSelectedDate(i)}
+                    >
+                      <Text
+                        style={[
+                          styles.dateDay,
+                          selectedDate === i && styles.activeText,
+                        ]}
+                      >
+                        {label}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.dateNum,
+                          selectedDate === i && styles.activeText,
+                        ]}
+                      >
+                        {date.getDate()}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* -------------------- TIME -------------------- */}
+            <View style={styles.card}>
+              <Text style={styles.section}>Select Time</Text>
+
               <TouchableOpacity
-                key={b.barberId}
-                style={[
-                  styles.barberCard,
-                  selected && styles.barberActive,
-                ]}
-                onPress={() =>
-                  setSelectedBarber(selected ? null : b)
-                }
+                style={styles.timeInput}
+                onPress={() => setShowTimePicker(true)}
               >
-                <ImageBackground
-                  source={{
-                    uri: `${getServerUrl()}/getfiles/${b.profileImageUrl}`,
-                  }}
-                  style={styles.barberImg}
-                  imageStyle={{ borderRadius: 12 }}
+                <Text style={styles.timeText}>
+                  {formatTime(selectedTime)}
+                </Text>
+                <Ionicons name="time-outline" size={20} color="#E1B378" />
+              </TouchableOpacity>
+
+              {showTimePicker && (
+                <DateTimePicker
+                  value={selectedTime || new Date()}
+                  mode="time"
+                  display="default"
+                  onChange={onTimeChange}
                 />
-
-                <Text style={styles.barberName}>{b.fullName}</Text>
-
-                <View style={styles.statusRow}>
-                  <View
-                    style={[
-                      styles.statusDot,
-                      { backgroundColor: getStatusColor(b.isAvailable) },
-                    ]}
-                  />
-                  <Text style={styles.statusText}>
-                    {b.isAvailable ? 'Available' : 'Not available'}
-                  </Text>
-                </View>
-
-                <Text style={styles.barberInfo}>
-                  ⭐ {b.ratingAverage || 0}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {/* -------------------- DATE -------------------- */}
-      <View style={styles.card}>
-        <Text style={styles.section}>Select Date</Text>
-        <View style={styles.dateRow}>
-          {[0, 1, 2].map(i => {
-            const date = new Date(Date.now() + i * 86400000);
-            const label =
-              i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : 'Day After';
-
-            return (
-              <TouchableOpacity
-                key={i}
-                style={[
-                  styles.dateBox,
-                  selectedDate === i && styles.dateActive,
-                ]}
-                onPress={() => setSelectedDate(i)}
-              >
-                <Text
-                  style={[
-                    styles.dateDay,
-                    selectedDate === i && styles.activeText,
-                  ]}
-                >
-                  {label}
-                </Text>
-                <Text
-                  style={[
-                    styles.dateNum,
-                    selectedDate === i && styles.activeText,
-                  ]}
-                >
-                  {date.getDate()}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-
-      {/* -------------------- TIME -------------------- */}
-      <View style={styles.card}>
-        <Text style={styles.section}>Select Time</Text>
-
-        <TouchableOpacity
-          style={styles.timeInput}
-          onPress={() => setShowTimePicker(true)}
-        >
-          <Text style={styles.timeText}>
-            {formatTime(selectedTime)}
-          </Text>
-          <Ionicons name="time-outline" size={20} color="#E1B378" />
-        </TouchableOpacity>
-
-        {showTimePicker && (
-          <DateTimePicker
-            value={selectedTime || new Date()}
-            mode="time"
-            display="clock"
-            onChange={onTimeChange}
-          />
-        )}
-      </View>
-    </>
-  }
-/>
+              )}
+            </View>
+          </>
+        }
+      />
 
 
       {/* -------------------- CONFIRM -------------------- */}
@@ -509,18 +444,18 @@ const styles = StyleSheet.create({
   },
 
   serviceBox: {
-  width: '48%',
-  backgroundColor: '#2A2A2A',
-  padding: 12,
-  borderRadius: 12,
-  marginBottom: 12,
-},
+    width: '48%',
+    backgroundColor: '#2A2A2A',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
 
-serviceFooter: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-},
+  serviceFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
 
 
 });

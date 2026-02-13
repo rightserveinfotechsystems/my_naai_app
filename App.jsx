@@ -36,6 +36,7 @@ import ServicesScreen from './src/screens/ServicesScreen';
 import AccountScreen from './src/screens/AccountScreen';
 import UserProduct from './src/screens/UserProduct';
 import SalonDetailScreen from './src/screens/SalonDetailScreen';
+import SalonServicesScreen from './src/screens/SalonServicesScreen';
 import BookingSchedule from './src/screens/BookingSchedule';
 import FAQScreen from './src/pages/FAQScreen';
 import TermsScreen from './src/pages/TermsScreen';
@@ -151,6 +152,7 @@ function AppStack({ userType }) {
         <Stack.Screen name="Salon" component={SalonTabs} />
       )}
       <Stack.Screen name="SalonDetail" component={SalonDetailScreen} />
+      <Stack.Screen name="SalonServicesScreen" component={SalonServicesScreen} />
       <Stack.Screen name="BookingSchedule" component={BookingSchedule} />
       <Stack.Screen name="FAQScreen" component={FAQScreen} />
       <Stack.Screen name="TermsScreen" component={TermsScreen} />

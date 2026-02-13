@@ -78,6 +78,10 @@ const NaaiDashboard = ({ navigation }) => {
   const [userName, setUserName] = useState('');
   const [totalPages, setTotalPages] = useState(1);
   const [ads, setAds] = useState([]);
+  const [genderFilter, setGenderFilter] = useState('male');
+
+  const [savedSalonId, setSavedSalonId] = useState(null);
+  const [savingSalonId, setSavingSalonId] = useState(null);
 
 
 
@@ -125,6 +129,7 @@ const NaaiDashboard = ({ navigation }) => {
       const payload = {
         page: pageNo,
         searchString: search,
+        genderType: genderFilter,
       };
 
       // ✅ Add location ONLY if available
@@ -181,6 +186,63 @@ const NaaiDashboard = ({ navigation }) => {
     }
   };
 
+
+  const toggleSaveSalon = async (salonId) => {
+    if (savingSalonId) return;
+
+    try {
+      setSavingSalonId(salonId);
+
+      // ✅ If clicking same saved salon → REMOVE
+      if (savedSalonId === salonId) {
+
+        const response = await communication.removeSalon({
+          salonId: salonId,
+        });
+
+        if (response?.status === 'SUCCESS') {
+          setSavedSalonId(null);
+          Alert.alert('Removed from bookmark');
+          getSalonList(1, true); // refresh list to reorder
+        } else {
+          Alert.alert('Error', 'Failed to remove bookmark');
+        }
+
+        return;
+      }
+
+      // ✅ If another salon already saved → block
+      if (savedSalonId && savedSalonId !== salonId) {
+        Alert.alert(
+          'Bookmark Exists',
+          'Please remove previous bookmarked salon first.'
+        );
+        return;
+      }
+
+      // ✅ If no salon saved → ADD
+      const response = await communication.saveSalon({
+        salonId: salonId,
+      });
+
+      if (response?.status === 'SUCCESS') {
+        setSavedSalonId(salonId);
+        Alert.alert('Salon bookmarked successfully');
+        getSalonList(1, true); // refresh to move it to top
+      } else {
+        Alert.alert('Error', 'Failed to bookmark salon');
+      }
+
+    } catch (error) {
+      Alert.alert('Error', 'Something went wrong');
+    } finally {
+      setSavingSalonId(null);
+    }
+  };
+
+
+
+
   useEffect(() => {
     userByIdInfo()
     userAds()
@@ -191,6 +253,15 @@ const NaaiDashboard = ({ navigation }) => {
     setHasMore(true);
     getSalonList(1, true);
   }, [locationFilter]);
+
+
+  useEffect(() => {
+    setPlans([]);
+    setPage(1);
+    setHasMore(true);
+
+    getSalonList(1, true);
+  }, [genderFilter]);
 
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -345,6 +416,30 @@ const NaaiDashboard = ({ navigation }) => {
           </View>
 
         </View>
+        <TouchableOpacity
+          onPress={() => toggleSaveSalon(item.id)}
+          style={{ position: 'absolute', top: 8, right: 8 }}
+          disabled={savingSalonId === item.id}
+        >
+          {savingSalonId === item.id ? (
+            <ActivityIndicator size="small" color="#E1B378" />
+          ) : (
+            <Ionicons
+              name={
+                savedSalonId === item.id
+                  ? 'bookmark'
+                  : 'bookmark-outline'
+              }
+              size={22}
+              color={
+                savedSalonId === item.id
+                  ? '#E1B378'
+                  : '#AAA'
+              }
+            />
+          )}
+        </TouchableOpacity>
+
 
         <TouchableOpacity
           style={[
@@ -371,48 +466,89 @@ const NaaiDashboard = ({ navigation }) => {
             style={{ flex: 1 }}
             onPress={() => showCityDropdown && setShowCityDropdown(false)}
           >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
               <Text style={styles.greeting}>Hi {firstName} 👋</Text>
 
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
 
-              <View style={{ position: 'relative', zIndex: 20 }}>
-                <TouchableOpacity
-                  style={styles.dropdownBtn}
-                  onPress={() => setShowCityDropdown(!showCityDropdown)}
-                >
-                  <Ionicons name="location-outline" size={16} color="#000" />
-                  <Text style={styles.dropdownText}>{locationFilter}</Text>
-                  <Ionicons
-                    name={showCityDropdown ? 'chevron-up' : 'chevron-down'}
-                    size={16}
-                    color="#000"
-                  />
-                </TouchableOpacity>
+                {/* Gender Toggle */}
+                <View style={styles.genderToggle}>
+                  <TouchableOpacity
+                    style={[
+                      styles.genderBtn,
+                      genderFilter === 'male' && styles.activeGenderBtn
+                    ]}
+                    onPress={() => setGenderFilter('male')}
+                  >
+                    <Text style={[
+                      styles.genderText,
+                      genderFilter === 'male' && styles.activeGenderText
+                    ]}>
+                      Male
+                    </Text>
+                  </TouchableOpacity>
 
-                {showCityDropdown && (
-                  <View style={styles.dropdownList}>
-                    {CITIES.map(city => (
-                      <TouchableOpacity
-                        key={city}
-                        style={styles.dropdownItem}
-                        onPress={() => {
-                          setLocationFilter(city);
-                          setShowCityDropdown(false);
-                        }}
-                      >
-                        <Text
-                          style={[
-                            styles.dropdownItemText,
-                            locationFilter === city &&
-                            styles.activeDropdownText,
-                          ]}
+                  <TouchableOpacity
+                    style={[
+                      styles.genderBtn,
+                      genderFilter === 'female' && styles.activeGenderBtn
+                    ]}
+                    onPress={() => setGenderFilter('female')}
+                  >
+                    <Text style={[
+                      styles.genderText,
+                      genderFilter === 'female' && styles.activeGenderText
+                    ]}>
+                      Female
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* City Dropdown */}
+                <View style={{ position: 'relative', zIndex: 20 }}>
+                  <TouchableOpacity
+                    style={styles.dropdownBtn}
+                    onPress={() => setShowCityDropdown(!showCityDropdown)}
+                  >
+                    <Ionicons name="location-outline" size={16} color="#000" />
+                    <Text style={styles.dropdownText}>{locationFilter}</Text>
+                    <Ionicons
+                      name={showCityDropdown ? 'chevron-up' : 'chevron-down'}
+                      size={16}
+                      color="#000"
+                    />
+                  </TouchableOpacity>
+
+                  {showCityDropdown && (
+                    <View style={styles.dropdownList}>
+                      {CITIES.map(city => (
+                        <TouchableOpacity
+                          key={city}
+                          style={styles.dropdownItem}
+                          onPress={() => {
+                            setLocationFilter(city);
+                            setShowCityDropdown(false);
+                          }}
                         >
-                          {city}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
+                          <Text
+                            style={[
+                              styles.dropdownItemText,
+                              locationFilter === city &&
+                              styles.activeDropdownText,
+                            ]}
+                          >
+                            {city}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+
               </View>
             </View>
 
@@ -503,8 +639,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     backgroundColor: '#E1B378',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
     borderRadius: 20,
     gap: 6,
   },
@@ -687,5 +823,31 @@ const styles = StyleSheet.create({
   //   fontWeight: '700',
   // },
 
+  genderToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#1E1E1E',
+    borderRadius: 20,
+    padding: 3,
+  },
+
+  genderBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+  },
+
+  activeGenderBtn: {
+    backgroundColor: '#E1B378',
+  },
+
+  genderText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#AAA',
+  },
+
+  activeGenderText: {
+    color: '#000',
+  },
 
 });
