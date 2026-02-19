@@ -49,9 +49,14 @@ import SalonProduct from './src/screens/SalonProduct';
 import SalonAccountScreen from './src/screens/SalonAccountScreen';
 import AddOfflineCustomer from './src/components/AddOfflineCustomer';
 import SalonNotifications from './src/screens/SalonNotifications';
+import BookingRequestScreen from './src/screens/BookingRequestScreen';
+import DelayRequestScreen from './src/screens/DelayRequestScreen';
+
 
 /* ---------- NAV REF ---------- */
 export const navigationRef = React.createRef();
+const isNavigationReady = React.createRef();
+
 
 /* ---------- NAV ---------- */
 const Stack = createNativeStackNavigator();
@@ -159,9 +164,25 @@ function AppStack({ userType }) {
       <Stack.Screen name="AboutScreen" component={AboutScreen} />
       <Stack.Screen name="AddOfflineCustomer" component={AddOfflineCustomer} />
       <Stack.Screen name="SalonNotifications" component={SalonNotifications} />
+      <Stack.Screen name="BookingRequestScreen" component={BookingRequestScreen} />
+      <Stack.Screen name="DelayRequestScreen" component={DelayRequestScreen} />
+
     </Stack.Navigator>
   );
 }
+
+const safeNavigate = (name, params) => {
+  if (isNavigationReady.current && navigationRef.current) {
+    navigationRef.current.navigate(name, params);
+  } else {
+    setTimeout(() => {
+      if (navigationRef.current) {
+        navigationRef.current.navigate(name, params);
+      }
+    }, 500);
+  }
+};
+
 
 /* ---------- ROOT APP ---------- */
 export default function App() {
@@ -232,6 +253,8 @@ export default function App() {
     initTTS();
 
     const unsubscribeMsg = messaging().onMessage(async msg => {
+      console.log("Full message 👉", msg);
+      console.log("Notification data 👉", msg.data);
       await notifee.displayNotification({
         title: msg.notification?.title,
         body: msg.notification?.body,
@@ -240,18 +263,116 @@ export default function App() {
       });
     });
 
-    const unsubscribeNotifee = notifee.onForegroundEvent(({ type }) => {
-      if (type === EventType.PRESS) {
-        if (userTypeRef.current === 'SALON') {
-          navigationRef.current?.navigate('Salon');
-        }
-      }
-    });
+const unsubscribeNotifee = notifee.onForegroundEvent(
+  ({ type, detail }) => {
+
+    if (type !== EventType.PRESS) return;
+
+    const data = detail.notification?.data;
+
+    console.log("Pressed Data 👉", data);
+    console.log("UserType 👉", userTypeRef.current);
+
+    // 👉 USER - Delay Request
+    if (
+      data?.type === "DELAY_REQUEST" &&
+      userTypeRef.current === "USER"
+    ) {
+      safeNavigate("DelayRequestScreen", {
+        bookingRequestId: data?.bookingRequestId,
+        delayMinutes: data?.delayMinutes,
+      });
+      return;
+    }
+
+    // 👉 SALON - Booking Request
+    if (
+      data?.type === "BOOKING_REQUEST" &&
+      userTypeRef.current === "SALON"
+    ) {
+      safeNavigate("BookingRequestScreen", {
+        bookingRequestId: data?.bookingRequestId,
+      });
+      return;
+    }
+
+    // 👉 DELAY_RESPONSE → DO NOTHING
+    if (data?.type === "DELAY_RESPONSE") {
+      console.log("Delay response received. No navigation.");
+      return;
+    }
+  }
+);
+
+// When app is in background & user taps notification
+const unsubscribeOpened = messaging().onNotificationOpenedApp(
+  remoteMessage => {
+
+    const data = remoteMessage?.data;
+
+    if (
+      data?.type === "DELAY_REQUEST" &&
+      userTypeRef.current === "USER"
+    ) {
+      safeNavigate("DelayRequestScreen", {
+        bookingRequestId: data?.bookingRequestId,
+        delayMinutes: data?.delayMinutes,
+      });
+    }
+
+    if (
+      data?.type === "BOOKING_REQUEST" &&
+      userTypeRef.current === "SALON"
+    ) {
+      safeNavigate("BookingRequestScreen", {
+        bookingRequestId: data?.bookingRequestId,
+      });
+    }
+
+    // DELAY_RESPONSE → do nothing
+  }
+);
+
+
+// When app is completely closed & opened from notification
+messaging()
+  .getInitialNotification()
+  .then(remoteMessage => {
+    const data = remoteMessage?.data;
+
+    if (!data) return;
+
+    if (
+      data?.type === "DELAY_REQUEST" &&
+      userTypeRef.current === "USER"
+    ) {
+      safeNavigate("DelayRequestScreen", {
+        bookingRequestId: data?.bookingRequestId,
+        delayMinutes: data?.delayMinutes,
+      });
+    }
+
+    if (
+      data?.type === "BOOKING_REQUEST" &&
+      userTypeRef.current === "SALON"
+    ) {
+      safeNavigate("BookingRequestScreen", {
+        bookingRequestId: data?.bookingRequestId,
+      });
+    }
+
+    // DELAY_RESPONSE → no navigation
+  });
+
+
+ 
 
     return () => {
-      unsubscribeMsg();
-      unsubscribeNotifee();
-    };
+  unsubscribeMsg();
+  unsubscribeNotifee();
+  unsubscribeOpened();
+};
+
   }, []);
 
   /* ---------- FCM ---------- */
@@ -279,11 +400,48 @@ export default function App() {
     return unsubscribe;
   }, []);
 
+  //  useEffect(() => {
+
+  //   const unsubscribe = messaging().onMessage(async remoteMessage => {
+
+  //     if (remoteMessage.data?.type === 'BOOKING_DELAY') {
+
+  //       const { bookingId, newTime } = remoteMessage.data;
+
+  //       Alert.alert(
+  //         'Salon Delay',
+  //         `Salon is busy. Can you come at ${formatTime(newTime)} instead?`,
+  //         [
+  //           {
+  //             text: 'Cancel',
+  //             onPress: () => sendDelayResponse(bookingId, false),
+  //             style: 'cancel',
+  //           },
+  //           {
+  //             text: 'Accept',
+  //             onPress: () => sendDelayResponse(bookingId, true),
+  //           },
+  //         ]
+  //       );
+  //     }
+  //   });
+
+  //   return unsubscribe;
+
+  // }, []);
+
+
   if (loading) return null;
 
   return (
     <NotificationProvider userId={userId}>
-      <NavigationContainer ref={navigationRef}>
+      <NavigationContainer
+  ref={navigationRef}
+  onReady={() => {
+    isNavigationReady.current = true;
+  }}
+>
+
         {isLoggedIn ? (
           <AppStack userType={userType} />
         ) : (

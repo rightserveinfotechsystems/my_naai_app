@@ -44,6 +44,47 @@ const BookingSchedule = ({ route, navigation }) => {
     loadUser();
   }, []);
 
+
+  
+  /* -------------------- GENERATE TIME SLOTS -------------------- */
+  const generateTimeSlots = () => {
+  const slots = [];
+
+  for (let hour = 7; hour <= 21; hour++) {
+    for (let minute = 0; minute < 60; minute += 20) {
+
+      // Stop after 9:00 PM (don't go beyond 21:00)
+      if (hour === 21 && minute > 0) break;
+
+      const date = new Date();
+      date.setHours(hour);
+      date.setMinutes(minute);
+
+      const displayHour =
+        hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+
+      const formatted = `${displayHour}:${minute
+        .toString()
+        .padStart(2, '0')} ${ampm}`;
+
+   const value = `${hour
+  .toString()
+  .padStart(2, '0')}:${minute
+  .toString()
+  .padStart(2, '0')}`;
+
+
+      slots.push({ label: formatted, value });
+    }
+  }
+
+  return slots;
+};
+
+
+  const timeSlots = generateTimeSlots();
   /* -------------------- SERVICE TOGGLE (MULTI) -------------------- */
 
   /* -------------------- TOTAL -------------------- */
@@ -75,46 +116,63 @@ const BookingSchedule = ({ route, navigation }) => {
     //   );
     //   return;
     // }
+
+
+
+    if (!selectedTime) {
+  Alert.alert("Select Time", "Please select a time slot.");
+  return;
+}
+
+if (!selectedServices?.length) {
+  Alert.alert("Select Service", "Please select at least one service.");
+  return;
+}
+
     setLoading(true);
     try {
-      const payload = {
-        userId: user?.userId,
-        salonId: salon?.salonId,
-        serviceIds: selectedServices.map(s => s.serviceId),
-        bookingDate,
-        bookingTime: formatBookingTime(selectedTime),
-        barberId: selectedBarber ? String(selectedBarber.barberId) : null,
+    const payload = {
+  salonId: salon?.salonId,
+  barberId: selectedBarber?.barberId?.toString() || "",
+  bookingDate,
+  bookingTime: selectedTime,
+  services: selectedServices.map(s => s.serviceId),
+};
 
-      }
       console.log("payload", payload);
 
-      const res = await communication.bookSalonService(payload);
+      // const res = await communication.bookSalonService(payload);
+      const res = await communication.createBookingRequest(payload);
 
       if (res?.status === 'SUCCESS') {
-        Alert.alert(
-          'Booking Confirmed 🎉',
-          `Salon: ${salon.salonName}
-Services: ${selectedServices
-            .map(s => s.serviceName)
-            .join(', ')}
-Barber: ${selectedBarber ? selectedBarber.fullName : 'Auto Assigned'
-          }
-Date: ${new Date(
-            Date.now() + selectedDate * 86400000,
-          ).toDateString()}
-Time: ${formatTime(selectedTime)}`,
-          [
-            {
-              text: 'OK',
-              onPress: () =>
-                navigation.navigate('Main', {
-                  screen: 'Booked Salon',
-                }),
-            },
-          ],
-        )
+//         Alert.alert(
+//           'Booking Confirmed 🎉',
+//           `Salon: ${salon.salonName}
+// Services: ${selectedServices
+//             .map(s => s.serviceName)
+//             .join(', ')}
+// Barber: ${selectedBarber ? selectedBarber.fullName : 'Auto Assigned'
+//           }
+// Date: ${new Date(
+//             Date.now() + selectedDate * 86400000,
+//           ).toDateString()}
+// Time: ${formatTime(selectedTime)}`,
+//           [
+//             {
+//               text: 'OK',
+//               onPress: () =>
+//                 navigation.navigate('Main', {
+//                   screen: 'Booked Salon',
+//                 }),
+//             },
+//           ],
+//         )
+   Alert.alert('Request sent for Salon Appointment');
 
-      } else {
+navigation.navigate('Main', {
+  screen: 'Booked Salon',
+});
+} else {
         Alert.alert('Error', res?.message || 'Bookig Appointment failed');
       }
     } catch (error) {
@@ -276,31 +334,37 @@ Time: ${formatTime(selectedTime)}`,
             </View>
 
             {/* -------------------- TIME -------------------- */}
-            <View style={styles.card}>
+                <View style={styles.card}>
               <Text style={styles.section}>Select Time</Text>
 
-              <TouchableOpacity
-                style={styles.timeInput}
-                onPress={() => setShowTimePicker(true)}
-              >
-                <Text style={styles.timeText}>
-                  {formatTime(selectedTime)}
-                </Text>
-                <Ionicons name="time-outline" size={20} color="#E1B378" />
-              </TouchableOpacity>
-
-              {showTimePicker && (
-                <DateTimePicker
-                  value={selectedTime || new Date()}
-                  mode="time"
-                  display="default"
-                  onChange={onTimeChange}
-                />
-              )}
+              <View style={styles.timeGrid}>
+                {timeSlots.map(slot => (
+                  <TouchableOpacity
+                    key={slot.value}
+                    style={[
+                      styles.timeSlot,
+                      selectedTime === slot.value &&
+                        styles.timeSlotActive,
+                    ]}
+                    onPress={() => setSelectedTime(slot.value)}
+                  >
+                    <Text
+                      style={[
+                        styles.timeSlotText,
+                        selectedTime === slot.value &&
+                          styles.activeText,
+                      ]}
+                    >
+                      {slot.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           </>
         }
       />
+      
 
 
       {/* -------------------- CONFIRM -------------------- */}
@@ -408,7 +472,31 @@ const styles = StyleSheet.create({
   dateActive: { backgroundColor: '#E1B378' },
   dateDay: { color: '#AAA', fontSize: 12 },
   dateNum: { color: '#fff', fontSize: 18, fontWeight: '700' },
+ timeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
 
+  timeSlot: {
+    width: '30%',
+    backgroundColor: '#2A2A2A',
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+
+  timeSlotActive: {
+    backgroundColor: '#E1B378',
+  },
+
+  timeSlotText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+
+ 
   bottomBar: {
     position: 'absolute',
     bottom: 0,

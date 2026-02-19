@@ -121,17 +121,30 @@ const ServicesScreen = () => {
     setPage(1);
     fetchBookings(userId, 1);
   };
+const STATUS_COLORS = {
+  pending: '#E1B378',
+  confirmed: '#4CAF50',
+  completed: '#f2ff00',
+  cancelled: '#E53935',
+};
+
+  const STATUS_LABELS = {
+  pending: "Pending",
+  confirmed: "Confirmed",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
 
 
   /* ---------------- RENDER ITEM ---------------- */
   const renderItem = ({ item }) => {
-    const btnColor =
-      item.status === 'pending'
-        ? '#E1B378'
-        : item.status === 'completed'
-          ? '#4CAF50'
-          : '#E53935';
-
+    // const btnColor =
+    //   item.status === 'pending'
+    //     ? '#E1B378'
+    //     : item.status === 'completed'
+    //       ? '#4CAF50'
+    //       : '#E53935';
+  const btnColor = STATUS_COLORS[item.status?.toLowerCase()] || '#9E9E9E';
 
     const formatDateReadable = (dateStr) => {
       if (!dateStr) return '';
@@ -231,9 +244,12 @@ const ServicesScreen = () => {
 
           </View>
 
-          <View style={[styles.statusBtn, { backgroundColor: btnColor }]}>
-            <Text style={styles.statusBtnText}>{item.status === "pending" ? "Pending" : "Completed"}</Text>
-          </View>
+       
+<View style={[styles.statusBtn, { backgroundColor: btnColor }]}>
+  <Text style={styles.statusBtnText}>
+    {STATUS_LABELS[item.status?.toLowerCase()] || "Unknown"}
+  </Text>
+</View>
         </View>
       </TouchableOpacity>
     );
