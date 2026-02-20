@@ -263,115 +263,163 @@ export default function App() {
       });
     });
 
-const unsubscribeNotifee = notifee.onForegroundEvent(
-  ({ type, detail }) => {
+    const unsubscribeNotifee = notifee.onForegroundEvent(
+      ({ type, detail }) => {
 
-    if (type !== EventType.PRESS) return;
+        if (type !== EventType.PRESS) return;
 
-    const data = detail.notification?.data;
+        const data = detail.notification?.data;
 
-    console.log("Pressed Data 👉", data);
-    console.log("UserType 👉", userTypeRef.current);
+        console.log("Pressed Data 👉", data);
+        console.log("UserType 👉", userTypeRef.current);
 
-    // 👉 USER - Delay Request
-    if (
-      data?.type === "DELAY_REQUEST" &&
-      userTypeRef.current === "USER"
-    ) {
-      safeNavigate("DelayRequestScreen", {
-        bookingRequestId: data?.bookingRequestId,
-        delayMinutes: data?.delayMinutes,
+        // 👉 USER - Delay Request
+        if (
+          data?.type === "DELAY_TIME_PROPOSAL" &&
+          userTypeRef.current === "USER"
+        ) {
+          safeNavigate("DelayRequestScreen", {
+            bookingRequestId: data?.bookingRequestId,
+            delayMinutes: data?.delayMinutes,
+            proposedTime: data?.proposedTime,
+          });
+          return;
+        }
+
+
+        // 👉 USER - Booking Confirmed
+        if (
+          data?.type === "BOOKING_CONFIRMED" &&
+          userTypeRef.current === "USER"
+        ) {
+          safeNavigate("Booked Salon");
+          return;
+        }
+
+        // 👉 USER - Booking Rejected
+        if (
+          data?.type === "BOOKING_REJECTED" &&
+          userTypeRef.current === "USER"
+        ) {
+          safeNavigate("Booked Salon");
+          return;
+        }
+
+        // 👉 SALON - Booking Request
+        if (
+          data?.type === "BOOKING_REQUEST" &&
+          userTypeRef.current === "SALON"
+        ) {
+          safeNavigate("BookingRequestScreen", {
+            bookingRequestId: data?.bookingRequestId,
+          });
+          return;
+        }
+
+        // 👉 DELAY_RESPONSE → DO NOTHING
+        if (data?.type === "DELAY_RESPONSE") {
+          console.log("Delay response received. No navigation.");
+          return;
+        }
+      }
+    );
+
+    // When app is in background & user taps notification
+    const unsubscribeOpened = messaging().onNotificationOpenedApp(
+      remoteMessage => {
+
+        const data = remoteMessage?.data;
+
+        if (
+          data?.type === "DELAY_TIME_PROPOSAL" &&
+          userTypeRef.current === "USER"
+        ) {
+          safeNavigate("DelayRequestScreen", {
+            bookingRequestId: data?.bookingRequestId,
+            delayMinutes: data?.delayMinutes,
+          });
+        }
+        // 👉 USER - Booking Confirmed
+        if (
+          data?.type === "BOOKING_CONFIRMED" &&
+          userTypeRef.current === "USER"
+        ) {
+          safeNavigate("Booked Salon");
+        }
+
+        // 👉 USER - Booking Rejected
+        if (
+          data?.type === "BOOKING_REJECTED" &&
+          userTypeRef.current === "USER"
+        ) {
+          safeNavigate("Booked Salon");
+        }
+        if (
+          data?.type === "BOOKING_REQUEST" &&
+          userTypeRef.current === "SALON"
+        ) {
+          safeNavigate("BookingRequestScreen", {
+            bookingRequestId: data?.bookingRequestId,
+          });
+        }
+
+        // DELAY_RESPONSE → do nothing
+      }
+    );
+
+
+    // When app is completely closed & opened from notification
+    messaging()
+      .getInitialNotification()
+      .then(remoteMessage => {
+        const data = remoteMessage?.data;
+
+        if (!data) return;
+
+        if (
+          data?.type === "DELAY_TIME_PROPOSAL" &&
+          userTypeRef.current === "USER"
+        ) {
+          safeNavigate("DelayRequestScreen", {
+            bookingRequestId: data?.bookingRequestId,
+            delayMinutes: data?.delayMinutes,
+          });
+        }
+
+
+        if (
+          data?.type === "BOOKING_CONFIRMED" &&
+          userTypeRef.current === "USER"
+        ) {
+          safeNavigate("Booked Salon");
+        }
+
+        if (
+          data?.type === "BOOKING_REJECTED" &&
+          userTypeRef.current === "USER"
+        ) {
+          safeNavigate("Booked Salon");
+        }
+        if (
+          data?.type === "BOOKING_REQUEST" &&
+          userTypeRef.current === "SALON"
+        ) {
+          safeNavigate("BookingRequestScreen", {
+            bookingRequestId: data?.bookingRequestId,
+          });
+        }
+
+        // DELAY_RESPONSE → no navigation
       });
-      return;
-    }
-
-    // 👉 SALON - Booking Request
-    if (
-      data?.type === "BOOKING_REQUEST" &&
-      userTypeRef.current === "SALON"
-    ) {
-      safeNavigate("BookingRequestScreen", {
-        bookingRequestId: data?.bookingRequestId,
-      });
-      return;
-    }
-
-    // 👉 DELAY_RESPONSE → DO NOTHING
-    if (data?.type === "DELAY_RESPONSE") {
-      console.log("Delay response received. No navigation.");
-      return;
-    }
-  }
-);
-
-// When app is in background & user taps notification
-const unsubscribeOpened = messaging().onNotificationOpenedApp(
-  remoteMessage => {
-
-    const data = remoteMessage?.data;
-
-    if (
-      data?.type === "DELAY_REQUEST" &&
-      userTypeRef.current === "USER"
-    ) {
-      safeNavigate("DelayRequestScreen", {
-        bookingRequestId: data?.bookingRequestId,
-        delayMinutes: data?.delayMinutes,
-      });
-    }
-
-    if (
-      data?.type === "BOOKING_REQUEST" &&
-      userTypeRef.current === "SALON"
-    ) {
-      safeNavigate("BookingRequestScreen", {
-        bookingRequestId: data?.bookingRequestId,
-      });
-    }
-
-    // DELAY_RESPONSE → do nothing
-  }
-);
 
 
-// When app is completely closed & opened from notification
-messaging()
-  .getInitialNotification()
-  .then(remoteMessage => {
-    const data = remoteMessage?.data;
 
-    if (!data) return;
-
-    if (
-      data?.type === "DELAY_REQUEST" &&
-      userTypeRef.current === "USER"
-    ) {
-      safeNavigate("DelayRequestScreen", {
-        bookingRequestId: data?.bookingRequestId,
-        delayMinutes: data?.delayMinutes,
-      });
-    }
-
-    if (
-      data?.type === "BOOKING_REQUEST" &&
-      userTypeRef.current === "SALON"
-    ) {
-      safeNavigate("BookingRequestScreen", {
-        bookingRequestId: data?.bookingRequestId,
-      });
-    }
-
-    // DELAY_RESPONSE → no navigation
-  });
-
-
- 
 
     return () => {
-  unsubscribeMsg();
-  unsubscribeNotifee();
-  unsubscribeOpened();
-};
+      unsubscribeMsg();
+      unsubscribeNotifee();
+      unsubscribeOpened();
+    };
 
   }, []);
 
@@ -387,7 +435,9 @@ messaging()
         if (enabled) {
           const token = await messaging().getToken();
           await AsyncStorage.setItem('FCM_TOKEN', token);
+
         }
+
       } catch { }
     };
 
@@ -436,11 +486,11 @@ messaging()
   return (
     <NotificationProvider userId={userId}>
       <NavigationContainer
-  ref={navigationRef}
-  onReady={() => {
-    isNavigationReady.current = true;
-  }}
->
+        ref={navigationRef}
+        onReady={() => {
+          isNavigationReady.current = true;
+        }}
+      >
 
         {isLoggedIn ? (
           <AppStack userType={userType} />

@@ -2,9 +2,9 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
-const serverUrl = "http://192.168.1.15:5001";
-// const serverUrl = "http://localhost:5000";
-// const serverUrl = "https://backend.mynaai.in"
+// const serverUrl = "http://192.168.1.15:5001";
+// const serverUrl = "http://localhost:5001";
+const serverUrl = "https://backend.mynaai.in"
 // 
 export function getServerUrl() {
     return serverUrl;
@@ -135,7 +135,7 @@ export const communication = {
             throw error;
         }
     },
-       getBookingRequestById: async ( bookingRequestId ) => {
+    getBookingRequestById: async (bookingRequestId) => {
         try {
             const response = await axios.get(`${getServerUrl()}/api/bookingRequest/get-bookingRequest-by-id/${bookingRequestId}/`, {
                 headers: {
@@ -149,44 +149,45 @@ export const communication = {
             throw error;
         }
     },
-  bookingRequestOwnerAction: async (bookingRequestId, payload) => {
-  try {
-    const response = await axios.post(
-      `${getServerUrl()}/api/bookingRequest/owner-action/${bookingRequestId}/`,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${await getCookie()}`
-        },
-      }
-    );
+    bookingRequestOwnerAction: async (bookingRequestId, payload) => {
+        try {
+            const response = await axios.post(
+                `${getServerUrl()}/api/bookingRequest/owner-action/${bookingRequestId}/`,
+                payload,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${await getCookie()}`
+                    },
+                }
+            );
+            console.log("response.data;", response.data);
 
-    return response.data;
+            return response.data;
 
-  } catch (error) {
-    throw error;
-  }
-},
-  customerDelayResponse: async (bookingRequestId, payload) => {
-  try {
-    const response = await axios.post(
-      `${getServerUrl()}/api/bookingRequest/customer-delay-response/${bookingRequestId}/`,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${await getCookie()}`
-        },
-      }
-    );
+        } catch (error) {
+            throw error;
+        }
+    },
+    customerDelayResponse: async (bookingRequestId, payload) => {
+        try {
+            const response = await axios.post(
+                `${getServerUrl()}/api/bookingRequest/customer-delay-response/${bookingRequestId}/`,
+                payload,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${await getCookie()}`
+                    },
+                }
+            );
 
-    return response.data;
+            return response.data;
 
-  } catch (error) {
-    throw error;
-  }
-},
+        } catch (error) {
+            throw error;
+        }
+    },
     userProfile: async ({ userId }) => {
         try {
             const response = await axios.get(`${getServerUrl()}/api/users/profile`, {

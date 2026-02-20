@@ -45,43 +45,43 @@ const BookingSchedule = ({ route, navigation }) => {
   }, []);
 
 
-  
+
   /* -------------------- GENERATE TIME SLOTS -------------------- */
   const generateTimeSlots = () => {
-  const slots = [];
+    const slots = [];
 
-  for (let hour = 7; hour <= 21; hour++) {
-    for (let minute = 0; minute < 60; minute += 20) {
+    for (let hour = 7; hour <= 21; hour++) {
+      for (let minute = 0; minute < 60; minute += 20) {
 
-      // Stop after 9:00 PM (don't go beyond 21:00)
-      if (hour === 21 && minute > 0) break;
+        // Stop after 9:00 PM (don't go beyond 21:00)
+        if (hour === 21 && minute > 0) break;
 
-      const date = new Date();
-      date.setHours(hour);
-      date.setMinutes(minute);
+        const date = new Date();
+        date.setHours(hour);
+        date.setMinutes(minute);
 
-      const displayHour =
-        hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+        const displayHour =
+          hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
 
-      const ampm = hour >= 12 ? 'PM' : 'AM';
+        const ampm = hour >= 12 ? 'PM' : 'AM';
 
-      const formatted = `${displayHour}:${minute
-        .toString()
-        .padStart(2, '0')} ${ampm}`;
+        const formatted = `${displayHour}:${minute
+          .toString()
+          .padStart(2, '0')} ${ampm}`;
 
-   const value = `${hour
-  .toString()
-  .padStart(2, '0')}:${minute
-  .toString()
-  .padStart(2, '0')}`;
+        const value = `${hour
+          .toString()
+          .padStart(2, '0')}:${minute
+            .toString()
+            .padStart(2, '0')}`;
 
 
-      slots.push({ label: formatted, value });
+        slots.push({ label: formatted, value });
+      }
     }
-  }
 
-  return slots;
-};
+    return slots;
+  };
 
 
   const timeSlots = generateTimeSlots();
@@ -120,24 +120,24 @@ const BookingSchedule = ({ route, navigation }) => {
 
 
     if (!selectedTime) {
-  Alert.alert("Select Time", "Please select a time slot.");
-  return;
-}
+      Alert.alert("Select Time", "Please select a time slot.");
+      return;
+    }
 
-if (!selectedServices?.length) {
-  Alert.alert("Select Service", "Please select at least one service.");
-  return;
-}
+    if (!selectedServices?.length) {
+      Alert.alert("Select Service", "Please select at least one service.");
+      return;
+    }
 
     setLoading(true);
     try {
-    const payload = {
-  salonId: salon?.salonId,
-  barberId: selectedBarber?.barberId?.toString() || "",
-  bookingDate,
-  bookingTime: selectedTime,
-  services: selectedServices.map(s => s.serviceId),
-};
+      const payload = {
+        salonId: salon?.salonId,
+        barberId: selectedBarber?.barberId?.toString() || "",
+        bookingDate,
+        bookingTime: selectedTime,
+        services: selectedServices.map(s => s.serviceId),
+      };
 
       console.log("payload", payload);
 
@@ -145,39 +145,39 @@ if (!selectedServices?.length) {
       const res = await communication.createBookingRequest(payload);
 
       if (res?.status === 'SUCCESS') {
-//         Alert.alert(
-//           'Booking Confirmed 🎉',
-//           `Salon: ${salon.salonName}
-// Services: ${selectedServices
-//             .map(s => s.serviceName)
-//             .join(', ')}
-// Barber: ${selectedBarber ? selectedBarber.fullName : 'Auto Assigned'
-//           }
-// Date: ${new Date(
-//             Date.now() + selectedDate * 86400000,
-//           ).toDateString()}
-// Time: ${formatTime(selectedTime)}`,
-//           [
-//             {
-//               text: 'OK',
-//               onPress: () =>
-//                 navigation.navigate('Main', {
-//                   screen: 'Booked Salon',
-//                 }),
-//             },
-//           ],
-//         )
-   Alert.alert('Request sent for Salon Appointment');
+        //         Alert.alert(
+        //           'Booking Confirmed 🎉',
+        //           `Salon: ${salon.salonName}
+        // Services: ${selectedServices
+        //             .map(s => s.serviceName)
+        //             .join(', ')}
+        // Barber: ${selectedBarber ? selectedBarber.fullName : 'Auto Assigned'
+        //           }
+        // Date: ${new Date(
+        //             Date.now() + selectedDate * 86400000,
+        //           ).toDateString()}
+        // Time: ${formatTime(selectedTime)}`,
+        //           [
+        //             {
+        //               text: 'OK',
+        //               onPress: () =>
+        //                 navigation.navigate('Main', {
+        //                   screen: 'Booked Salon',
+        //                 }),
+        //             },
+        //           ],
+        //         )
+        Alert.alert('Request sent for Salon Appointment');
 
-navigation.navigate('Main', {
-  screen: 'Booked Salon',
-});
-} else {
+        navigation.navigate('Main', {
+          screen: 'Booked Salon',
+        });
+      } else {
         Alert.alert('Error', res?.message || 'Bookig Appointment failed');
       }
     } catch (error) {
       Alert.alert(
-        'Error',
+        'Warn',
         error?.response?.data?.message || 'Something went wrong'
       );
 
@@ -334,7 +334,7 @@ navigation.navigate('Main', {
             </View>
 
             {/* -------------------- TIME -------------------- */}
-                <View style={styles.card}>
+            <View style={styles.card}>
               <Text style={styles.section}>Select Time</Text>
 
               <View style={styles.timeGrid}>
@@ -344,7 +344,7 @@ navigation.navigate('Main', {
                     style={[
                       styles.timeSlot,
                       selectedTime === slot.value &&
-                        styles.timeSlotActive,
+                      styles.timeSlotActive,
                     ]}
                     onPress={() => setSelectedTime(slot.value)}
                   >
@@ -352,7 +352,7 @@ navigation.navigate('Main', {
                       style={[
                         styles.timeSlotText,
                         selectedTime === slot.value &&
-                          styles.activeText,
+                        styles.activeText,
                       ]}
                     >
                       {slot.label}
@@ -364,7 +364,7 @@ navigation.navigate('Main', {
           </>
         }
       />
-      
+
 
 
       {/* -------------------- CONFIRM -------------------- */}
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   dateActive: { backgroundColor: '#E1B378' },
   dateDay: { color: '#AAA', fontSize: 12 },
   dateNum: { color: '#fff', fontSize: 18, fontWeight: '700' },
- timeGrid: {
+  timeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
- 
+
   bottomBar: {
     position: 'absolute',
     bottom: 0,

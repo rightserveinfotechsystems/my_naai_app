@@ -4,8 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { communication } from "../services/communication";
 
 export default function DelayRequestScreen({ route, navigation }) {
-    console.log("Full Route 👉", route);
-  const { bookingRequestId, delayMinutes } = route.params;
+  console.log("Full Route 👉", route);
+  const { bookingRequestId, delayMinutes, proposedTime } = route.params;
 
   const handleCustomerAction = async (action) => {
     try {
@@ -37,6 +37,12 @@ export default function DelayRequestScreen({ route, navigation }) {
           <Text style={styles.highlight}>
             {delayMinutes} minutes
           </Text>.
+        </Text>
+        <Text style={styles.message}>
+          Your new booking time will be{" "}
+          <Text style={styles.highlight}>
+            {proposedTime}
+          </Text>
         </Text>
 
         <Text style={styles.subMessage}>

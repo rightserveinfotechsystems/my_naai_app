@@ -54,19 +54,23 @@ export default function BookingRequestScreen({ route, navigation }) {
 
       const payload =
         action === "DELAY"
-          ? { action, delayMinutes: delayMinutes.toString() }
+          ? { action, delayMinutes: String(delayMinutes) }
           : { action };
+
+      console.log("bookingRequestId", bookingRequestId);
+      console.log("payload", payload);
 
       const res = await communication.bookingRequestOwnerAction(
         bookingRequestId,
         payload
       );
 
-      console.log(res);
+      console.log("res", res);
 
-      Alert.alert("Success", `Booking ${action.toLowerCase()}ed successfully`);
+      // Alert.alert("Success", `Booking ${action.toLowerCase()}ed successfully`);
 
-      navigation.goBack();
+      // navigation.goBack();
+      navigation.replace("Salon");
 
     } catch (error) {
       console.log(error);
