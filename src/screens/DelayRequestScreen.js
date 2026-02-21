@@ -1,14 +1,20 @@
-import React from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { communication } from "../services/communication";
 
 export default function DelayRequestScreen({ route, navigation }) {
   console.log("Full Route 👉", route);
   const { bookingRequestId, delayMinutes, proposedTime } = route.params;
+  const [loading, setLoading] = useState(false);
+  const [selectedAction, setSelectedAction] = useState(null);
 
   const handleCustomerAction = async (action) => {
+    if (loading) return;
     try {
+      setSelectedAction(action);
+      setLoading(true);
+
       await communication.customerDelayResponse(
         bookingRequestId,
         { action }
@@ -22,8 +28,12 @@ export default function DelayRequestScreen({ route, navigation }) {
       );
 
       navigation.goBack();
+
     } catch (err) {
       Alert.alert("Error", "Something went wrong");
+    } finally {
+      setLoading(false);
+      setSelectedAction(null);
     }
   };
 
@@ -52,17 +62,33 @@ export default function DelayRequestScreen({ route, navigation }) {
 
       <View style={styles.buttonRow}>
         <TouchableOpacity
-          style={styles.acceptBtn}
+          style={[
+            styles.acceptBtn,
+            loading && { opacity: 0.6 }
+          ]}
+          disabled={loading}
           onPress={() => handleCustomerAction("ACCEPT")}
         >
-          <Text style={styles.btnText}>Accept</Text>
+          {loading && selectedAction === "ACCEPT" ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.btnText}>Accept</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.rejectBtn}
+          style={[
+            styles.rejectBtn,
+            loading && { opacity: 0.6 }
+          ]}
+          disabled={loading}
           onPress={() => handleCustomerAction("REJECT")}
         >
-          <Text style={styles.btnText}>Reject</Text>
+          {loading && selectedAction === "REJECT" ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.btnText}>Reject</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

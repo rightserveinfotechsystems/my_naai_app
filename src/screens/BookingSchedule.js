@@ -118,6 +118,7 @@ const BookingSchedule = ({ route, navigation }) => {
     // }
 
 
+    if (loading) return;
 
     if (!selectedTime) {
       Alert.alert("Select Time", "Please select a time slot.");
@@ -370,10 +371,14 @@ const BookingSchedule = ({ route, navigation }) => {
       {/* -------------------- CONFIRM -------------------- */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
-          style={styles.confirmBtn}
+          style={[
+            styles.confirmBtn,
+            loading && { opacity: 0.6 }
+          ]}
           onPress={handleConfirm}
+          disabled={loading}
+          activeOpacity={0.8}
         >
-
           {loading ? (
             <ActivityIndicator color="#000" />
           ) : (
@@ -381,7 +386,6 @@ const BookingSchedule = ({ route, navigation }) => {
               Confirm Booking
             </Text>
           )}
-
         </TouchableOpacity>
       </View>
     </SafeAreaView>

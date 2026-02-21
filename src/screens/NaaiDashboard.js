@@ -61,6 +61,24 @@ const convertSalonApiData = (apiData = []) => {
   }));
 };
 
+const getDistanceInKm = (lat1, lon1, lat2, lon2) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+
+  const R = 6371; // Earth radius in KM
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+    Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return (R * c).toFixed(1); // 1 decimal like 2.4 km
+};
+
 const NaaiDashboard = ({ navigation }) => {
   const [search, setSearch] = useState('');
   const [locationFilter, setLocationFilter] = useState('All');
@@ -82,7 +100,7 @@ const NaaiDashboard = ({ navigation }) => {
 
   const [savedSalonId, setSavedSalonId] = useState(null);
   const [savingSalonId, setSavingSalonId] = useState(null);
-
+  const [userLocation, setUserLocation] = useState(null);
 
 
 
@@ -126,13 +144,16 @@ const NaaiDashboard = ({ navigation }) => {
     try {
       const location = await getUserLocation();
 
+      if (location) {
+        setUserLocation(location);
+      }
+
       const payload = {
         page: pageNo,
         searchString: search,
         genderType: genderFilter,
       };
 
-      // ✅ Add location ONLY if available
       if (location) {
         payload.latitude = location.latitude;
         payload.longitude = location.longitude;
@@ -145,8 +166,6 @@ const NaaiDashboard = ({ navigation }) => {
       const response = await communication.userSalonList(payload);
 
       if (response?.status === 'SUCCESS') {
-        console.log("userSalonList response", response);
-
         const convertedData = convertSalonApiData(response.data);
         const pagination = response.pagination;
 
@@ -162,6 +181,7 @@ const NaaiDashboard = ({ navigation }) => {
         if (refresh) setPlans([]);
         setHasMore(false);
       }
+
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch salons');
     } finally {
@@ -192,49 +212,42 @@ const NaaiDashboard = ({ navigation }) => {
 
     try {
       setSavingSalonId(salonId);
-
-      // ✅ If clicking same saved salon → REMOVE
-      if (savedSalonId === salonId) {
-
-        const response = await communication.removeSalon({
-          salonId: salonId,
-        });
-
-        if (response?.status === 'SUCCESS') {
-          setSavedSalonId(null);
-          Alert.alert('Removed from bookmark');
-          getSalonList(1, true); // refresh list to reorder
-        } else {
-          Alert.alert('Error', 'Failed to remove bookmark');
-        }
-
-        return;
-      }
-
-      // ✅ If another salon already saved → block
       if (savedSalonId && savedSalonId !== salonId) {
         Alert.alert(
-          'Bookmark Exists',
-          'Please remove previous bookmarked salon first.'
+          "Bookmark Exists",
+          "Please remove previous bookmarked salon first."
         );
         return;
       }
 
-      // ✅ If no salon saved → ADD
-      const response = await communication.saveSalon({
-        salonId: salonId,
-      });
+      const response = await communication.toggleSaveSalon({ salonId });
 
-      if (response?.status === 'SUCCESS') {
-        setSavedSalonId(salonId);
-        Alert.alert('Salon bookmarked successfully');
-        getSalonList(1, true); // refresh to move it to top
+      if (response?.status === "SUCCESS") {
+
+        const msg = response?.message?.toLowerCase();
+
+        const isNowBookmarked = msg?.includes("save") && !msg?.includes("unsave");
+
+        if (isNowBookmarked) {
+          setSavedSalonId(salonId);
+          Alert.alert("Salon bookmarked successfully");
+        } else {
+          setSavedSalonId(null);
+          Alert.alert("Bookmark removed successfully");
+        }
+
+        // ✅ Refresh list properly
+        setPlans([]);
+        setPage(1);
+        setHasMore(true);
+        getSalonList(1, true);
+
       } else {
-        Alert.alert('Error', 'Failed to bookmark salon');
+        Alert.alert("Error", "Failed to update bookmark");
       }
 
     } catch (error) {
-      Alert.alert('Error', 'Something went wrong');
+      Alert.alert("Error", "Something went wrong");
     } finally {
       setSavingSalonId(null);
     }
@@ -346,37 +359,57 @@ const NaaiDashboard = ({ navigation }) => {
   );
 
   /* -------- SALON CARD -------- */
-  const renderSalon = ({ item }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigation.navigate('SalonDetail', { salonId: item.id })}
-    >
+  const renderSalon = ({ item }) => {
 
-      <Image
-        source={
-          item.imagesArray?.length
-            ? { uri: `${getServerUrl()}/getfiles/${item.imagesArray[0]}` }
-            : item.imageUrl
-              ? { uri: `${getServerUrl()}/getfiles/${item.imageUrl}` }
-              : require('../assets/myNaai.jpeg')
+    const distance =
+      userLocation &&
+      getDistanceInKm(
+        userLocation.latitude,
+        userLocation.longitude,
+        item.latitude,
+        item.longitude
+      );
+
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() =>
+          navigation.navigate('SalonDetail', { salonId: item.id })
         }
-        style={styles.image}
-      />
+      >
+
+        <Image
+          source={
+            item.imagesArray?.length
+              ? { uri: `${getServerUrl()}/getfiles/${item.imagesArray[0]}` }
+              : item.imageUrl
+                ? { uri: `${getServerUrl()}/getfiles/${item.imageUrl}` }
+                : require('../assets/myNaai.jpeg')
+          }
+          style={styles.image}
+        />
 
 
 
-      <View style={styles.cardContent}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{item.name}</Text>
-
-          {/* <View style={styles.ratingRow}>
+        <View style={styles.cardContent}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.name}>{item.name}</Text>
+            {distance !== null && (
+              <View style={styles.row}>
+                <Ionicons name="location-outline" size={14} color="#E1B378" />
+                <Text style={styles.distanceText}>
+                  {distance} km away
+                </Text>
+              </View>
+            )}
+            {/* <View style={styles.ratingRow}>
             <Ionicons name="star" size={14} color="#E1B378" />
             <Text style={styles.ratingText}>
               {item.rating} ({item.reviews})
             </Text>
           </View> */}
-          {/* LOCATION */}
-          <TouchableOpacity
+            {/* LOCATION */}
+            {/* <TouchableOpacity
             style={styles.row}
             onPress={() => {
               if (!item.latitude || !item.longitude) {
@@ -391,39 +424,47 @@ const NaaiDashboard = ({ navigation }) => {
           >
             <Ionicons name="location-outline" size={18} color="#E1B378" />
             <Text style={styles.linkText}>{item.address}</Text>
-            {/* <Ionicons name="open-outline" size={14} color="#AAA" style={{ marginLeft: 4 }} /> */}
-          </TouchableOpacity>
-          {/* <Text style={styles.address}>{item.address}</Text> */}
-          <TouchableOpacity style={styles.row}
-            onPress={() => Linking.openURL(`tel:${item?.phoneNumber}`)}
-          >
-            <Ionicons name="call-outline" size={18} color="#E1B378" />
-            <Text style={styles.linkText}>{item?.phoneNumber}</Text>
-          </TouchableOpacity>
+            <Ionicons name="open-outline" size={14} color="#AAA" style={{ marginLeft: 4 }} />
+          </TouchableOpacity> */}
+            {/* <Text style={styles.address}>{item.address}</Text> */}
+            <TouchableOpacity style={styles.row}
+              onPress={() => Linking.openURL(`tel:${item?.phoneNumber}`)}
+            >
+              <Ionicons name="call-outline" size={18} color="#E1B378" />
+              <Text style={styles.linkText}>{item?.phoneNumber}</Text>
+            </TouchableOpacity>
 
 
 
 
-          <View style={styles.waitRow}>
-            <View style={styles.waitTime}>
-              <Ionicons name="time-outline" size={14} color="#E1B378" />
-              <Text style={styles.waitText}>{item?.waitTime}</Text>
+            <View style={styles.waitRow}>
               {item?.open &&
-                <Text style={styles.queueText}>
-                  Queue: {item?.raw?.queueLength} people
-                </Text>}
-            </View>
-          </View>
 
-        </View>
-        <TouchableOpacity
-          onPress={() => toggleSaveSalon(item.id)}
-          style={{ position: 'absolute', top: 8, right: 8 }}
-          disabled={savingSalonId === item.id}
-        >
-          {savingSalonId === item.id ? (
+                <View style={styles.waitTime}>
+
+                  <Ionicons name="time-outline" size={14} color="#E1B378" />
+                  <Text style={styles.waitText}>{item?.waitTime}</Text>
+                  {/* {item?.open && */}
+                  <Text style={styles.queueText}>
+                    Queue: {item?.raw?.queueLength} people
+                  </Text>
+
+                </View>
+              }
+
+            </View>
+
+          </View>
+          <TouchableOpacity
+            onPress={() => toggleSaveSalon(item.id)}
+            style={{ position: 'absolute', top: 8, right: 8 }}
+            disabled={savingSalonId === item.id}
+          >
+            {/* {savingSalonId === item.id ? (
             <ActivityIndicator size="small" color="#E1B378" />
-          ) : (
+          ) 
+          :
+          ( */}
             <Ionicons
               name={
                 savedSalonId === item.id
@@ -437,26 +478,28 @@ const NaaiDashboard = ({ navigation }) => {
                   : '#AAA'
               }
             />
-          )}
-        </TouchableOpacity>
+            {/* )
+          } */}
+          </TouchableOpacity>
 
 
-        <TouchableOpacity
-          style={[
-            styles.bookBtn,
-            { backgroundColor: item.open ? '#E1B378' : '#555' },
-          ]}
-          disabled={!item.open}
-          onPress={() => navigation.navigate('SalonDetail', { salonId: item.id })}
+          <TouchableOpacity
+            style={[
+              styles.bookBtn,
+              { backgroundColor: item.open ? '#E1B378' : '#555' },
+            ]}
+            disabled={!item.open}
+            onPress={() => navigation.navigate('SalonDetail', { salonId: item.id })}
 
-        >
-          <Text style={styles.bookText}>
-            {item?.open ? 'Book Now' : 'Closed'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
+          >
+            <Text style={styles.bookText}>
+              {item?.open ? 'Book Now' : 'Closed'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    )
+  };
 
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
@@ -599,7 +642,8 @@ const NaaiDashboard = ({ navigation }) => {
 
             <FlatList
               data={plans}
-              keyExtractor={item => item.id}
+              // keyExtractor={item => item.id}
+              keyExtractor={(item, index) => `${item.id}_${index}`}
               renderItem={renderSalon}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 30 }}
@@ -696,6 +740,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 50,
     marginBottom: 14,
+    marginTop: 8,
   },
 
   searchInput: {
@@ -848,6 +893,13 @@ const styles = StyleSheet.create({
 
   activeGenderText: {
     color: '#000',
+  },
+
+  distanceText: {
+    color: '#E1B378',
+    fontSize: 12,
+    marginLeft: 4,
+    fontWeight: '600',
   },
 
 });

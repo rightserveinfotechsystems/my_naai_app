@@ -121,19 +121,19 @@ const ServicesScreen = () => {
     setPage(1);
     fetchBookings(userId, 1);
   };
-const STATUS_COLORS = {
-  pending: '#E1B378',
-  confirmed: '#4CAF50',
-  completed: '#f2ff00',
-  cancelled: '#E53935',
-};
+  const STATUS_COLORS = {
+    pending: '#E1B378',
+    confirmed: '#4CAF50',
+    completed: '#f2ff00',
+    cancelled: '#E53935',
+  };
 
   const STATUS_LABELS = {
-  pending: "Pending",
-  confirmed: "Confirmed",
-  completed: "Completed",
-  cancelled: "Cancelled",
-};
+    pending: "Pending",
+    confirmed: "Confirmed",
+    completed: "Completed",
+    cancelled: "Cancelled",
+  };
 
 
   /* ---------------- RENDER ITEM ---------------- */
@@ -144,7 +144,7 @@ const STATUS_COLORS = {
     //     : item.status === 'completed'
     //       ? '#4CAF50'
     //       : '#E53935';
-  const btnColor = STATUS_COLORS[item.status?.toLowerCase()] || '#9E9E9E';
+    const btnColor = STATUS_COLORS[item.status?.toLowerCase()] || '#9E9E9E';
 
     const formatDateReadable = (dateStr) => {
       if (!dateStr) return '';
@@ -233,23 +233,23 @@ const STATUS_COLORS = {
 
 
             </View>
-            {item.status === "pending" &&
+            {/* {item.status === "pending" &&
               <View style={styles.dateRow}>
                 <Ionicons name="time-outline" size={14} color="#E1B378" />
                 <Text style={styles.dateText}>
                   Waiting Time: {item?.waitingTimeDisplay}
                 </Text>
-              </View>}
+              </View>} */}
 
 
           </View>
 
-       
-<View style={[styles.statusBtn, { backgroundColor: btnColor }]}>
-  <Text style={styles.statusBtnText}>
-    {STATUS_LABELS[item.status?.toLowerCase()] || "Unknown"}
-  </Text>
-</View>
+
+          <View style={[styles.statusBtn, { backgroundColor: btnColor }]}>
+            <Text style={styles.statusBtnText}>
+              {STATUS_LABELS[item.status?.toLowerCase()] || "Unknown"}
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     );

@@ -20,6 +20,7 @@ export default function BookingRequestScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showDelayOptions, setShowDelayOptions] = useState(false);
+  const [selectedAction, setSelectedAction] = useState(null);
 
   console.log("bookingRequestId 👉", bookingRequestId);
 
@@ -49,7 +50,9 @@ export default function BookingRequestScreen({ route, navigation }) {
   };
 
   const handleOwnerAction = async (action, delayMinutes = null) => {
+    if (actionLoading) return;
     try {
+      setSelectedAction(action);
       setActionLoading(true);
 
       const payload =
@@ -78,6 +81,7 @@ export default function BookingRequestScreen({ route, navigation }) {
     } finally {
       setActionLoading(false);
       setShowDelayOptions(false);
+      setSelectedAction(null);
     }
   };
 
@@ -137,24 +141,41 @@ export default function BookingRequestScreen({ route, navigation }) {
         {/* Action Buttons */}
         <View style={styles.rowButtons}>
           <TouchableOpacity
-            style={styles.acceptBtn}
+            style={[
+              styles.acceptBtn,
+              actionLoading && { opacity: 0.6 }
+            ]}
             disabled={actionLoading}
             onPress={() => handleOwnerAction("ACCEPT")}
           >
-            <Text style={styles.btnWhiteText}>Accept</Text>
+            {actionLoading && selectedAction === "ACCEPT" ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.btnWhiteText}>Accept</Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.rejectBtn}
+            style={[
+              styles.rejectBtn,
+              actionLoading && { opacity: 0.6 }
+            ]}
             disabled={actionLoading}
             onPress={() => handleOwnerAction("REJECT")}
           >
-            <Text style={styles.btnWhiteText}>Reject</Text>
+            {actionLoading && selectedAction === "REJECT" ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.btnWhiteText}>Reject</Text>
+            )}
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity
-          style={styles.delayBtn}
+          style={[
+            styles.delayBtn,
+            actionLoading && { opacity: 0.6 }
+          ]}
           disabled={actionLoading}
           onPress={() => setShowDelayOptions(true)}
         >
@@ -170,17 +191,35 @@ export default function BookingRequestScreen({ route, navigation }) {
               {[15, 30, 60].map(min => (
                 <TouchableOpacity
                   key={min}
-                  style={styles.timeBtn}
+                  style={[
+                    styles.timeBtn,
+                    actionLoading && { opacity: 0.5 }
+                  ]}
+                  disabled={actionLoading}
                   onPress={() => handleOwnerAction("DELAY", min)}
                 >
-                  <Text style={styles.timeText}>+{min} Minutes</Text>
+                  {actionLoading && selectedAction === "DELAY" ? (
+                    <ActivityIndicator color="#E1B378" />
+                  ) : (
+                    <Text style={styles.timeText}>+{min} Minutes</Text>
+                  )}
                 </TouchableOpacity>
               ))}
 
               <TouchableOpacity
-                onPress={() => setShowDelayOptions(false)}
+                disabled={actionLoading}
+                onPress={() => {
+                  if (!actionLoading) setShowDelayOptions(false);
+                }}
               >
-                <Text style={styles.cancelText}>Cancel</Text>
+                <Text
+                  style={[
+                    styles.cancelText,
+                    actionLoading && { opacity: 0.5 }
+                  ]}
+                >
+                  Cancel
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
