@@ -188,6 +188,22 @@ export const communication = {
             throw error;
         }
     },
+    bookingRequestCancel: async (bookingRequestId) => {
+        try {
+            const response = await axios.post(
+                `${getServerUrl()}/api/booking/booking-request-cancel/${bookingRequestId}/`, {},
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${await getCookie()}`
+                    },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
     userProfile: async ({ userId }) => {
         try {
             const response = await axios.get(`${getServerUrl()}/api/users/profile`, {

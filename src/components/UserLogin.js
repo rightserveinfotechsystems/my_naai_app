@@ -267,7 +267,7 @@ const UserLogin = ({ navigation }) => {
 
                 <TouchableOpacity
                   style={styles.partnerBtn}
-                  onPress={() => navigation.navigate('NaaiLogin')}
+                  onPress={() => navigation.navigate('NaaiRequest')}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.partnerBtnText}>

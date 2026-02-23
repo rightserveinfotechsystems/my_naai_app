@@ -87,6 +87,34 @@ const ServicesScreen = () => {
   };
 
 
+  const handleCancelBooking = (bookingRequestId) => {
+    Alert.alert(
+      "Cancel Booking",
+      "Are you sure you want to cancel this booking?",
+      [
+        { text: "No", style: "cancel" },
+        {
+          text: "Yes",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const response = await communication.bookingRequestCancel(bookingRequestId);
+
+              if (response?.status === "SUCCESS") {
+                Alert.alert("Success", "Booking cancelled");
+                fetchBookings(userId, 1); // refresh list
+              } else {
+                Alert.alert("Error", "Unable to cancel booking");
+              }
+            } catch (e) {
+              Alert.alert("Error", e.message);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   useEffect(() => {
     getUserInfo();
   }, []);
@@ -245,11 +273,29 @@ const ServicesScreen = () => {
           </View>
 
 
-          <View style={[styles.statusBtn, { backgroundColor: btnColor }]}>
-            <Text style={styles.statusBtnText}>
-              {STATUS_LABELS[item.status?.toLowerCase()] || "Unknown"}
-            </Text>
-          </View>
+          <View style={styles.rightSection}>
+  {/* STATUS BADGE */}
+  <View style={[styles.statusBadge, { backgroundColor: btnColor }]}>
+    <Text style={styles.statusBadgeText}>
+      {STATUS_LABELS[item.status?.toLowerCase()] || "Unknown"}
+    </Text>
+  </View>
+
+  {/* CANCEL BUTTON */}
+  {["pending", "confirmed"].includes(
+    item.status?.toLowerCase()
+  ) && (
+   <TouchableOpacity
+  style={styles.cancelBtn}
+  onPress={() => handleCancelBooking(item.bookingId)}
+>
+  {/* <Ionicons name="close-circle-outline" size={14} color="#fff" /> */}
+  <Text style={[styles.cancelBtnText, { marginLeft: 6 }]}>
+    Cancel Booking
+  </Text>
+</TouchableOpacity>
+  )}
+</View>
         </View>
       </TouchableOpacity>
     );
@@ -430,7 +476,42 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     opacity: 0.6,
   },
+ 
+ rightSection: {
+  width: 110,
+  justifyContent: 'space-between',
+  alignItems: 'flex-end',
+},
 
+statusBadge: {
+  paddingHorizontal: 14,
+  paddingVertical: 7,
+  borderRadius: 20,
+  minWidth: 90,
+  alignItems: 'center',
+},
+
+statusBadgeText: {
+  color: '#fff',
+  fontSize: 12,
+  fontWeight: '700',
+  textTransform: 'uppercase',
+},
+
+cancelBtn: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginTop: 12,
+  backgroundColor: '#E53935',
+  paddingVertical: 8,
+  paddingHorizontal: 6,
+  borderRadius: 20,
+},
+cancelBtnText: {
+  color: '#fff',
+  fontSize: 12,
+  fontWeight: '700',
+},
 
 
 });
