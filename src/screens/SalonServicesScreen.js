@@ -160,10 +160,10 @@ const styles = StyleSheet.create({
 
     serviceCard: {
         backgroundColor: '#2A2A2A',
-        padding: 10,
+        paddingHorizontal: 10,
         borderRadius: 16,
         width: '48%',
-        minHeight: 100,
+        minHeight: 80,
         justifyContent: 'center',
     },
 
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     serviceName: {
         color: '#fff',
         fontWeight: '600',
-        fontSize: 14,
+        fontSize: 16,
     },
 
     serviceTime: {

@@ -99,7 +99,7 @@ const ServicesScreen = () => {
           onPress: async () => {
             try {
               const response = await communication.bookingRequestCancel(bookingRequestId);
-
+console.log("Cancel ID:", bookingRequestId);
               if (response?.status === "SUCCESS") {
                 Alert.alert("Success", "Booking cancelled");
                 fetchBookings(userId, 1); // refresh list
@@ -287,11 +287,11 @@ const ServicesScreen = () => {
   ) && (
    <TouchableOpacity
   style={styles.cancelBtn}
-  onPress={() => handleCancelBooking(item.bookingId)}
+  onPress={() => handleCancelBooking(item.bookingRequestId)}
 >
-  {/* <Ionicons name="close-circle-outline" size={14} color="#fff" /> */}
-  <Text style={[styles.cancelBtnText, { marginLeft: 6 }]}>
-    Cancel Booking
+  <Ionicons name="close-circle-outline" size={14} color="#fff" />
+  <Text style={[styles.cancelBtnText, { marginLeft: 2 }]}>
+    Cancel
   </Text>
 </TouchableOpacity>
   )}
@@ -421,6 +421,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+    textTransform: "capitalize",
   },
   address: {
     color: '#AAA',
@@ -492,7 +493,7 @@ statusBadge: {
 },
 
 statusBadgeText: {
-  color: '#fff',
+  color: '#000000',
   fontSize: 12,
   fontWeight: '700',
   textTransform: 'uppercase',

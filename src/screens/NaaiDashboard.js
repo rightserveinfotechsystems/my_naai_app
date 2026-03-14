@@ -40,6 +40,7 @@ const convertSalonApiData = (apiData = []) => {
   return apiData.map(item => ({
     id: item.salonId,
     name: item.salonName,
+    genderType: item.genderType,
     address: `${item.addressLine1}, ${item.city}`,
     location: item.city,
     rating: Number(item.ratingAverage),
@@ -230,10 +231,10 @@ const NaaiDashboard = ({ navigation }) => {
 
         if (isNowBookmarked) {
           setSavedSalonId(salonId);
-          Alert.alert("Salon bookmarked successfully");
+          // Alert.alert("Salon bookmarked successfully");
         } else {
           setSavedSalonId(null);
-          Alert.alert("Bookmark removed successfully");
+          // Alert.alert("Bookmark removed successfully");
         }
 
         // ✅ Refresh list properly
@@ -370,6 +371,8 @@ const NaaiDashboard = ({ navigation }) => {
         item.longitude
       );
 
+
+    
     return (
       <TouchableOpacity
         style={styles.card}
@@ -378,30 +381,39 @@ const NaaiDashboard = ({ navigation }) => {
         }
       >
 
-        <Image
-          source={
-            item.imagesArray?.length
-              ? { uri: `${getServerUrl()}/getfiles/${item.imagesArray[0]}` }
-              : item.imageUrl
-                ? { uri: `${getServerUrl()}/getfiles/${item.imageUrl}` }
-                : require('../assets/myNaai.jpeg')
-          }
-          style={styles.image}
-        />
+        <View style={styles.imageContainer}>
+          <Image
+            source={
+              item.imagesArray?.length
+                ? { uri: `${getServerUrl()}/getfiles/${item.imagesArray[0]}` }
+                : item.imageUrl
+                  ? { uri: `${getServerUrl()}/getfiles/${item.imageUrl}` }
+                  : require('../assets/myNaai.jpeg')
+            }
+            style={styles.image}
+          />
+
+          {distance && (
+            <View style={styles.distanceBadge}>
+              <Text style={styles.distanceBadgeText}>{distance} KM</Text>
+            </View>
+          )}
+        </View>
 
 
 
         <View style={styles.cardContent}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{item.name}</Text>
-            {distance !== null && (
+            <Text style={styles.genderName}>{item?.genderType}</Text>
+            <Text style={styles.name}>{item?.name}</Text>
+            {/* {distance !== null && (
               <View style={styles.row}>
                 <Ionicons name="location-outline" size={14} color="#E1B378" />
                 <Text style={styles.distanceText}>
-                  {distance} km away
+                  {distance} KM
                 </Text>
               </View>
-            )}
+            )} */}
             {/* <View style={styles.ratingRow}>
             <Ionicons name="star" size={14} color="#E1B378" />
             <Text style={styles.ratingText}>
@@ -409,42 +421,41 @@ const NaaiDashboard = ({ navigation }) => {
             </Text>
           </View> */}
             {/* LOCATION */}
-            {/* <TouchableOpacity
-            style={styles.row}
-            onPress={() => {
-              if (!item.latitude || !item.longitude) {
-                Alert.alert('Location not available');
-                return;
-              }
+            <TouchableOpacity
+              style={styles.row}
+              onPress={() => {
+                if (!item.latitude || !item.longitude) {
+                  Alert.alert('Location not available');
+                  return;
+                }
 
-              Linking.openURL(
-                `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`
-              );
-            }}
-          >
-            <Ionicons name="location-outline" size={18} color="#E1B378" />
-            <Text style={styles.linkText}>{item.address}</Text>
-            <Ionicons name="open-outline" size={14} color="#AAA" style={{ marginLeft: 4 }} />
-          </TouchableOpacity> */}
+                Linking.openURL(
+                  `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`
+                );
+              }}
+            >
+              {/* <Ionicons name="location-outline" size={18} color="#E1B378" /> */}
+              <Text style={styles.linkText}>{item.address}</Text>
+              {/* <Ionicons name="open-outline" size={14} color="#AAA" style={{ marginLeft: 4 }} /> */}
+            </TouchableOpacity>
             {/* <Text style={styles.address}>{item.address}</Text> */}
-            <TouchableOpacity style={styles.row}
+            {/* <TouchableOpacity style={styles.row}
               onPress={() => Linking.openURL(`tel:${item?.phoneNumber}`)}
             >
               <Ionicons name="call-outline" size={18} color="#E1B378" />
               <Text style={styles.linkText}>{item?.phoneNumber}</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
 
 
 
-            <View style={styles.waitRow}>
+            {/* <View style={styles.waitRow}>
               {item?.open &&
 
                 <View style={styles.waitTime}>
 
                   <Ionicons name="time-outline" size={14} color="#E1B378" />
                   <Text style={styles.waitText}>{item?.waitTime}</Text>
-                  {/* {item?.open && */}
                   <Text style={styles.queueText}>
                     Queue: {item?.raw?.queueLength} people
                   </Text>
@@ -452,7 +463,7 @@ const NaaiDashboard = ({ navigation }) => {
                 </View>
               }
 
-            </View>
+            </View> */}
 
           </View>
           <TouchableOpacity
@@ -500,7 +511,39 @@ const NaaiDashboard = ({ navigation }) => {
       </TouchableOpacity>
     )
   };
+const renderAdsSlider = () => (
+      <Pressable
+        onPressIn={() => setPaused(true)}
+        onPressOut={() => setPaused(false)}
+      >
+        <FlatList
+          ref={adRef}
+          data={ads}
+          horizontal
+          pagingEnabled
+          snapToInterval={AD_WIDTH}
+          decelerationRate="fast"
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item, index) => index.toString()}
+          style={styles.adSlider}
+          renderItem={({ item }) => (
+            <Image
+              source={{ uri: `${getServerUrl()}/getfiles/${item}` }}
+              style={styles.adImage}
+            />
+          )}
+        />
 
+        <View style={styles.dotsContainer}>
+          {ads.map((_, i) => (
+            <View
+              key={i}
+              style={[styles.dot, adIndex === i && styles.activeDot]}
+            />
+          ))}
+        </View>
+      </Pressable>
+    );
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
@@ -595,7 +638,7 @@ const NaaiDashboard = ({ navigation }) => {
               </View>
             </View>
 
-            <View style={styles.searchBox}>
+            {/* <View style={styles.searchBox}>
               <Ionicons name="search" size={18} color="#999" />
               <TextInput
                 placeholder="Find salon, specialists..."
@@ -604,9 +647,9 @@ const NaaiDashboard = ({ navigation }) => {
                 value={search}
                 onChangeText={setSearch}
               />
-            </View>
+            </View> */}
 
-            <Pressable
+            {/* <Pressable
               onPressIn={() => setPaused(true)}
               onPressOut={() => setPaused(false)}
             >
@@ -638,15 +681,32 @@ const NaaiDashboard = ({ navigation }) => {
                 ))}
               </View>
 
-            </Pressable>
+            </Pressable> */}
 
             <FlatList
               data={plans}
-              // keyExtractor={item => item.id}
               keyExtractor={(item, index) => `${item.id}_${index}`}
               renderItem={renderSalon}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 30 }}
+
+              ListHeaderComponent={
+                <>
+                  <View style={styles.searchBox}>
+                    <Ionicons name="search" size={18} color="#999" />
+                    <TextInput
+                      placeholder="Find salon, specialists..."
+                      placeholderTextColor="#999"
+                      style={styles.searchInput}
+                      value={search}
+                      onChangeText={setSearch}
+                    />
+                  </View>
+
+                  {renderAdsSlider()}
+                </>
+              }
+
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.5}
               ListFooterComponent={renderFooter}
@@ -753,7 +813,7 @@ const styles = StyleSheet.create({
   adSlider: { marginBottom: 6 },
   adImage: {
     width: AD_WIDTH,
-    height: 140,
+    height: 190,
     borderRadius: 16,
   },
 
@@ -786,7 +846,7 @@ const styles = StyleSheet.create({
 
   // image: { width: 100, height: '100%' },
   image: {
-    width: 100,
+    width: 120,
     height: '100%',       // ✅ REQUIRED
     minHeight: 110,       // ✅ SAFETY
     borderTopLeftRadius: 20,
@@ -802,6 +862,7 @@ const styles = StyleSheet.create({
   },
 
   name: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  genderName: { color: '#fff', fontSize: 14, fontWeight: '500' },
 
   ratingRow: {
     flexDirection: 'row',
@@ -818,7 +879,8 @@ const styles = StyleSheet.create({
   address: { color: '#AAA', fontSize: 12 },
   row: { flexDirection: 'row', alignItems: 'center', marginVertical: 6 },
 
-  linkText: { color: '#E1B378', marginLeft: 2 },
+  linkText: { color: '#E1B378', marginLeft: 2, fontSize: 15,textTransform: "capitalize"
+   },
   waitRow: {
     marginTop: 6,
   },
@@ -897,9 +959,34 @@ const styles = StyleSheet.create({
 
   distanceText: {
     color: '#E1B378',
-    fontSize: 12,
-    marginLeft: 4,
+    fontSize: 13,
+    // marginLeft: 4,
     fontWeight: '600',
+  },
+
+  imageContainer: {
+    // width: 120,
+    maxHeight: 140,
+    position: 'relative',
+  },
+
+  distanceBadge: {
+    position: 'absolute',
+    bottom: 8,
+    left: 0,
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    elevation: 3,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0
+  },
+
+  distanceBadgeText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#000',
   },
 
 });

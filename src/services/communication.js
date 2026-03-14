@@ -2,9 +2,9 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
-const serverUrl = "http://192.168.1.15:5001";
+// const serverUrl = "http://192.168.1.14:5001";
 // const serverUrl = "http://localhost:5001";
-// const serverUrl = "https://backend.mynaai.in"
+const serverUrl = "https://backend.mynaai.in"
 // 
 export function getServerUrl() {
     return serverUrl;

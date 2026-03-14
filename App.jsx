@@ -51,12 +51,19 @@ import AddOfflineCustomer from './src/components/AddOfflineCustomer';
 import SalonNotifications from './src/screens/SalonNotifications';
 import BookingRequestScreen from './src/screens/BookingRequestScreen';
 import DelayRequestScreen from './src/screens/DelayRequestScreen';
-
+import { Text, TextInput } from 'react-native';
 
 /* ---------- NAV REF ---------- */
 export const navigationRef = React.createRef();
 const isNavigationReady = React.createRef();
 
+/* ---------- Roboto font ---------- */
+
+Text.defaultProps = Text.defaultProps || {};
+Text.defaultProps.style = { fontFamily: 'Roboto-Regular' };
+
+TextInput.defaultProps = TextInput.defaultProps || {};
+TextInput.defaultProps.style = { fontFamily: 'Roboto-Regular' };
 
 /* ---------- NAV ---------- */
 const Stack = createNativeStackNavigator();

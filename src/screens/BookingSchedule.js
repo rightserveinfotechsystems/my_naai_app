@@ -20,6 +20,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 const BookingSchedule = ({ route, navigation }) => {
   // const { salon } = route.params;
   const { salon, selectedServices } = route.params;
+  const bookedSlots = salon?.bookedSlots || [];
 
 
   console.log("salon", salon);
@@ -45,6 +46,38 @@ const BookingSchedule = ({ route, navigation }) => {
   }, []);
 
 
+  const isPastSlot = (slotValue) => {
+    if (selectedDate !== 0) return false;
+
+    const [slotHour, slotMinute] = slotValue.split(':').map(Number);
+    const slotTotalMinutes = slotHour * 60 + slotMinute;
+
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    return slotTotalMinutes <= currentMinutes;
+  };
+
+  /* -------------------- CHECK IF SLOT IS BOOKED -------------------- */
+  const isSlotBooked = (slotValue) => {
+    if (!bookedSlots?.length) return false;
+
+    const [slotHour, slotMinute] = slotValue.split(':').map(Number);
+    const slotTotalMinutes = slotHour * 60 + slotMinute;
+
+    return bookedSlots.some(booked => {
+      const [startH, startM] = booked.start.split(':').map(Number);
+      const [endH, endM] = booked.end.split(':').map(Number);
+
+      const startMinutes = startH * 60 + startM;
+      const endMinutes = endH * 60 + endM;
+
+      return (
+        slotTotalMinutes >= startMinutes &&
+        slotTotalMinutes < endMinutes
+      );
+    });
+  };
 
   /* -------------------- GENERATE TIME SLOTS -------------------- */
   const generateTimeSlots = () => {
@@ -339,27 +372,37 @@ const BookingSchedule = ({ route, navigation }) => {
               <Text style={styles.section}>Select Time</Text>
 
               <View style={styles.timeGrid}>
-                {timeSlots.map(slot => (
-                  <TouchableOpacity
-                    key={slot.value}
-                    style={[
-                      styles.timeSlot,
-                      selectedTime === slot.value &&
-                      styles.timeSlotActive,
-                    ]}
-                    onPress={() => setSelectedTime(slot.value)}
-                  >
-                    <Text
+                {timeSlots.map(slot => {
+                  const booked = isSlotBooked(slot.value);
+                  const past = isPastSlot(slot.value);
+
+                  const disabled = booked || past;
+
+                  return (
+                    <TouchableOpacity
+                      key={slot.value}
+                      disabled={disabled}
                       style={[
-                        styles.timeSlotText,
-                        selectedTime === slot.value &&
-                        styles.activeText,
+                        styles.timeSlot,
+                        selectedTime === slot.value && styles.timeSlotActive,
+                        booked && styles.timeSlotBooked,   // 🔴 booked color
+                        past && styles.pastSlot,           // ⚫ gray past
                       ]}
+                      onPress={() => setSelectedTime(slot.value)}
                     >
-                      {slot.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        style={[
+                          styles.timeSlotText,
+                          selectedTime === slot.value && styles.activeText,
+                          booked && styles.timeSlotBookedText,
+                          past && styles.disabledText,
+                        ]}
+                      >
+                        {slot.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
           </>
@@ -548,6 +591,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  timeSlotBooked: {
+    backgroundColor: '#3A1F1F',
+    borderWidth: 1,
+    borderColor: '#F44336',
+  },
 
+  timeSlotBookedText: {
+    color: '#F44336',
+  },
+  pastSlot: {
+    backgroundColor: "#2A2A2A",
+  },
 
+  bookedSlot: {
+    backgroundColor: "#FF4D4D", // your existing booked color
+  },
+
+  disabledText: {
+    color: "#888",
+  },
 });

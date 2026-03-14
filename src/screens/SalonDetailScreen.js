@@ -101,16 +101,16 @@ const SalonDetailScreen = ({ route, navigation }) => {
 
 
   /* -------------------- HELPERS -------------------- */
-  // const openMap = () => {
-  //   if (!salonDetails.latitude || !salonDetails.longitude) {
-  //     Alert.alert('Location not available');
-  //     return;
-  //   }
+  const openMap = () => {
+    if (!salonDetails.latitude || !salonDetails.longitude) {
+      Alert.alert('Location not available');
+      return;
+    }
 
-  //   Linking.openURL(
-  //     `https://www.google.com/maps/search/?api=1&query=${salonDetails.latitude},${salonDetails.longitude}`
-  //   );
-  // };
+    Linking.openURL(
+      `https://www.google.com/maps/search/?api=1&query=${salonDetails.latitude},${salonDetails.longitude}`
+    );
+  };
 
 
   const callSalon = () => {
@@ -147,6 +147,16 @@ const SalonDetailScreen = ({ route, navigation }) => {
   const services = salonDetails?.services || [];
   const barbers = salonDetails?.barbers || [];
 
+
+  const isSlotBooked = (slotValue) => {
+    if (!bookedSlots.length) return false;
+
+    return bookedSlots.some(booked => {
+      const bookedStart = booked.start.slice(0, 5);
+      return bookedStart === slotValue;
+    });
+  };
+
   const address = `${salonDetails?.addressLine1}, ${salonDetails?.addressLine2}, ${salonDetails?.city}`;
 
   const formatTime12Hour = (time) => {
@@ -162,7 +172,8 @@ const SalonDetailScreen = ({ route, navigation }) => {
       hour12: true,
     });
   };
-
+  const weeklyOff =
+    salonDetails?.businessHours?.flatMap(e => e.holidayDays || []) || [];
 
   return (
     <View style={styles.container}>
@@ -246,7 +257,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
 
 
                     </View> */}
-                    {salonDetails?.isOpen && (
+                    {/* {salonDetails?.isOpen && (
                       <>
                         <View style={styles.waitRow}>
                           <Ionicons name="people-outline" size={14} color="#E1B378" />
@@ -262,7 +273,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                           </Text>
                         </View>
                       </>
-                    )}
+                    )} */}
 
 
                     {/* SHOP STATUS */}
@@ -296,7 +307,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
 
                       </View>
 
-
+                      {/* {salonDetails.businessHours &&
                       <View style={styles.infoRow}>
                         <Ionicons name="calendar-outline" size={16} color="#E1B378" />
                         <Text style={styles.infoText}>
@@ -309,6 +320,16 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         </Text>
 
                       </View>
+                      } */}
+
+                      {weeklyOff.length > 0 && (
+                        <View style={styles.infoRow}>
+                          <Ionicons name="calendar-outline" size={16} color="#E1B378" />
+                          <Text style={styles.infoText}>
+                            Weekly Off: {weeklyOff.join(', ')}
+                          </Text>
+                        </View>
+                      )}
 
                       {salonDetails.upcomingHoliday && (
                         <View style={styles.infoRow}>
@@ -325,7 +346,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                     </View>
 
                     {/* LOCATION */}
-                    {/* <TouchableOpacity style={styles.row} onPress={openMap}>
+                    <TouchableOpacity style={styles.row} onPress={openMap}>
                       <Ionicons
                         name="location-outline"
                         size={18}
@@ -333,7 +354,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                       />
                       <Text style={styles.linkText}>{address}</Text>
                       <Ionicons name="open-outline" size={14} color="#AAA" />
-                    </TouchableOpacity> */}
+                    </TouchableOpacity>
 
                     {/* CALL */}
                     <TouchableOpacity style={styles.row} onPress={callSalon}>
@@ -491,6 +512,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     flex: 1,
     lineHeight: 20,
+    textTransform: "capitalize",
   },
 
 
