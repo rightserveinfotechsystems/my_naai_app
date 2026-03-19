@@ -19,90 +19,99 @@ import { communication } from '../services/communication';
 import { CITY_OPTIONS, SALON_OPTIONS } from '../utilities/citiesRequestArray';
 import RNPickerSelect from 'react-native-picker-select';
 import Geolocation from 'react-native-geolocation-service';
-// import Geocoder from 'react-native-geocoding';
+import Geocoder from 'react-native-geocoding';
 
-// Geocoder.init("AIzaSyCz32prVTCy8x0xtd2mB2Q8rTYmvbqi8Tw");
+Geocoder.init("AIzaSyCz32prVTCy8x0xtd2mB2Q8rTYmvbqi8Tw");
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
-const NaaiRequest = ({ navigation }) => {
+const SalonInfoForRegister = ({ navigation, route }) => {
+
+  const phoneNumber = route?.params?.phoneNumber || '';
+  const tempToken = route?.params?.tempToken || '';
+  const userData = route?.params?.userData || {};
   const [naaiName, setNaaiName] = useState('');
   const [salonName, setSalonName] = useState('');
-  const [mobile, setMobile] = useState('');
+  const [mobile, setMobile] = useState(phoneNumber);
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
+  const [genderType, setGenderType] = useState('');
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
   const [agentCode, setAgentCode] = useState('');
   const [loading, setLoading] = useState(false);
 
   /* ---------------- VALIDATION ---------------- */
 
 
-  // const getCurrentLocation = async () => {
-  //   try {
-  //     const granted = await PermissionsAndroid.request(
-  //       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-  //     );
+  const getCurrentLocation = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
 
-  //     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
 
-  //       Geolocation.getCurrentPosition(
-  //         async (position) => {
+        Geolocation.getCurrentPosition(
+          async (position) => {
 
-  //           const { latitude, longitude } = position.coords;
+            const { latitude, longitude } = position.coords;
 
-  //           console.log("LAT:", latitude);
-  //           console.log("LNG:", longitude);
+            setLatitude(latitude);
+            setLongitude(longitude);
+            console.log("LAT:", latitude);
+            console.log("LNG:", longitude);
 
-  //           const response = await Geocoder.from(latitude, longitude);
+            const response = await Geocoder.from(latitude, longitude);
 
-  //           const address = response.results[0].formatted_address;
+            const address = response.results[0].formatted_address;
 
-  //           setAddress(address);
+            setAddress(address);
 
-  //         },
-  //         (error) => {
-  //           console.log(error);
-  //           Alert.alert("Error", "Unable to fetch location");
-  //         },
-  //         {
-  //           enableHighAccuracy: true,
-  //           timeout: 15000,
-  //           maximumAge: 10000,
-  //         }
-  //       );
+          },
+          (error) => {
+            console.log(error);
+            Alert.alert("Error", "Unable to fetch location");
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 10000,
+          }
+        );
 
-  //     }
+      }
 
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-  // useEffect(() => {
-  //   getCurrentLocation();
-  // }, []);
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
 
   const validate = () => {
-    // if (!naaiName.trim()) {
-    //   Alert.alert('Validation', 'Please enter Naai name');
-    //   return false;
-    // }
-    // if (!salonName.trim()) {
-    //   Alert.alert('Validation', 'Please enter Salon name');
-    //   return false;
-    // }
+    if (!naaiName.trim()) {
+      Alert.alert('Validation', 'Please enter Naai name');
+      return false;
+    }
+    if (!salonName.trim()) {
+      Alert.alert('Validation', 'Please enter Salon name');
+      return false;
+    }
     if (mobile.length !== 10) {
       Alert.alert('Validation', 'Enter valid 10-digit mobile number');
       return false;
     }
-    // if (!address.trim()) {
-    //   Alert.alert('Validation', 'Please enter address');
-    //   return false;
-    // }
-    // if (!city) {
-    //   Alert.alert('Validation', 'Please select a city');
-    //   return false;
-    // }
+    if (!address.trim()) {
+      Alert.alert('Validation', 'Please enter address');
+      return false;
+    }
+    if (!city) {
+      Alert.alert('Validation', 'Please select a city');
+      return false;
+    }
 
 
     return true;
@@ -113,44 +122,29 @@ const NaaiRequest = ({ navigation }) => {
   // const handleSignup = () => {
 
 
-  const handleSignup = async () => {
-    if (!validate()) return;
+ const handleSignup = () => {
+  if (!validate()) return;
 
-    setLoading(true);
-    try {
-      const payload = {
-        // fullName: naaiName,
-        phoneNumber: mobile,
-        // salonName: salonName,
-        // address: address,
-        // city: city,
-      }
-      console.log("payload", payload);
-
-      const res = await communication.salonOwnerLogin(payload);
-      console.log("API RESPONSE:", res);
-      if (res?.status === 'SUCCESS') {
-        Alert.alert("Sent OTP on registered mobile number successfully");
-        navigation.navigate("SalonRegisterOtpScreen", {
-          mobile: mobile,
-        });
-      } else {
-        Alert.alert('Error', res?.message || 'Failed to send request to admin');
-      }
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        error?.response?.data?.message || 'Something went wrong'
-      );
-    } finally {
-      setLoading(false);
-    }
+  const payload = {
+    ownerName: naaiName,
+    phoneNumber: mobile,
+    salonName: salonName,
+    addressLine1: address,
+    city: city,
+    agentCode: agentCode,
+    genderType: genderType,
+    latitude: latitude,
+    longitude: longitude,
+    tempToken: tempToken,
   };
 
+  console.log("NAVIGATING WITH:", payload);
 
-  // };
+  navigation.navigate("SubscriptionsPlan", {
+    userData: payload,
+  });
+};
 
-  /* ---------------- UI ---------------- */
 
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
@@ -169,7 +163,7 @@ const NaaiRequest = ({ navigation }) => {
           >
             <Text style={styles.title}>Register as a Salon Owner</Text>
 
-            {/* <View style={styles.inputBox}>
+            <View style={styles.inputBox}>
               <TextInput
                 placeholder="Salon Owner Name"
                 placeholderTextColor="#999"
@@ -187,24 +181,20 @@ const NaaiRequest = ({ navigation }) => {
                 onChangeText={setSalonName}
                 style={styles.input}
               />
-            </View> */}
+            </View>
 
             <View style={styles.inputBox}>
               <View style={styles.phoneContainer}>
                 <Text style={styles.countryCode}>+91</Text>
                 <TextInput
-                  placeholder="Phone Number"
-                  placeholderTextColor="#999"
-                  keyboardType="number-pad"
-                  maxLength={10}
                   value={mobile}
-                  onChangeText={setMobile}
+                  editable={false}
                   style={styles.input}
                 />
               </View>
             </View>
 
-            {/* <View style={styles.inputBox}>
+            <View style={styles.inputBox}>
               <TextInput
                 placeholder="Fetching location..."
                 placeholderTextColor="#999"
@@ -212,8 +202,8 @@ const NaaiRequest = ({ navigation }) => {
                 editable={false}
                 style={styles.input}
               />
-            </View> */}
-            {/* <View style={styles.inputBox}>
+            </View>
+            <View style={styles.inputBox}>
               <RNPickerSelect
                 placeholder={{ label: 'Select City', value: null }}
                 value={city}
@@ -226,7 +216,7 @@ const NaaiRequest = ({ navigation }) => {
                 }}
                 useNativeAndroidPickerStyle={false}
               />
-            </View> */}
+            </View>
             {/* <View style={styles.inputBox}>
               <TextInput
                 placeholder="City"
@@ -236,20 +226,22 @@ const NaaiRequest = ({ navigation }) => {
                 style={styles.input}
               />
             </View> */}
-            {/* <View style={styles.inputBox}>
+            <View style={styles.inputBox}>
               <TextInput
                 placeholder="Agent Code"
                 placeholderTextColor="#999"
                 value={agentCode}
                 onChangeText={setAgentCode}
                 style={styles.input}
+                maxLength={10}
+                keyboardType="number-pad"
               />
             </View>
             <View style={styles.inputBox}>
               <RNPickerSelect
                 placeholder={{ label: 'Select Salon Type', value: null }}
-                value={city}
-                onValueChange={setCity}
+                value={genderType}
+                onValueChange={setGenderType}
                 items={SALON_OPTIONS}
                 style={{
                   inputAndroid: styles.pickerInput,
@@ -258,7 +250,7 @@ const NaaiRequest = ({ navigation }) => {
                 }}
                 useNativeAndroidPickerStyle={false}
               />
-            </View> */}
+            </View>
             <TouchableOpacity
               style={styles.signupBtn}
               // onPress={() => navigation.navigate("SalonRegisterOtpScreen")}
@@ -268,7 +260,7 @@ const NaaiRequest = ({ navigation }) => {
               {loading ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text style={styles.signupText}>Send OTP</Text>
+                <Text style={styles.signupText}>Continue</Text>
               )}
             </TouchableOpacity>
 
@@ -293,7 +285,7 @@ const NaaiRequest = ({ navigation }) => {
   );
 };
 
-export default NaaiRequest;
+export default SalonInfoForRegister;
 
 /* ---------------- STYLES ---------------- */
 

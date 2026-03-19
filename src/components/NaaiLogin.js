@@ -84,15 +84,19 @@ const NaaiLogin = ({ navigation }) => {
 
             {/* Phone Input */}
             <View style={styles.inputBox}>
-              <TextInput
-                placeholder="Mobile Number"
-                placeholderTextColor="#999"
-                keyboardType="number-pad"
-                maxLength={10}
-                value={mobile}
-                onChangeText={setMobile}
-                style={styles.input}
-              />
+              <View style={styles.phoneContainer}>
+                <Text style={styles.countryCode}>+91</Text>
+
+                <TextInput
+                  placeholder="Mobile Number"
+                  placeholderTextColor="#999"
+                  keyboardType="number-pad"
+                  maxLength={10}
+                  value={mobile}
+                  onChangeText={setMobile}
+                  style={styles.input}
+                />
+              </View>
             </View>
 
             {/* Login Button */}
@@ -111,12 +115,12 @@ const NaaiLogin = ({ navigation }) => {
             {/* Footer */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>
-                Don’t have an account? Request to register as a Salon / Naai Owner to admin{' '}
+                Don’t have an account? {' '}
                 <Text
                   style={styles.signup}
                   onPress={() => navigation.navigate('NaaiRequest')}
                 >
-                  Request to admin
+                  Register as a Salon Owner
                 </Text>
               </Text>
             </View>
@@ -212,5 +216,22 @@ const styles = StyleSheet.create({
   signup: {
     color: '#E8B97E',
     fontWeight: '600',
+  },
+  phoneContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  countryCode: {
+    color: '#fff',
+    fontSize: 15,
+    marginRight: 8,
+    fontWeight: '600',
+  },
+
+  phoneInput: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 15,
   },
 });

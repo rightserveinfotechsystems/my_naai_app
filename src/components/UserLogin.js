@@ -177,15 +177,19 @@ const UserLogin = ({ navigation }) => {
             {/* MOBILE INPUT */}
             {!otpSent && (
               <View style={styles.inputBox}>
-                <TextInput
-                  placeholder="Mobile Number"
-                  placeholderTextColor="#999"
-                  keyboardType="number-pad"
-                  maxLength={10}
-                  value={mobile}
-                  onChangeText={setMobile}
-                  style={styles.input}
-                />
+                <View style={styles.phoneContainer}>
+                  <Text style={styles.countryCode}>+91</Text>
+
+                  <TextInput
+                    placeholder="Mobile Number"
+                    placeholderTextColor="#999"
+                    keyboardType="number-pad"
+                    maxLength={10}
+                    value={mobile}
+                    onChangeText={setMobile}
+                    style={styles.input}
+                  />
+                </View>
               </View>
             )}
 
@@ -408,7 +412,24 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#2A2A2A',
     marginVertical: 24,
-  }
+  },
 
+  phoneContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  countryCode: {
+    color: '#fff',
+    fontSize: 15,
+    marginRight: 8,
+    fontWeight: '600',
+  },
+
+  phoneInput: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 15,
+  },
 
 });

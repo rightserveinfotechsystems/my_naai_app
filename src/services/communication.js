@@ -2,9 +2,11 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
-// const serverUrl = "http://192.168.1.14:5001";
+const serverUrl = "http://192.168.1.13:5004";
 // const serverUrl = "http://localhost:5001";
-const serverUrl = "https://backend.mynaai.in"
+// const serverUrl = "https://backend.mynaai.in"
+// export const rzp_key = "rzp_test_SRombQCQU03uVL"
+export const rzp_key = "rzp_test_RyX5e71Zpn3ofA"
 // 
 export function getServerUrl() {
     return serverUrl;
@@ -272,6 +274,56 @@ export const communication = {
         }
     },
     //=================== salon API start===================//
+
+
+    salonOwnerLogin: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/salons/send-register-otp`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    createPaymentOrder: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/salons/create-payment-order`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    createSalon: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/salons/create-salon-with-plan`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    verifySalonOwnerLogin: async (payload) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/salons/verify-otp-register`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
     salonRequest: async (payload) => {
         try {
             const response = await axios.post(`${getServerUrl()}/api/salonrequest/create-request`, payload, {

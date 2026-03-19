@@ -870,7 +870,7 @@ const SalonAccountScreen = ({ navigation }) => {
                   }}
                 />
 
-                {/* <TextInput
+                <TextInput
                   style={[styles.input, styles.smallInput]}
                   placeholder="Price"
                   keyboardType="numeric"
@@ -881,7 +881,7 @@ const SalonAccountScreen = ({ navigation }) => {
                     updated[index].price = text;
                     setServices(updated);
                   }}
-                /> */}
+                />
 
                 <TextInput
                   style={[styles.input, styles.smallInput]}
