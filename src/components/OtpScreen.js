@@ -15,6 +15,7 @@ import { communication } from '../services/communication';
 const RESEND_TIME = 30;
 
 const OtpScreen = ({ route, onLoginSuccess }) => {
+  const isVerifying = useRef(false);
   const { mobile, fullName } = route.params;
 
   const [otp, setOtp] = useState('');
@@ -47,12 +48,11 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
 
   /* ✅ VERIFY OTP */
   const verifyOtp = async () => {
-    if (otp.length !== 6) {
-      Alert.alert('Invalid OTP', 'Please enter 6-digit OTP');
-      return;
-    }
+    if (otp.length !== 6 || isVerifying.current) return;
 
+    isVerifying.current = true; // ✅ LOCK
     setLoading(true);
+
     const token = await getStoredToken();
 
     try {
@@ -73,9 +73,11 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
 
         onLoginSuccess('USER');
       } else {
+        isVerifying.current = false; // ❗ unlock on failure
         Alert.alert('Error', response?.message || 'Invalid OTP');
       }
     } catch (error) {
+      isVerifying.current = false; // ❗ unlock on error
       Alert.alert(
         'Verification Failed',
         error?.response?.data?.message || error.message
@@ -84,12 +86,17 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
       setLoading(false);
     }
   };
-
+  useEffect(() => {
+    if (otp.length === 6) {
+      verifyOtp();
+    }
+  }, [otp]);
   /* 🔁 RESEND OTP */
   const resendOtp = async () => {
     if (!canResend || loading) return;
 
     setLoading(true);
+    isVerifying.current = false;
     try {
       const res = await communication.sendRegisterOtp({
         phoneNumber: mobile,
@@ -115,7 +122,7 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Phone Verification</Text>
+      <Text style={styles.title}>Phone Verification abhi</Text>
       <Text style={styles.subtitle}>
         Enter the code sent to +91 {mobile}
       </Text>
@@ -126,17 +133,24 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
         keyboardType="number-pad"
         maxLength={6}
         value={otp}
-        onChangeText={setOtp}
+        onChangeText={(text) => {
+          const cleaned = text.replace(/[^0-9]/g, '');
+          setOtp(cleaned);
+        }}
         autoFocus
+        textContentType="oneTimeCode"
+        autoComplete="sms-otp"
       />
 
-      <TouchableOpacity style={styles.btn} onPress={verifyOtp} disabled={loading}>
-        {loading ? (
-          <ActivityIndicator color="#000" />
-        ) : (
-          <Text style={styles.btnText}>Verify Code</Text>
-        )}
-      </TouchableOpacity>
+      {otp.length < 6 && (
+        <TouchableOpacity style={styles.btn} onPress={verifyOtp} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color="#000" />
+          ) : (
+            <Text style={styles.btnText}>Verify Code</Text>
+          )}
+        </TouchableOpacity>
+      )}
 
       {!canResend ? (
         <Text style={styles.timerText}>

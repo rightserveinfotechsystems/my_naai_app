@@ -268,7 +268,10 @@ const SalonInfoForRegister = ({ navigation, route }) => {
                 placeholderTextColor="#999"
                 value={address}
                 editable={false}
-                style={styles.input}
+                multiline={true}
+                numberOfLines={4}
+                // textAlignVertical="top"
+                style={[styles.input, styles.textArea]}
               />
             </View>
             <View style={styles.inputBox}>
@@ -498,6 +501,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
   },
+  textArea: {
+    height: 100,
+    paddingTop: 12,
+  }
 
 
 });

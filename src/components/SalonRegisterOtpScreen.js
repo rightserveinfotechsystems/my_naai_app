@@ -119,7 +119,11 @@ const SalonRegisterOtpScreen = ({ navigation, route }) => {
     }
   };
 
-
+  useEffect(() => {
+    if (otp.length === 6) {
+      verifyOtp();
+    }
+  }, [otp]);
 
   // const handlePayment = () => {
 
@@ -176,8 +180,14 @@ const SalonRegisterOtpScreen = ({ navigation, route }) => {
           keyboardType="number-pad"
           maxLength={6}
           value={otp}
-          onChangeText={setOtp}
+          onChangeText={(text) => {
+            const cleaned = text.replace(/[^0-9]/g, '');
+            setOtp(cleaned);
+          }}
           autoFocus
+          textContentType="oneTimeCode"
+          autoComplete="sms-otp"
+          importantForAutofill="yes"
         />
 
         <TouchableOpacity

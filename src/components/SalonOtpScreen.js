@@ -118,6 +118,11 @@ const SalonOtpScreen = ({ route }) => {
       setResendLoading(false);
     }
   };
+  useEffect(() => {
+    if (otp.length === 6) {
+      verifyOtp();
+    }
+  }, [otp]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -126,7 +131,7 @@ const SalonOtpScreen = ({ route }) => {
         Enter the code sent to +91 {mobile}
       </Text>
 
-      <TextInput
+      {/* <TextInput
         ref={inputRef}
         style={styles.otpInput}
         keyboardType="number-pad"
@@ -134,8 +139,22 @@ const SalonOtpScreen = ({ route }) => {
         value={otp}
         onChangeText={setOtp}
         autoFocus
+      /> */}
+ <TextInput
+        ref={inputRef}
+        style={styles.otpInput}
+        keyboardType="number-pad"
+        maxLength={6}
+        value={otp}
+        onChangeText={(text) => {
+          const cleaned = text.replace(/[^0-9]/g, '');
+          setOtp(cleaned);
+        }}
+        autoFocus
+        textContentType="oneTimeCode"
+        autoComplete="sms-otp"
+        importantForAutofill="yes"
       />
-
       <TouchableOpacity
         style={styles.btn}
         onPress={verifyOtp}

@@ -128,6 +128,13 @@ const UserLogin = ({ navigation }) => {
     }
   };
 
+
+  useEffect(() => {
+    if (otp.length === 6) {
+      verifyOtp();
+    }
+  }, [otp]);
+
   useEffect(() => {
     if (otpSent && !canResend && secondsLeft > 0) {
       const timer = setTimeout(() => {
@@ -202,8 +209,15 @@ const UserLogin = ({ navigation }) => {
                   keyboardType="number-pad"
                   maxLength={6}
                   value={otp}
-                  onChangeText={setOtp}
+                  onChangeText={(text) => {
+                    const cleaned = text.replace(/[^0-9]/g, '');
+                    setOtp(cleaned);
+                  }}
                   style={styles.input}
+                  textContentType="oneTimeCode"
+                  autoComplete="sms-otp"
+                  importantForAutofill="yes"
+                  autoFocus
                 />
               </View>
             )}
