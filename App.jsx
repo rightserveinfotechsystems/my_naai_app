@@ -30,6 +30,7 @@ import NaaiLogin from './src/components/NaaiLogin';
 import NaaiRequest from './src/components/NaaiRequest';
 import SalonOtpScreen from './src/components/SalonOtpScreen';
 import SalonInfoForRegister from './src/components/SalonInfoForRegister';
+import SalonBusinessInfo from './src/components/SalonBusinessInfo';
 import SalonRegisterOtpScreen from './src/components/SalonRegisterOtpScreen';
 import SubscriptionsPlan from './src/screens/SubscriptionsPlan';
 
@@ -152,9 +153,10 @@ function AuthStack({ onLoginSuccess }) {
       <Stack.Screen name="NaaiRequest" component={NaaiRequest} />
       <Stack.Screen name="SalonOtpScreen" component={SalonOtpScreen} />
       <Stack.Screen name="SalonInfoForRegister" component={SalonInfoForRegister} />
+      <Stack.Screen name="SalonBusinessInfo" component={SalonBusinessInfo} />
       <Stack.Screen name="SalonRegisterOtpScreen" component={SalonRegisterOtpScreen} />
       {/* <Stack.Screen name="SubscriptionsPlan" component={SubscriptionsPlan} /> */}
-       <Stack.Screen name="SubscriptionsPlan">
+      <Stack.Screen name="SubscriptionsPlan">
         {props => <SubscriptionsPlan {...props} onLoginSuccess={onLoginSuccess} />}
       </Stack.Screen>
     </Stack.Navigator>

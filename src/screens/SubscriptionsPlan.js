@@ -12,7 +12,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { paymentForMembership } from "../utilities/paymentForMembership";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { communication } from "../services/communication";
+import { communication, setCookie } from "../services/communication";
 
 const plans = [
   {
@@ -96,18 +96,33 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
 
           const res = await communication.createSalon(finalPayload, {
             headers: {
-              Authorization: `Bearer ${userData.tempToken}`
+              Authorization: `Bearer ${userData.tempToken}`,
+
             }
           });
 
           if (res?.status === "SUCCESS") {
-            Alert.alert("Account Created Successfully!");
-
+            // await AsyncStorage.setItem('token', res.token);
+            console.log("res.token", res.token);
+            await setCookie(res.token);
             await AsyncStorage.setItem('userType', 'SALON');
 
-            DeviceEventEmitter.emit('AUTH_CHANGED');
+            await AsyncStorage.setItem(
+              'mynaaiUser',
+              JSON.stringify({
+                salon: {
+                  salonId: res.salonId,
+                },
+              })
+            );
 
-          } else {
+            await AsyncStorage.setItem('redirectTab', 'Account');
+
+            Alert.alert("Success", "Account Created Successfully!");
+
+            DeviceEventEmitter.emit('AUTH_CHANGED');
+          }
+          else {
             Alert.alert("Error", res?.message);
           }
 

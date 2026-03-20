@@ -20,6 +20,8 @@ const SalonOtpScreen = ({ route }) => {
 
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(RESEND_TIME);
   const [canResend, setCanResend] = useState(false);
 
@@ -56,7 +58,7 @@ const SalonOtpScreen = ({ route }) => {
       return;
     }
 
-    setLoading(true);
+    setVerifyLoading(true);
 
     try {
       const token = await getStoredToken();
@@ -67,45 +69,33 @@ const SalonOtpScreen = ({ route }) => {
         deviceToken: token || '',
       };
 
-      console.log('verifySalonLogin payload:', payload);
-
       const res = await communication.verifySalonLogin(payload);
-      console.log('verifySalonLogin res:', res);
 
       if (res?.status === 'SUCCESS' && res?.data?.token) {
         await AsyncStorage.setItem('mynaai', res.data.token);
-        await AsyncStorage.setItem(
-          'mynaaiUser',
-          JSON.stringify(res.data)
-        );
+        await AsyncStorage.setItem('mynaaiUser', JSON.stringify(res.data));
         await AsyncStorage.setItem('isLoggedIn', 'true');
         await AsyncStorage.setItem('userType', 'SALON');
 
-        // Notify App.js to re-check auth
         DeviceEventEmitter.emit('AUTH_CHANGED');
       } else {
-        Alert.alert(
-          'Invalid OTP',
-          res?.message || 'OTP verification failed'
-        );
+        Alert.alert('Invalid OTP', res?.message || 'OTP verification failed');
       }
     } catch (error) {
-      console.log('Salon OTP error:', error);
       Alert.alert(
         'Verification Failed',
-        error?.response?.data?.message ||
-          'Network issue. Please try again.'
+        error?.response?.data?.message || 'Network issue'
       );
     } finally {
-      setLoading(false);
+      setVerifyLoading(false);
     }
   };
 
   /* ---------- RESEND OTP ---------- */
   const resendOtp = async () => {
-    if (!canResend || loading) return;
+    if (!canResend || resendLoading) return;
 
-    setLoading(true);
+    setResendLoading(true);
 
     try {
       const payload = { phoneNumber: mobile };
@@ -125,7 +115,7 @@ const SalonOtpScreen = ({ route }) => {
         error?.response?.data?.message || 'Something went wrong'
       );
     } finally {
-      setLoading(false);
+      setResendLoading(false);
     }
   };
 
@@ -149,9 +139,9 @@ const SalonOtpScreen = ({ route }) => {
       <TouchableOpacity
         style={styles.btn}
         onPress={verifyOtp}
-        disabled={loading}
+        disabled={verifyLoading}
       >
-        {loading ? (
+        {verifyLoading ? (
           <ActivityIndicator color="#000" />
         ) : (
           <Text style={styles.btnText}>Verify Code</Text>
@@ -164,9 +154,9 @@ const SalonOtpScreen = ({ route }) => {
           {secondsLeft < 10 ? `0${secondsLeft}` : secondsLeft}
         </Text>
       ) : (
-        <TouchableOpacity onPress={resendOtp} disabled={loading}>
+        <TouchableOpacity onPress={resendOtp} disabled={resendLoading}>
           <Text style={styles.resend}>
-            {loading ? 'Sending...' : 'Resend a new Code'}
+            {resendLoading ? 'Sending...' : 'Resend a new Code'}
           </Text>
         </TouchableOpacity>
       )}

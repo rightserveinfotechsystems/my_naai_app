@@ -1,4 +1,3 @@
-// NaaiRequest.js
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -20,6 +19,7 @@ import { CITY_OPTIONS, SALON_OPTIONS } from '../utilities/citiesRequestArray';
 import RNPickerSelect from 'react-native-picker-select';
 import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoding';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 Geocoder.init("AIzaSyCz32prVTCy8x0xtd2mB2Q8rTYmvbqi8Tw");
 
@@ -39,10 +39,38 @@ const SalonInfoForRegister = ({ navigation, route }) => {
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [agentCode, setAgentCode] = useState('');
+  const getDefaultOpeningTime = () => {
+    const date = new Date();
+    date.setHours(9, 0, 0); // 9:00 AM
+    return date;
+  };
+
+  const getDefaultClosingTime = () => {
+    const date = new Date();
+    date.setHours(22, 0, 0); // 10:00 PM
+    return date;
+  };
+
+  const [openingTime, setOpeningTime] = useState(getDefaultOpeningTime());
+  const [closingTime, setClosingTime] = useState(getDefaultClosingTime());
+  const [showOpenPicker, setShowOpenPicker] = useState(false);
+  const [showClosePicker, setShowClosePicker] = useState(false);
   const [loading, setLoading] = useState(false);
 
   /* ---------------- VALIDATION ---------------- */
 
+  const formatDisplayTime = (date) => {
+    if (!date) return "";
+
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+
+    hours = hours % 12;
+    hours = hours === 0 ? 12 : hours;
+
+    return `${hours}:${minutes} ${ampm}`;
+  };
 
   const getCurrentLocation = async () => {
     try {
@@ -112,6 +140,10 @@ const SalonInfoForRegister = ({ navigation, route }) => {
       Alert.alert('Validation', 'Please select a city');
       return false;
     }
+    // if (closingTime <= openingTime) {
+    //   Alert.alert("Validation", "Closing time must be after opening time");
+    //   return false;
+    // }
 
 
     return true;
@@ -122,29 +154,65 @@ const SalonInfoForRegister = ({ navigation, route }) => {
   // const handleSignup = () => {
 
 
- const handleSignup = () => {
-  if (!validate()) return;
+  // const handleSignup = () => {
+  //   if (!validate()) return;
 
-  const payload = {
-    ownerName: naaiName,
-    phoneNumber: mobile,
-    salonName: salonName,
-    addressLine1: address,
-    city: city,
-    agentCode: agentCode,
-    genderType: genderType,
-    latitude: latitude,
-    longitude: longitude,
-    tempToken: tempToken,
+  //   const payload = {
+  //     ownerName: naaiName,
+  //     phoneNumber: mobile,
+  //     salonName: salonName,
+  //     addressLine1: address,
+  //     city: city,
+  //     agentCode: agentCode,
+  //     genderType: genderType,
+  //     latitude: latitude,
+  //     longitude: longitude,
+  //     tempToken: tempToken,
+  //     businessHours: [
+  //       {
+  //         openingTime: formatTime(openingTime),
+  //         closingTime: formatTime(closingTime),
+  //         breakStartTime: null,
+  //         breakEndTime: null,
+  //       },
+  //     ],
+  //   };
+
+  //   console.log("NAVIGATING WITH:", payload);
+
+  //   navigation.navigate("SubscriptionsPlan", {
+  //     userData: payload,
+  //   });
+  // };
+  const handleNext = () => {
+    if (!naaiName.trim()) {
+      Alert.alert('Validation', 'Please enter Naai name');
+      return;
+    }
+    if (!salonName.trim()) {
+      Alert.alert('Validation', 'Please enter Salon name');
+      return;
+    }
+    if (!city) {
+      Alert.alert('Validation', 'Please select a city');
+      return;
+    }
+
+    const step1Data = {
+      ownerName: naaiName,
+      phoneNumber: mobile,
+      salonName: salonName,
+      addressLine1: address,
+      city: city,
+      latitude,
+      longitude,
+      tempToken,
+    };
+
+    navigation.navigate("SalonBusinessInfo", {
+      step1Data,
+    });
   };
-
-  console.log("NAVIGATING WITH:", payload);
-
-  navigation.navigate("SubscriptionsPlan", {
-    userData: payload,
-  });
-};
-
 
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
@@ -226,7 +294,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
                 style={styles.input}
               />
             </View> */}
-            <View style={styles.inputBox}>
+            {/* <View style={styles.inputBox}>
               <TextInput
                 placeholder="Agent Code"
                 placeholderTextColor="#999"
@@ -251,16 +319,31 @@ const SalonInfoForRegister = ({ navigation, route }) => {
                 useNativeAndroidPickerStyle={false}
               />
             </View>
+            <View style={styles.inputBox}>
+              <TouchableOpacity onPress={() => setShowOpenPicker(true)}>
+                <Text style={{ color: '#fff' }}>
+                  {formatDisplayTime(openingTime)}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputBox}>
+              <TouchableOpacity onPress={() => setShowClosePicker(true)}>
+                <Text style={{ color: '#fff' }}>
+                  {formatDisplayTime(closingTime)}
+                </Text>
+              </TouchableOpacity>
+            </View> */}
             <TouchableOpacity
               style={styles.signupBtn}
               // onPress={() => navigation.navigate("SalonRegisterOtpScreen")}
-              onPress={handleSignup}
+              onPress={handleNext}
               disabled={loading}
             >
               {loading ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text style={styles.signupText}>Continue</Text>
+                <Text style={styles.signupText}>Next</Text>
               )}
             </TouchableOpacity>
 
@@ -281,6 +364,31 @@ const SalonInfoForRegister = ({ navigation, route }) => {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </View>
+      {showOpenPicker && (
+        <DateTimePicker
+          value={openingTime || new Date()}
+          mode="time"
+          is24Hour={true}
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowOpenPicker(false);
+            if (selectedDate) setOpeningTime(selectedDate);
+          }}
+        />
+      )}
+
+      {showClosePicker && (
+        <DateTimePicker
+          value={closingTime || new Date()}
+          mode="time"
+          is24Hour={true}
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowClosePicker(false);
+            if (selectedDate) setClosingTime(selectedDate);
+          }}
+        />
+      )}
     </ImageBackground>
   );
 };

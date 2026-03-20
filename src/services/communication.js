@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
 const serverUrl = "http://192.168.1.13:5004";
+// const serverUrl = "http://192.168.1.8:5001";
 // const serverUrl = "http://localhost:5001";
 // const serverUrl = "https://backend.mynaai.in"
 // export const rzp_key = "rzp_test_SRombQCQU03uVL"
@@ -300,13 +301,18 @@ export const communication = {
             throw error;
         }
     },
-    createSalon: async (payload) => {
+    createSalon: async (payload, config = {}) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/create-salon-with-plan`, payload, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
+            const response = await axios.post(
+                `${getServerUrl()}/api/salons/create-salon-with-plan`,
+                payload,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...config.headers,
+                    },
+                }
+            );
             return response.data;
         } catch (error) {
             throw error;

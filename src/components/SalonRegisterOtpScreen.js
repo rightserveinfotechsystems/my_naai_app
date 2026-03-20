@@ -22,6 +22,8 @@ const SalonRegisterOtpScreen = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(RESEND_TIME);
   const [canResend, setCanResend] = useState(false);
 
@@ -58,7 +60,7 @@ const SalonRegisterOtpScreen = ({ navigation, route }) => {
       return;
     }
 
-    setLoading(true);
+    setVerifyLoading(true);
 
     try {
       const token = await getStoredToken();
@@ -66,45 +68,34 @@ const SalonRegisterOtpScreen = ({ navigation, route }) => {
       const payload = {
         phoneNumber: mobile,
         otp: otp,
-        // deviceToken: token || '',
       };
 
       const res = await communication.verifySalonOwnerLogin(payload);
 
       if (res?.status === 'SUCCESS') {
-
-        // ❌ DON'T mark as logged in yet
-        // ❌ DON'T emit AUTH_CHANGED here
-
-        // ✅ Just move to next step
         navigation.replace("SalonInfoForRegister", {
           phoneNumber: mobile,
           tempToken: res?.data?.token,
           userData: res?.data
         });
-
       } else {
-        Alert.alert(
-          'Invalid OTP',
-          res?.message || 'OTP verification failed'
-        );
+        Alert.alert('Invalid OTP', res?.message || 'OTP verification failed');
       }
     } catch (error) {
       Alert.alert(
         'Verification Failed',
-        error?.response?.data?.message ||
-        'Network issue. Please try again.'
+        error?.response?.data?.message || 'Network issue. Please try again.'
       );
     } finally {
-      setLoading(false);
+      setVerifyLoading(false);
     }
   };
 
   /* ---------- RESEND OTP ---------- */
   const resendOtp = async () => {
-    if (!canResend || loading) return;
+    if (!canResend || resendLoading) return;
 
-    setLoading(true);
+    setResendLoading(true);
 
     try {
       const payload = { phoneNumber: mobile };
@@ -124,7 +115,7 @@ const SalonRegisterOtpScreen = ({ navigation, route }) => {
         error?.response?.data?.message || 'Something went wrong'
       );
     } finally {
-      setLoading(false);
+      setResendLoading(false);
     }
   };
 
@@ -190,11 +181,11 @@ const SalonRegisterOtpScreen = ({ navigation, route }) => {
         />
 
         <TouchableOpacity
-          style={[styles.btn, loading && { opacity: 0.6 }]}
+          style={[styles.btn, verifyLoading && { opacity: 0.6 }]}
           onPress={verifyOtp}
-          disabled={loading}
+          disabled={verifyLoading}
         >
-          {loading ? (
+          {verifyLoading ? (
             <ActivityIndicator color="#000" />
           ) : (
             <Text style={styles.btnText}>Verify Code</Text>
@@ -207,9 +198,9 @@ const SalonRegisterOtpScreen = ({ navigation, route }) => {
             {secondsLeft < 10 ? `0${secondsLeft}` : secondsLeft}
           </Text>
         ) : (
-          <TouchableOpacity onPress={resendOtp} disabled={loading}>
+          <TouchableOpacity onPress={resendOtp} disabled={resendLoading}>
             <Text style={styles.resend}>
-              {loading ? 'Sending...' : 'Resend a new Code'}
+              {resendLoading ? 'Sending...' : 'Resend a new Code'}
             </Text>
           </TouchableOpacity>
         )}
