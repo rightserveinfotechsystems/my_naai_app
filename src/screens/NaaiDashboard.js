@@ -231,8 +231,14 @@ const NaaiDashboard = ({ navigation }) => {
         const convertedData = convertSalonApiData(response?.data || [], location);
 
         const sortedData = convertedData.sort((a, b) => {
+          // ⭐ 1. Bookmarked salon first
+          if (a.id === savedSalonId) return -1;
+          if (b.id === savedSalonId) return 1;
+
+          // 📍 2. Then sort by distance
           if (a.distance === null) return 1;
           if (b.distance === null) return -1;
+
           return a.distance - b.distance;
         });
 
@@ -243,8 +249,14 @@ const NaaiDashboard = ({ navigation }) => {
             const merged = [...prev, ...sortedData];
 
             return merged.sort((a, b) => {
+              // ⭐ Bookmarked first
+              if (a.id === savedSalonId) return -1;
+              if (b.id === savedSalonId) return 1;
+
+              // 📍 Distance next
               if (a.distance === null) return 1;
               if (b.distance === null) return -1;
+
               return a.distance - b.distance;
             });
           });

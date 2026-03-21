@@ -118,7 +118,8 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
 
             await AsyncStorage.setItem('redirectTab', 'Account');
 
-            Alert.alert("Success", "Account Created Successfully!");
+            console.log("Success", "Account Created Successfully!");
+            
 
             DeviceEventEmitter.emit('AUTH_CHANGED');
           }

@@ -325,19 +325,16 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
 
-  inputBox: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 54,
-    justifyContent: 'center',
-    marginBottom: 18,
-  },
+  // inputBox: {
+  //   backgroundColor: '#1E1E1E',
+  //   borderRadius: 12,
+  //   paddingHorizontal: 16,
+  //   height: 54,
+  //   justifyContent: 'center',
+  //   marginBottom: 18,
+  // },
 
-  input: {
-    color: '#fff',
-    fontSize: 15,
-  },
+
 
   signupBtn: {
     backgroundColor: '#E8B97E',
@@ -381,23 +378,32 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
 
-  phoneContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  inputBox: {
+  width: '100%',
+  backgroundColor: '#1E1E1E',
+  borderRadius: 12,
+  paddingHorizontal: 16,
+  height: 54,
+  justifyContent: 'center',
+  marginBottom: 20,
+},
 
-  countryCode: {
-    color: '#fff',
-    fontSize: 15,
-    marginRight: 8,
-    fontWeight: '600',
-  },
+phoneContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  height: '100%',
+},
 
-  phoneInput: {
-    flex: 1,
-    color: '#fff',
-    fontSize: 15,
-  },
+countryCode: {
+  marginRight: 8,
+  color: '#fff',
+},
+
+input: {
+  flex: 1,
+  color: '#fff',
+  paddingVertical: 10,
+},
 
 
 });

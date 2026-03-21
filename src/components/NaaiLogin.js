@@ -98,7 +98,6 @@ const NaaiLogin = ({ navigation }) => {
                 />
               </View>
             </View>
-
             {/* Login Button */}
             <TouchableOpacity
               style={styles.loginBtn}
@@ -171,22 +170,7 @@ const styles = StyleSheet.create({
     color: '#ccc',
     fontSize: 14,
     marginBottom: 30,
-  },
-
-  inputBox: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 54,
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-
-  input: {
-    color: '#fff',
-    fontSize: 16,
-  },
-
+  }, 
   loginBtn: {
     backgroundColor: '#E8B97E',
     height: 54,
@@ -217,21 +201,36 @@ const styles = StyleSheet.create({
     color: '#E8B97E',
     fontWeight: '600',
   },
-  phoneContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  countryCode: {
-    color: '#fff',
-    fontSize: 15,
-    marginRight: 8,
-    fontWeight: '600',
-  },
 
   phoneInput: {
     flex: 1,
     color: '#fff',
     fontSize: 15,
   },
+  inputBox: {
+  width: '100%',
+  backgroundColor: '#1E1E1E',
+  borderRadius: 12,
+  paddingHorizontal: 16,
+  height: 54,
+  justifyContent: 'center',
+  marginBottom: 20,
+},
+
+phoneContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  height: '100%',
+},
+
+countryCode: {
+  marginRight: 8,
+  color: '#fff',
+},
+
+input: {
+  flex: 1,
+  color: '#fff',
+  paddingVertical: 10,
+},
 });

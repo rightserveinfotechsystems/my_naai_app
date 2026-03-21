@@ -337,22 +337,22 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  inputBox: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 14,
-    paddingHorizontal: 18,
-    height: 56,
-    justifyContent: 'center',
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
-  },
+  // inputBox: {
+  //   backgroundColor: '#1E1E1E',
+  //   borderRadius: 14,
+  //   paddingHorizontal: 18,
+  //   height: 56,
+  //   justifyContent: 'center',
+  //   marginBottom: 20,
+  //   borderWidth: 1,
+  //   borderColor: '#2A2A2A',
+  // },
 
-  input: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    letterSpacing: 0.5,
-  },
+  // input: {
+  //   color: '#FFFFFF',
+  //   fontSize: 16,
+  //   letterSpacing: 0.5,
+  // },
 
   loginBtn: {
     backgroundColor: '#E8B97E',
@@ -428,22 +428,49 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
 
-  phoneContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  // phoneContainer: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  // },
 
-  countryCode: {
-    color: '#fff',
-    fontSize: 15,
-    marginRight: 8,
-    fontWeight: '600',
-  },
+  // countryCode: {
+  //   color: '#fff',
+  //   fontSize: 15,
+  //   marginRight: 8,
+  //   fontWeight: '600',
+  // },
 
   phoneInput: {
     flex: 1,
     color: '#fff',
     fontSize: 15,
+  },
+
+  inputBox: {
+    width: '100%',
+    backgroundColor: '#1E1E1E',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 54,
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+
+  phoneContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: '100%',
+  },
+
+  countryCode: {
+    marginRight: 8,
+    color: '#fff',
+  },
+
+  input: {
+    flex: 1,
+    color: '#fff',
+    paddingVertical: 10,
   },
 
 });
