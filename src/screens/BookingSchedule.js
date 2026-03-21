@@ -81,36 +81,40 @@ const BookingSchedule = ({ route, navigation }) => {
 
   /* -------------------- GENERATE TIME SLOTS -------------------- */
   const generateTimeSlots = () => {
+    const schedule = salon?.businessHours?.[0];
+
+    if (!schedule) return [];
+
+    const convertToMinutes = (time) => {
+      const [h, m] = time.split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    const openingMinutes = convertToMinutes(schedule.openingTime);
+    const closingMinutes = convertToMinutes(schedule.closingTime);
+
     const slots = [];
 
-    for (let hour = 7; hour <= 21; hour++) {
-      for (let minute = 0; minute < 60; minute += 20) {
+    for (let mins = openingMinutes; mins < closingMinutes; mins += 20) {
+      const hour = Math.floor(mins / 60);
+      const minute = mins % 60;
 
-        // Stop after 9:00 PM (don't go beyond 21:00)
-        if (hour === 21 && minute > 0) break;
+      const displayHour =
+        hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
 
-        const date = new Date();
-        date.setHours(hour);
-        date.setMinutes(minute);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
 
-        const displayHour =
-          hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+      const label = `${displayHour}:${minute
+        .toString()
+        .padStart(2, '0')} ${ampm}`;
 
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-
-        const formatted = `${displayHour}:${minute
+      const value = `${hour
+        .toString()
+        .padStart(2, '0')}:${minute
           .toString()
-          .padStart(2, '0')} ${ampm}`;
+          .padStart(2, '0')}`;
 
-        const value = `${hour
-          .toString()
-          .padStart(2, '0')}:${minute
-            .toString()
-            .padStart(2, '0')}`;
-
-
-        slots.push({ label: formatted, value });
-      }
+      slots.push({ label, value });
     }
 
     return slots;
@@ -118,6 +122,18 @@ const BookingSchedule = ({ route, navigation }) => {
 
 
   const timeSlots = generateTimeSlots();
+
+  const selectedDateObj = new Date(
+    Date.now() + selectedDate * 24 * 60 * 60 * 1000
+  );
+
+  const selectedDayName = selectedDateObj.toLocaleDateString('en-US', {
+    weekday: 'long',
+  });
+
+  const isHoliday =
+    salon?.businessHours?.[0]?.holidayDays?.includes(selectedDayName);
+
   /* -------------------- SERVICE TOGGLE (MULTI) -------------------- */
 
   /* -------------------- TOTAL -------------------- */
@@ -368,43 +384,51 @@ const BookingSchedule = ({ route, navigation }) => {
             </View>
 
             {/* -------------------- TIME -------------------- */}
-            <View style={styles.card}>
-              <Text style={styles.section}>Select Time</Text>
-
-              <View style={styles.timeGrid}>
-                {timeSlots.map(slot => {
-                  const booked = isSlotBooked(slot.value);
-                  const past = isPastSlot(slot.value);
-
-                  const disabled = booked || past;
-
-                  return (
-                    <TouchableOpacity
-                      key={slot.value}
-                      disabled={disabled}
-                      style={[
-                        styles.timeSlot,
-                        selectedTime === slot.value && styles.timeSlotActive,
-                        booked && styles.timeSlotBooked,   // 🔴 booked color
-                        past && styles.pastSlot,           // ⚫ gray past
-                      ]}
-                      onPress={() => setSelectedTime(slot.value)}
-                    >
-                      <Text
-                        style={[
-                          styles.timeSlotText,
-                          selectedTime === slot.value && styles.activeText,
-                          booked && styles.timeSlotBookedText,
-                          past && styles.disabledText,
-                        ]}
-                      >
-                        {slot.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+            {isHoliday ? (
+              <View style={styles.card}>
+                <Text style={[styles.section, { color: 'red' }]}>
+                  Salon is closed on {selectedDayName}
+                </Text>
               </View>
-            </View>
+            ) : (
+              <View style={styles.card}>
+                <Text style={styles.section}>Select Time</Text>
+
+                <View style={styles.timeGrid}>
+                  {timeSlots.map(slot => {
+                    const booked = isSlotBooked(slot.value);
+                    const past = isPastSlot(slot.value);
+
+                    const disabled = booked || past;
+
+                    return (
+                      <TouchableOpacity
+                        key={slot.value}
+                        disabled={disabled}
+                        style={[
+                          styles.timeSlot,
+                          selectedTime === slot.value && styles.timeSlotActive,
+                          booked && styles.timeSlotBooked,
+                          past && styles.pastSlot,
+                        ]}
+                        onPress={() => setSelectedTime(slot.value)}
+                      >
+                        <Text
+                          style={[
+                            styles.timeSlotText,
+                            selectedTime === slot.value && styles.activeText,
+                            booked && styles.timeSlotBookedText,
+                            past && styles.disabledText,
+                          ]}
+                        >
+                          {slot.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
           </>
         }
       />

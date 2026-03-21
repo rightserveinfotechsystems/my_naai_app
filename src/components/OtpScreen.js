@@ -122,7 +122,7 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Phone Verification abhi</Text>
+      <Text style={styles.title}>Phone Verification</Text>
       <Text style={styles.subtitle}>
         Enter the code sent to +91 {mobile}
       </Text>

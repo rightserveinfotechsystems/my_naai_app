@@ -130,7 +130,7 @@ const NaaiRequest = ({ navigation }) => {
       const res = await communication.salonOwnerLogin(payload);
       console.log("API RESPONSE:", res);
       if (res?.status === 'SUCCESS') {
-        Alert.alert("Sent OTP on registered mobile number successfully");
+        // Alert.alert("Sent OTP on registered mobile number successfully");
         navigation.navigate("SalonRegisterOtpScreen", {
           mobile: mobile,
         });

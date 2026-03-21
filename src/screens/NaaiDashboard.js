@@ -36,30 +36,40 @@ const AD_WIDTH = SCREEN_WIDTH - 28;
 // const CITIES = ['All', 'Katol', 'Warud'];
 
 /* -------------------- API DATA CONVERTER -------------------- */
-const convertSalonApiData = (apiData = []) => {
-  return apiData.map(item => ({
-    id: item.salonId,
-    name: item.salonName,
-    genderType: item.genderType,
-    address: `${item.addressLine1}, ${item.city}`,
-    location: item.city,
-    rating: Number(item.ratingAverage),
-    reviews: item.totalReviews,
-    phoneNumber: item.phoneNumber,
-    open: item.isOpen,
-    waitNumber: item.queues?.[0]?.queueNumber ?? '_',
-    // waitTime: item.isOpen ? '25 mins' : '—',
-    waitTime: item.isOpen ? item.totalWaitTime?.display : 'Closed',
-    imageUrl: item.imageUrl,
-    imagesArray: item.imagesArray || [],
-    latitude: Number(item.latitude),
-    longitude: Number(item.longitude),
+const convertSalonApiData = (apiData = [], userLocation = null) => {
+  return apiData.map(item => {
+    const distance =
+      userLocation &&
+      getDistanceInKm(
+        userLocation.latitude,
+        userLocation.longitude,
+        Number(item.latitude),
+        Number(item.longitude)
+      );
 
-    raw: item,
+    return {
+      id: item.salonId,
+      name: item.salonName,
+      genderType: item.genderType,
+      address: `${item.addressLine1}, ${item.city}`,
+      location: item.city,
+      rating: Number(item.ratingAverage),
+      reviews: item.totalReviews,
+      phoneNumber: item.phoneNumber,
+      open: item.isOpen,
+      waitNumber: item.queues?.[0]?.queueNumber ?? '_',
+      waitTime: item.isOpen ? item.totalWaitTime?.display : 'Closed',
+      imageUrl: item.imageUrl,
+      imagesArray: item.imagesArray || [],
+      latitude: Number(item.latitude),
+      longitude: Number(item.longitude),
 
-
-
-  }));
+      distance: distance !== null && distance !== undefined
+        ? Number(distance)
+        : null,
+      raw: item,
+    };
+  });
 };
 
 const getDistanceInKm = (lat1, lon1, lat2, lon2) => {
@@ -77,7 +87,59 @@ const getDistanceInKm = (lat1, lon1, lat2, lon2) => {
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  return (R * c).toFixed(1); // 1 decimal like 2.4 km
+  return Number((R * c).toFixed(1)); // 1 decimal like 2.4 km
+};
+
+const getSalonStatus = (businessHours = []) => {
+  if (!businessHours.length) {
+    return { isOpen: false, text: 'Closed', color: '#F44336' };
+  }
+
+  const schedule = businessHours[0];
+
+  const now = new Date();
+
+  const currentDay = now.toLocaleDateString('en-US', {
+    weekday: 'long',
+  });
+
+  // ✅ Holiday check
+  if (schedule.holidayDays?.includes(currentDay)) {
+    return { isOpen: false, text: 'Closed (Holiday)', color: '#F44336' };
+  }
+
+  const convertToMinutes = (time) => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const openingMinutes = convertToMinutes(schedule.openingTime);
+  const closingMinutes = convertToMinutes(schedule.closingTime);
+
+  const isOpen = currentMinutes >= openingMinutes && currentMinutes < closingMinutes;
+
+  return {
+    isOpen,
+    text: isOpen ? 'OPEN NOW' : 'CLOSED',
+    color: isOpen ? '#4CAF50' : '#F44336',
+    openingTime: schedule.openingTime,
+    closingTime: schedule.closingTime,
+  };
+};
+
+
+const formatTime12Hour = (time) => {
+  if (!time) return '';
+
+  const [h, m] = time.split(':');
+  let hour = parseInt(h);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+
+  hour = hour % 12 || 12;
+
+  return `${hour}:${m} ${ampm}`;
 };
 
 const NaaiDashboard = ({ navigation }) => {
@@ -165,19 +227,33 @@ const NaaiDashboard = ({ navigation }) => {
       }
 
       const response = await communication.userSalonList(payload);
-
       if (response?.status === 'SUCCESS') {
-        const convertedData = convertSalonApiData(response.data);
-        const pagination = response.pagination;
+        const convertedData = convertSalonApiData(response?.data || [], location);
+
+        const sortedData = convertedData.sort((a, b) => {
+          if (a.distance === null) return 1;
+          if (b.distance === null) return -1;
+          return a.distance - b.distance;
+        });
 
         if (refresh) {
-          setPlans(convertedData);
+          setPlans(sortedData);
         } else {
-          setPlans(prev => [...prev, ...convertedData]);
+          setPlans(prev => {
+            const merged = [...prev, ...sortedData];
+
+            return merged.sort((a, b) => {
+              if (a.distance === null) return 1;
+              if (b.distance === null) return -1;
+              return a.distance - b.distance;
+            });
+          });
         }
 
-        setTotalPages(pagination?.totalPages || 1);
-        setHasMore(pageNo < (pagination?.totalPages || 1));
+        const totalPages = response?.pagination?.totalPages || 1;
+
+        setTotalPages(totalPages);
+        setHasMore(pageNo < totalPages);
       } else {
         if (refresh) setPlans([]);
         setHasMore(false);
@@ -371,8 +447,8 @@ const NaaiDashboard = ({ navigation }) => {
         item.longitude
       );
 
+    const status = getSalonStatus(item.raw?.businessHours);
 
-    
     return (
       <TouchableOpacity
         style={styles.card}
@@ -393,7 +469,7 @@ const NaaiDashboard = ({ navigation }) => {
             style={styles.image}
           />
 
-          {distance && (
+          {distance !== null && distance !== undefined && (
             <View style={styles.distanceBadge}>
               <Text style={styles.distanceBadgeText}>{distance} KM</Text>
             </View>
@@ -406,6 +482,25 @@ const NaaiDashboard = ({ navigation }) => {
           <View style={{ flex: 1 }}>
             <Text style={styles.genderName}>{item?.genderType}</Text>
             <Text style={styles.name}>{item?.name}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+              {/* <Ionicons
+    name="time-outline"
+    size={14}
+    color={status.color}
+  /> */}
+
+              {/* <Text style={{ color: status.color, marginLeft: 4, fontSize: 12, fontWeight: '700' }}>
+    {status.text}
+  </Text> */}
+
+              {status.openingTime && (
+                <Text style={{ color: '#aaa', fontSize: 12 }}>
+                  (
+                  {formatTime12Hour(status.openingTime)} - {formatTime12Hour(status.closingTime)}
+                  )
+                </Text>
+              )}
+            </View>
             {/* {distance !== null && (
               <View style={styles.row}>
                 <Ionicons name="location-outline" size={14} color="#E1B378" />
@@ -497,53 +592,57 @@ const NaaiDashboard = ({ navigation }) => {
           <TouchableOpacity
             style={[
               styles.bookBtn,
-              { backgroundColor: item.open ? '#E1B378' : '#555' },
+              { backgroundColor: status.isOpen ? '#E1B378' : '#555' },
             ]}
-            disabled={!item.open}
+            disabled={!status.isOpen}
             onPress={() => navigation.navigate('SalonDetail', { salonId: item.id })}
 
           >
             <Text style={styles.bookText}>
-              {item?.open ? 'Book Now' : 'Closed'}
+              {status.isOpen
+                ? 'Book Now'
+                : status.text === 'Closed (Holiday)'
+                  ? 'Holiday'
+                  : 'Closed'}
             </Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
     )
   };
-const renderAdsSlider = () => (
-      <Pressable
-        onPressIn={() => setPaused(true)}
-        onPressOut={() => setPaused(false)}
-      >
-        <FlatList
-          ref={adRef}
-          data={ads}
-          horizontal
-          pagingEnabled
-          snapToInterval={AD_WIDTH}
-          decelerationRate="fast"
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item, index) => index.toString()}
-          style={styles.adSlider}
-          renderItem={({ item }) => (
-            <Image
-              source={{ uri: `${getServerUrl()}/getfiles/${item}` }}
-              style={styles.adImage}
-            />
-          )}
-        />
+  const renderAdsSlider = () => (
+    <Pressable
+      onPressIn={() => setPaused(true)}
+      onPressOut={() => setPaused(false)}
+    >
+      <FlatList
+        ref={adRef}
+        data={ads}
+        horizontal
+        pagingEnabled
+        snapToInterval={AD_WIDTH}
+        decelerationRate="fast"
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item, index) => index.toString()}
+        style={styles.adSlider}
+        renderItem={({ item }) => (
+          <Image
+            source={{ uri: `${getServerUrl()}/getfiles/${item}` }}
+            style={styles.adImage}
+          />
+        )}
+      />
 
-        <View style={styles.dotsContainer}>
-          {ads.map((_, i) => (
-            <View
-              key={i}
-              style={[styles.dot, adIndex === i && styles.activeDot]}
-            />
-          ))}
-        </View>
-      </Pressable>
-    );
+      <View style={styles.dotsContainer}>
+        {ads.map((_, i) => (
+          <View
+            key={i}
+            style={[styles.dot, adIndex === i && styles.activeDot]}
+          />
+        ))}
+      </View>
+    </Pressable>
+  );
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
@@ -879,8 +978,9 @@ const styles = StyleSheet.create({
   address: { color: '#AAA', fontSize: 12 },
   row: { flexDirection: 'row', alignItems: 'center', marginVertical: 6 },
 
-  linkText: { color: '#E1B378', marginLeft: 2, fontSize: 15,textTransform: "capitalize"
-   },
+  linkText: {
+    color: '#E1B378', marginLeft: 2, fontSize: 15, textTransform: "capitalize"
+  },
   waitRow: {
     marginTop: 6,
   },

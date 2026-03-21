@@ -27,6 +27,7 @@ const ServicesScreen = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
 
   const isFocused = useIsFocused();
 
@@ -98,16 +99,32 @@ const ServicesScreen = () => {
           style: "destructive",
           onPress: async () => {
             try {
+              setCancellingId(bookingRequestId);
+
+              // ✅ Optimistic remove
+              setSalonList(prev =>
+                prev.filter(item => item.bookingRequestId !== bookingRequestId)
+              );
+
               const response = await communication.bookingRequestCancel(bookingRequestId);
-console.log("Cancel ID:", bookingRequestId);
+
               if (response?.status === "SUCCESS") {
-                Alert.alert("Success", "Booking cancelled");
-                fetchBookings(userId, 1); // refresh list
+                console.log("Success", "Booking cancelled");
+
               } else {
-                Alert.alert("Error", "Unable to cancel booking");
+                console.log("Error", "Unable to cancel booking");
+
+                fetchBookings(userId, 1);
               }
+
             } catch (e) {
               Alert.alert("Error", e.message);
+
+              // ❗ rollback on error
+              fetchBookings(userId, 1);
+
+            } finally {
+              setCancellingId(null);
             }
           },
         },
@@ -144,7 +161,11 @@ console.log("Cancel ID:", bookingRequestId);
 
   /* ---------------- REFRESH ---------------- */
   const onRefresh = () => {
-    if (!userId) return;
+    if (!userId) {
+      setRefreshing(false);
+      return;
+    }
+
     setRefreshing(true);
     setPage(1);
     fetchBookings(userId, 1);
@@ -204,7 +225,7 @@ console.log("Cancel ID:", bookingRequestId);
 
 
     return (
-      <TouchableOpacity style={styles.card}>
+      <View style={styles.card}>
         {/* <Image
           source={
             item.imageUrl
@@ -254,9 +275,9 @@ console.log("Cancel ID:", bookingRequestId);
                 </View>
               )} */}
               {/* <View style={styles.dateRow}> */}
-              <Text style={styles.dateText}>
+              {/* <Text style={styles.dateText}>
                 ,Token Number: {item.queueNumber}
-              </Text>
+              </Text> */}
               {/* </View> */}
 
 
@@ -274,30 +295,37 @@ console.log("Cancel ID:", bookingRequestId);
 
 
           <View style={styles.rightSection}>
-  {/* STATUS BADGE */}
-  <View style={[styles.statusBadge, { backgroundColor: btnColor }]}>
-    <Text style={styles.statusBadgeText}>
-      {STATUS_LABELS[item.status?.toLowerCase()] || "Unknown"}
-    </Text>
-  </View>
+            {/* STATUS BADGE */}
+            <View style={[styles.statusBadge, { backgroundColor: btnColor }]}>
+              <Text style={styles.statusBadgeText}>
+                {STATUS_LABELS[item.status?.toLowerCase()] || "Unknown"}
+              </Text>
+            </View>
 
-  {/* CANCEL BUTTON */}
-  {["pending", "confirmed"].includes(
-    item.status?.toLowerCase()
-  ) && (
-   <TouchableOpacity
-  style={styles.cancelBtn}
-  onPress={() => handleCancelBooking(item.bookingRequestId)}
->
-  <Ionicons name="close-circle-outline" size={14} color="#fff" />
-  <Text style={[styles.cancelBtnText, { marginLeft: 2 }]}>
-    Cancel
-  </Text>
-</TouchableOpacity>
-  )}
-</View>
+            {/* CANCEL BUTTON */}
+            {["pending", "confirmed"].includes(
+              item.status?.toLowerCase()
+            ) && (
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  onPress={() => handleCancelBooking(item.bookingRequestId)}
+                  disabled={cancellingId === item.bookingRequestId}
+                >
+                  {cancellingId === item.bookingRequestId ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <>
+                      <Ionicons name="close-circle-outline" size={14} color="#fff" />
+                      <Text style={[styles.cancelBtnText, { marginLeft: 4 }]}>
+                        Cancel
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+          </View>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -477,42 +505,44 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     opacity: 0.6,
   },
- 
- rightSection: {
-  width: 110,
-  justifyContent: 'space-between',
-  alignItems: 'flex-end',
-},
 
-statusBadge: {
-  paddingHorizontal: 14,
-  paddingVertical: 7,
-  borderRadius: 20,
-  minWidth: 90,
-  alignItems: 'center',
-},
+  rightSection: {
+    width: 110,
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
 
-statusBadgeText: {
-  color: '#000000',
-  fontSize: 12,
-  fontWeight: '700',
-  textTransform: 'uppercase',
-},
+  statusBadge: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    minWidth: 90,
+    alignItems: 'center',
+  },
 
-cancelBtn: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginTop: 12,
-  backgroundColor: '#E53935',
-  paddingVertical: 8,
-  paddingHorizontal: 6,
-  borderRadius: 20,
-},
-cancelBtnText: {
-  color: '#fff',
-  fontSize: 12,
-  fontWeight: '700',
-},
+  statusBadgeText: {
+    color: '#000000',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+
+  cancelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    backgroundColor: '#E53935',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    minWidth: 80,
+  },
+  cancelBtnText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
 
 
 });

@@ -65,8 +65,11 @@ const SalonServicesScreen = ({ route, navigation }) => {
                         {item.serviceName}
                     </Text>
 
-                    <Text style={styles.serviceTime}>
+                    {/* <Text style={styles.serviceTime}>
                         ⏱ {item.durationMinutes} min
+                    </Text> */}
+                    <Text style={styles.servicePrice}>
+                        ₹{item.price}
                     </Text>
 
                     {selected && (
@@ -219,5 +222,11 @@ const styles = StyleSheet.create({
     bookBtnDisabled: {
         opacity: 0.4,
     },
+    servicePrice: {
+        color: '#E8B97E',
+        fontSize: 16,
+        fontWeight: '700',
+        // marginTop: 4,
+    }
 
 });

@@ -175,6 +175,48 @@ const SalonDetailScreen = ({ route, navigation }) => {
   const weeklyOff =
     salonDetails?.businessHours?.flatMap(e => e.holidayDays || []) || [];
 
+  const isSalonOpenNow = (businessHours) => {
+    if (!businessHours || businessHours.length === 0) return false;
+
+    const schedule = businessHours[0];
+    const now = new Date();
+
+    const convertToSeconds = (time) => {
+      const [h, m, s] = time.split(':').map(Number);
+      return h * 3600 + m * 60 + s;
+    };
+
+    const currentSeconds =
+      now.getHours() * 3600 +
+      now.getMinutes() * 60 +
+      now.getSeconds();
+
+    const opening = convertToSeconds(schedule.openingTime);
+    const closing = convertToSeconds(schedule.closingTime);
+
+    // Get today's name (e.g., "Friday")
+    const today = now.toLocaleDateString('en-US', { weekday: 'long' });
+
+    // ❌ Holiday check
+    if (schedule.holidayDays?.includes(today)) {
+      return false;
+    }
+
+    // ❌ Outside working hours
+    if (currentSeconds < opening || currentSeconds > closing) {
+      return false;
+    }
+
+    return true;
+  };
+  const isOpenNow = isSalonOpenNow(salonDetails.businessHours);
+
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+  const isHolidayToday =
+    salonDetails?.businessHours?.[0]?.holidayDays?.includes(today);
+
+
   return (
     <View style={styles.container}>
       <ImageBackground source={BG_IMAGE} style={styles.bg}>
@@ -282,17 +324,28 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         <Ionicons
                           name="time-outline"
                           size={16}
-                          color={salonDetails.isOpen ? '#4CAF50' : '#F44336'}
+                          color={
+                            isHolidayToday
+                              ? '#FF5252'
+                              : isOpenNow
+                                ? '#4CAF50'
+                                : '#F44336'
+                          }
                         />
 
                         <Text
                           style={[
                             styles.infoText,
-                            { color: salonDetails.isOpen ? '#4CAF50' : '#F44336' },
+                            { color: isOpenNow ? '#4CAF50' : '#F44336' },
                           ]}
                         >
-                          {salonDetails.isOpen ? 'OPEN NOW' : 'CLOSED'}
+                          {isHolidayToday
+                            ? 'HOLIDAY'
+                            : isOpenNow
+                              ? 'OPEN NOW'
+                              : 'CLOSED'}
                         </Text>
+
                         <Text style={styles.infoSub}>
                           (
                           {salonDetails?.businessHours?.length > 0
@@ -304,7 +357,6 @@ const SalonDetailScreen = ({ route, navigation }) => {
                             : ''}
                           )
                         </Text>
-
                       </View>
 
                       {/* {salonDetails.businessHours &&
@@ -325,7 +377,12 @@ const SalonDetailScreen = ({ route, navigation }) => {
                       {weeklyOff.length > 0 && (
                         <View style={styles.infoRow}>
                           <Ionicons name="calendar-outline" size={16} color="#E1B378" />
-                          <Text style={styles.infoText}>
+
+                          <Text
+                            style={styles.infoText}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                          >
                             Weekly Off: {weeklyOff.join(', ')}
                           </Text>
                         </View>
@@ -478,7 +535,7 @@ const styles = StyleSheet.create({
 
   header: {
     position: 'absolute',
-    top: 10,
+    top: 30,
     left: 16,
     right: 16,
     zIndex: 10,
@@ -532,7 +589,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginLeft: 8,
     fontWeight: '600',
-    lineHeight: 20,
+    flex: 1,
   },
 
   infoSub: {
