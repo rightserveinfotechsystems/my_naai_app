@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
 // const serverUrl = "http://192.168.1.13:5004";
-const serverUrl = "http://192.168.1.8:5001";
+const serverUrl = "http://192.168.1.12:5001";
 // const serverUrl = "http://localhost:5001";
 // const serverUrl = "https://backend.mynaai.in"
 export const rzp_key = "rzp_test_SRombQCQU03uVL"
@@ -390,6 +390,22 @@ export const communication = {
                     "Authorization": `Bearer ${await getCookie()}`
                 },
             });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+   
+     deleteSalonService: async (serviceId) => {
+        try {
+            const response = await axios.post(`${getServerUrl()}/api/salons/delete-service`, { serviceId }, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            console.log("response.data", response.data);
+
             return response.data;
         } catch (error) {
             throw error;

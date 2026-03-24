@@ -66,6 +66,17 @@ const BookingSchedule = ({ route, navigation }) => {
     const slotTotalMinutes = slotHour * 60 + slotMinute;
 
     return bookedSlots.some(booked => {
+      if (
+        !booked ||
+        !booked.start ||
+        !booked.end ||
+        typeof booked.start !== 'string' ||
+        typeof booked.end !== 'string' ||
+        !booked.start.includes(':') ||
+        !booked.end.includes(':')
+      ) {
+        return false;
+      }
       const [startH, startM] = booked.start.split(':').map(Number);
       const [endH, endM] = booked.end.split(':').map(Number);
 
@@ -95,7 +106,13 @@ const BookingSchedule = ({ route, navigation }) => {
 
     const slots = [];
 
+    // for (let mins = openingMinutes; mins < closingMinutes; mins += 20) {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
     for (let mins = openingMinutes; mins < closingMinutes; mins += 20) {
+      // 👉 Skip past slots ONLY for today
+      if (selectedDate === 0 && mins <= currentMinutes) continue;
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
 
@@ -261,6 +278,13 @@ const BookingSchedule = ({ route, navigation }) => {
       hour12: true,
     });
   };
+
+  useEffect(() => {
+    if (timeSlots.length > 0 && selectedDate === 0) {
+      // 👉 pick first available slot
+      setSelectedTime(timeSlots[0].value);
+    }
+  }, [selectedDate, salon]);
 
   return (
     <SafeAreaView style={styles.container}>

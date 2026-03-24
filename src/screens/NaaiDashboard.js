@@ -542,7 +542,8 @@ const NaaiDashboard = ({ navigation }) => {
               }}
             >
               {/* <Ionicons name="location-outline" size={18} color="#E1B378" /> */}
-              <Text style={styles.linkText}>{item.address}</Text>
+              <Text style={styles.linkText} numberOfLines={2}
+                ellipsizeMode="tail">{item.address}</Text>
               {/* <Ionicons name="open-outline" size={14} color="#AAA" style={{ marginLeft: 4 }} /> */}
             </TouchableOpacity>
             {/* <Text style={styles.address}>{item.address}</Text> */}
@@ -973,7 +974,7 @@ const styles = StyleSheet.create({
   },
 
   name: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  genderName: { color: '#fff', fontSize: 14, fontWeight: '500' },
+  genderName: { color: '#fff', fontSize: 13, fontWeight: '500' },
 
   ratingRow: {
     flexDirection: 'row',

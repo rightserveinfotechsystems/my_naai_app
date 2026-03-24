@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import RNPickerSelect from 'react-native-picker-select';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { SALON_OPTIONS } from '../utilities/citiesRequestArray';
+import { DEFAULT_SERVICES, SALON_OPTIONS } from '../utilities/citiesRequestArray';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
@@ -69,7 +69,9 @@ const SalonBusinessInfo = ({ navigation, route }) => {
             Alert.alert("Validation", "Opening and closing time cannot be same");
             return;
         }
-
+        const services = DEFAULT_SERVICES[genderType?.toLowerCase()] || [];
+        console.log("GenderType:", genderType);
+        console.log("Mapped Services:", DEFAULT_SERVICES[genderType?.toLowerCase()]);
         setLoading(true);
 
         const finalPayload = {
@@ -83,6 +85,7 @@ const SalonBusinessInfo = ({ navigation, route }) => {
                 breakStartTime: null,
                 breakEndTime: null,
             },
+            services: services,
 
         };
 
@@ -118,18 +121,6 @@ const SalonBusinessInfo = ({ navigation, route }) => {
                         {/* Step Indicator */}
                         <Text style={styles.stepText}>Step 2 of 2</Text>
 
-                        {/* Agent Code */}
-                        <View style={styles.inputBox}>
-                            <TextInput
-                                placeholder="Agent Code"
-                                placeholderTextColor="#999"
-                                keyboardType="number-pad"
-                                maxLength={10}
-                                value={agentCode}
-                                onChangeText={setAgentCode}
-                                style={styles.input}
-                            />
-                        </View>
 
                         {/* Salon Type */}
                         <View style={styles.inputBox}>
@@ -166,6 +157,20 @@ const SalonBusinessInfo = ({ navigation, route }) => {
                                 </Text>
                             </TouchableOpacity>
                         </View>
+
+                        {/* Agent Code */}
+                        <View style={styles.inputBox}>
+                            <TextInput
+                                placeholder="Agent Code"
+                                placeholderTextColor="#999"
+                                keyboardType="number-pad"
+                                maxLength={10}
+                                value={agentCode}
+                                onChangeText={setAgentCode}
+                                style={styles.input}
+                            />
+                        </View>
+
 
                         {/* Button */}
                         <TouchableOpacity

@@ -80,7 +80,7 @@ const NaaiLogin = ({ navigation }) => {
             {/* Title */}
 
             <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Login as Naai to your account</Text>
+            <Text style={styles.subtitle}>Login as Salon Owner</Text>
 
             {/* Phone Input */}
             <View style={styles.inputBox}>
@@ -200,6 +200,7 @@ const styles = StyleSheet.create({
   signup: {
     color: '#E8B97E',
     fontWeight: '600',
+    fontSize: 14,
   },
 
   phoneInput: {

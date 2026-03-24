@@ -34,6 +34,7 @@ const MENUS = [
   { label: 'About', screen: 'AboutScreen', icon: 'information-circle-outline' },
   { label: 'FAQ', screen: 'FAQScreen', icon: 'help-circle-outline' },
   { label: 'Terms & Conditions', screen: 'TermsScreen', icon: 'document-text-outline' },
+  { label: 'Subscription Plans', screen: 'SubscriptionsPlan', icon: 'document-text-outline' },
 ];
 
 const SalonAccountScreen = ({ navigation }) => {
@@ -112,8 +113,18 @@ const SalonAccountScreen = ({ navigation }) => {
 
 
         setProfileData(data);
-        setIsOpen(data?.isOpen);
+        // setIsOpen(data?.isOpen);
+        if (data?.businessHours?.length) {
+          const bh = data.businessHours[0];
 
+          const isTimeOpen = checkSalonOpenStatus(
+            bh.openingTime,
+            bh.closingTime,
+            bh.holidayDays || []
+          );
+
+          setIsOpen(isTimeOpen);
+        }
         // BASIC INFO
         setSalonName(data?.salonName || '');
         setSalonAddress(
@@ -362,20 +373,20 @@ const SalonAccountScreen = ({ navigation }) => {
         newBarbers,
 
         businessHours: [
-  {
-    scheduleId: profileData.businessHours[0]?.scheduleId,
-    openingTime: formatTimeForApi(openTime),
-    closingTime: formatTimeForApi(closeTime),
-    breakStartTime: '13:00:00',
-    breakEndTime: '15:00:00',
-    holidayDays:
-      holiday === 'NONE'
-        ? []
-        : typeof holiday === 'number'
-          ? [holiday]
-          : [],
-  },
-],
+          {
+            scheduleId: profileData.businessHours[0]?.scheduleId,
+            openingTime: formatTimeForApi(openTime),
+            closingTime: formatTimeForApi(closeTime),
+            breakStartTime: '13:00:00',
+            breakEndTime: '15:00:00',
+            holidayDays:
+              holiday === 'NONE'
+                ? []
+                : typeof holiday === 'number'
+                  ? [holiday]
+                  : [],
+          },
+        ],
 
       };
 
@@ -384,7 +395,7 @@ const SalonAccountScreen = ({ navigation }) => {
       const response = await communication.updateSalonProfile(payload);
 
       if (response?.status === 'SUCCESS') {
-        Alert.alert('Success', 'Salon profile updated successfully');
+        console.log('Success', 'Salon profile updated successfully');
         setEditVisible(false);
         salonProfile(salonId);
         console.log("response", response);
@@ -461,8 +472,27 @@ const SalonAccountScreen = ({ navigation }) => {
     }
   };
 
+  const checkSalonOpenStatus = (openingTime, closingTime, holidayDays = []) => {
+    const now = new Date();
 
+    const today = now.toLocaleDateString('en-US', { weekday: 'long' });
 
+    // ❌ Closed if today is holiday
+    if (holidayDays.includes(today)) {
+      return false;
+    }
+
+    const open = new Date();
+    const close = new Date();
+
+    const [openH, openM, openS] = openingTime.split(':');
+    const [closeH, closeM, closeS] = closingTime.split(':');
+
+    open.setHours(openH, openM, openS);
+    close.setHours(closeH, closeM, closeS);
+
+    return now >= open && now <= close;
+  };
 
 
   /* ---------------- LOGOUT ---------------- */
@@ -586,6 +616,31 @@ const SalonAccountScreen = ({ navigation }) => {
         },
       ]
     );
+  };
+
+  const handleDeleteService = (serviceId) => {
+    Alert.alert('Delete Product', 'Are you sure you want to delete this service?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const response = await communication.deleteSalonService(serviceId);
+            if (response?.status === 'SUCCESS') {
+              setServices(prev =>
+                prev.filter(s => s.id !== serviceId)
+              );
+              console.log('Deleted', 'Service deleted successfully');
+            } else {
+             console.log('Error', response?.message || 'Failed to delete service');
+            }
+          } catch (error) {
+           console.log('Error', error?.response?.data?.message || 'Failed to delete service');
+          }
+        },
+      },
+    ]);
   };
 
   if (profileLoading) {
@@ -896,13 +951,11 @@ const SalonAccountScreen = ({ navigation }) => {
                   }}
                 />
 
-                {/* <TouchableOpacity
-                  onPress={() =>
-                    setServices(services.filter(s => s.id !== service.id))
-                  }
+                <TouchableOpacity
+                  onPress={() => handleDeleteService(service.id)}
                 >
                   <Ionicons name="trash-outline" size={20} color="#E53935" />
-                </TouchableOpacity> */}
+                </TouchableOpacity>
               </View>
             ))}
 
@@ -1270,7 +1323,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#2A2A2A',
     borderRadius: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: 6,
     paddingVertical: 12,
     color: '#fff',
     marginBottom: 12,
@@ -1435,8 +1488,8 @@ const styles = StyleSheet.create({
   serviceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 10,
+    gap: 5,
+    marginBottom: 12,
   },
 
   smallInput: {

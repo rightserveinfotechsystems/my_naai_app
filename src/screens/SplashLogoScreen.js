@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: width * 0.5,
-    height: width * 0.5,
+    width: width * 0.7,
+    height: width * 0.7,
   },
 });

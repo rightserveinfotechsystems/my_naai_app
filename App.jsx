@@ -180,6 +180,7 @@ function AppStack({ userType }) {
       <Stack.Screen name="FAQScreen" component={FAQScreen} />
       <Stack.Screen name="TermsScreen" component={TermsScreen} />
       <Stack.Screen name="AboutScreen" component={AboutScreen} />
+      <Stack.Screen name="SubscriptionsPlan" component={SubscriptionsPlan} />
       <Stack.Screen name="AddOfflineCustomer" component={AddOfflineCustomer} />
       <Stack.Screen name="SalonNotifications" component={SalonNotifications} />
       <Stack.Screen name="BookingRequestScreen" component={BookingRequestScreen} />

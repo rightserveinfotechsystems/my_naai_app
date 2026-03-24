@@ -177,8 +177,8 @@ const styles = StyleSheet.create({
 
     serviceName: {
         color: '#fff',
-        fontWeight: '600',
-        fontSize: 16,
+        fontWeight: '500',
+        fontSize: 15,
     },
 
     serviceTime: {
@@ -224,8 +224,8 @@ const styles = StyleSheet.create({
     },
     servicePrice: {
         color: '#E8B97E',
-        fontSize: 16,
-        fontWeight: '700',
+        fontSize: 15,
+        fontWeight: '600',
         // marginTop: 4,
     }
 

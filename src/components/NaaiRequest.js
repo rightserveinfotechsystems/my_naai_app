@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
 
   title: {
     color: '#fff',
-    fontSize: 28,
+    fontSize: 25,
     fontWeight: '700',
     marginBottom: 30,
   },
