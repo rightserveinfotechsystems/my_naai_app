@@ -136,10 +136,10 @@ const SalonInfoForRegister = ({ navigation, route }) => {
       Alert.alert('Validation', 'Please enter address');
       return false;
     }
-    if (!city) {
-      Alert.alert('Validation', 'Please select a city');
-      return false;
-    }
+    // if (!city) {
+    //   Alert.alert('Validation', 'Please select a city');
+    //   return false;
+    // }
     // if (closingTime <= openingTime) {
     //   Alert.alert("Validation", "Closing time must be after opening time");
     //   return false;
@@ -193,17 +193,17 @@ const SalonInfoForRegister = ({ navigation, route }) => {
       Alert.alert('Validation', 'Please enter Salon name');
       return;
     }
-    if (!city) {
-      Alert.alert('Validation', 'Please select a city');
-      return;
-    }
+    // if (!city) {
+    //   Alert.alert('Validation', 'Please select a city');
+    //   return;
+    // }
 
     const step1Data = {
       ownerName: naaiName,
       phoneNumber: mobile,
       salonName: salonName,
       addressLine1: address,
-      city: city,
+      // city: city,
       latitude,
       longitude,
       tempToken,
@@ -262,7 +262,8 @@ const SalonInfoForRegister = ({ navigation, route }) => {
               </View>
             </View>
 
-            <View style={styles.inputBox}>
+
+            <View style={[styles.inputBox, { height: 100, alignItems: 'flex-start' }]}>
               <TextInput
                 placeholder="Fetching location..."
                 placeholderTextColor="#999"
@@ -270,11 +271,10 @@ const SalonInfoForRegister = ({ navigation, route }) => {
                 editable={false}
                 multiline={true}
                 numberOfLines={4}
-                // textAlignVertical="top"
-                style={[styles.input, styles.textArea]}
+                style={[styles.input, { textAlignVertical: 'top' }]}
               />
             </View>
-            <View style={styles.inputBox}>
+            {/* <View style={styles.inputBox}>
               <RNPickerSelect
                 placeholder={{ label: 'Select City', value: null }}
                 value={city}
@@ -287,7 +287,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
                 }}
                 useNativeAndroidPickerStyle={false}
               />
-            </View>
+            </View> */}
             {/* <View style={styles.inputBox}>
               <TextInput
                 placeholder="City"
@@ -501,9 +501,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
   },
-  textArea: {
-    height: 100,
-    paddingTop: 12,
+  textAreaBox: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    height: 120,
+    marginBottom: 18,
+  },
+
+  textAreaInput: {
+    color: '#fff',
+    fontSize: 15,
+    textAlignVertical: 'top',
   }
 
 

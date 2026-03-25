@@ -183,10 +183,10 @@ const SalonProduct = () => {
                     setProducts(prev => [newProduct, ...prev]);
                 }
 
-                Alert.alert(
-                    'Success',
-                    editId ? 'Product updated successfully' : 'Product added successfully'
-                );
+                // Alert.alert(
+                //     'Success',
+                //     editId ? 'Product updated successfully' : 'Product added successfully'
+                // );
 
                 resetForm();
             } else {
@@ -242,12 +242,12 @@ const SalonProduct = () => {
                         const response = await communication.deleteProduct(productId);
                         if (response?.status === 'SUCCESS') {
                             setProducts(prev => prev.filter(p => p.id !== productId));
-                            Alert.alert('Deleted', 'Product deleted successfully');
+                            console.log('Deleted', 'Product deleted successfully');
                         } else {
-                            Alert.alert('Error', response?.message || 'Failed to delete product');
+                            console.log('Error', response?.message || 'Failed to delete product');
                         }
                     } catch (error) {
-                        Alert.alert('Error', error?.response?.data?.message || 'Failed to delete product');
+                        console.log('Error', error?.response?.data?.message || 'Failed to delete product');
                     }
                 },
             },

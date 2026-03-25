@@ -34,7 +34,7 @@ const MENUS = [
   { label: 'About', screen: 'AboutScreen', icon: 'information-circle-outline' },
   { label: 'FAQ', screen: 'FAQScreen', icon: 'help-circle-outline' },
   { label: 'Terms & Conditions', screen: 'TermsScreen', icon: 'document-text-outline' },
-  { label: 'Subscription Plans', screen: 'SubscriptionsPlan', icon: 'document-text-outline' },
+  { label: 'Subscription Plans', screen: 'SubscriptionsPlan', icon: 'card-outline' },
 ];
 
 const SalonAccountScreen = ({ navigation }) => {
@@ -86,6 +86,8 @@ const SalonAccountScreen = ({ navigation }) => {
   const userByIdInfo = async () => {
     try {
       const userData = await AsyncStorage.getItem('mynaaiUser');
+      console.log("userData", userData);
+
       const parsedUser = JSON.parse(userData);
       console.log("parsedUser", parsedUser);
       setsalonId(parsedUser?.salon?.salonId)
@@ -633,10 +635,10 @@ const SalonAccountScreen = ({ navigation }) => {
               );
               console.log('Deleted', 'Service deleted successfully');
             } else {
-             console.log('Error', response?.message || 'Failed to delete service');
+              console.log('Error', response?.message || 'Failed to delete service');
             }
           } catch (error) {
-           console.log('Error', error?.response?.data?.message || 'Failed to delete service');
+            console.log('Error', error?.response?.data?.message || 'Failed to delete service');
           }
         },
       },
@@ -701,7 +703,7 @@ const SalonAccountScreen = ({ navigation }) => {
         </View>
 
         {/* STATUS */}
-        <View style={styles.statusRow}>
+        {/* <View style={styles.statusRow}>
           <Text style={styles.statusLabel}>Salon Open/Close Status</Text>
           <TouchableOpacity
             style={[
@@ -715,7 +717,7 @@ const SalonAccountScreen = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
 
-        </View>
+        </View> */}
 
         {/* MENU */}
         <View style={styles.menuCard}>
@@ -723,7 +725,17 @@ const SalonAccountScreen = ({ navigation }) => {
             <TouchableOpacity
               key={item.label}
               style={styles.menuRow}
-              onPress={() => navigation.navigate(item.screen)}
+              // onPress={() => navigation.navigate(item.screen)}
+              onPress={() => {
+                if (item.screen === 'SubscriptionsPlan') {
+                  navigation.navigate('SubscriptionsPlan', {
+                    userData: profileData,
+                    isUpgrade: true,
+                  });
+                } else {
+                  navigation.navigate(item.screen);
+                }
+              }}
             >
               <View style={styles.menuLeft}>
                 <Ionicons name={item.icon} size={20} color={GOLD} />

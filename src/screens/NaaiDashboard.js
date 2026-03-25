@@ -707,7 +707,7 @@ const NaaiDashboard = ({ navigation }) => {
                 </View>
 
                 {/* City Dropdown */}
-                <View style={{ position: 'relative', zIndex: 20 }}>
+                {/* <View style={{ position: 'relative', zIndex: 20 }}>
                   <TouchableOpacity
                     style={styles.dropdownBtn}
                     onPress={() => setShowCityDropdown(!showCityDropdown)}
@@ -745,7 +745,7 @@ const NaaiDashboard = ({ navigation }) => {
                       ))}
                     </View>
                   )}
-                </View>
+                </View> */}
 
               </View>
             </View>
@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
   },
 
   name: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  genderName: { color: '#fff', fontSize: 13, fontWeight: '500' },
+  genderName: { color: '#fff', fontSize: 13, fontWeight: '500', letterSpacing: 2 },
 
   ratingRow: {
     flexDirection: 'row',

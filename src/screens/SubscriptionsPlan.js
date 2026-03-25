@@ -37,7 +37,8 @@ const plans = [
 ];
 
 const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
-  const { userData } = route.params;
+  // const { userData } = route.params;
+  const { userData, isUpgrade } = route.params || {};
   console.log("Received Data:", userData);
   const insets = useSafeAreaInsets();
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -84,51 +85,77 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
       userData.phoneNumber,
       amount,
       async (paymentResponse) => {
-
         try {
-          const finalPayload = {
-            ...userData,
-            planType: selectedPlan,
-            paymentId: paymentResponse.paymentId,
-            orderId: paymentResponse.orderId,
-            signature: paymentResponse.signature,
-          };
 
-          const res = await communication.createSalon(finalPayload, {
-            headers: {
-              Authorization: `Bearer ${userData.tempToken}`,
+          let res;
 
-            }
-          });
+          if (isUpgrade) {
+            // ✅ RENEW PLAN FLOW
+            const renewPayload = {
+              planType: selectedPlan,
+              paymentId: paymentResponse.paymentId,
+              totalAmount: amount,
+            };
 
-          if (res?.status === "SUCCESS") {
-            // await AsyncStorage.setItem('token', res.token);
-            console.log("res.token", res.token);
-            await setCookie(res.token);
-            await AsyncStorage.setItem('userType', 'SALON');
+            console.log("Renew Payload:", renewPayload);
 
-            await AsyncStorage.setItem(
-              'mynaaiUser',
-              JSON.stringify({
-                salon: {
-                  salonId: res.salonId,
-                },
-              })
-            );
+            res = await communication.renewSalon(renewPayload);
 
-            await AsyncStorage.setItem('redirectTab', 'Account');
+          } else {
+            // ✅ NEW REGISTRATION FLOW
+            const finalPayload = {
+              ...userData,
+              planType: selectedPlan,
+              paymentId: paymentResponse.paymentId,
+              orderId: paymentResponse.orderId,
+              signature: paymentResponse.signature,
+            };
 
-            console.log("Success", "Account Created Successfully!");
-            
-
-            DeviceEventEmitter.emit('AUTH_CHANGED');
+            res = await communication.createSalon(finalPayload, {
+              headers: {
+                Authorization: `Bearer ${userData.tempToken}`,
+              },
+            });
           }
-          else {
-            Alert.alert("Error", res?.message);
+
+          // ✅ COMMON SUCCESS HANDLING
+          if (res?.status === "SUCCESS") {
+
+            if (isUpgrade) {
+              console.log("Success", "Plan renewed successfully ✅");
+              navigation.goBack();
+            } else {
+              await setCookie(res.token);
+              await AsyncStorage.setItem('userType', 'SALON');
+
+              await AsyncStorage.setItem(
+                'mynaaiUser',
+                JSON.stringify({
+                  salon: {
+                    salonId: res.salonId,
+                  },
+                })
+              );
+
+              await AsyncStorage.setItem('isLoggedIn', 'true');
+
+              await AsyncStorage.setItem('redirectTab', 'Account');
+
+              DeviceEventEmitter.emit('AUTH_CHANGED');
+              onLoginSuccess && onLoginSuccess('SALON');
+              // navigation.reset({
+              //   index: 0,
+              //   routes: [{ name: 'Salon' }],
+              // });
+            }
+
+          } else {
+            Alert.alert("Error", res?.message || "Something went wrong");
           }
 
         } catch (err) {
-          Alert.alert("Error", "Account creation failed");
+          console.log("Payment Flow Error:", err);
+          Alert.alert("Error", "Payment process failed");
         } finally {
           setLoading(false);
         }

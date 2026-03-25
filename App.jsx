@@ -505,6 +505,7 @@ export default function App() {
   return (
     <NotificationProvider userId={userId}>
       <NavigationContainer
+        key={isLoggedIn ? 'app' : 'auth'}
         ref={navigationRef}
         onReady={() => {
           isNavigationReady.current = true;
