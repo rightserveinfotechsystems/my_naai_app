@@ -410,7 +410,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         color="#E1B378"
                       />
                       <Text style={styles.linkText}>{address}</Text>
-                      <Ionicons name="open-outline" size={14} color="#AAA" />
+                      {/* <Ionicons name="open-outline" size={14} color="#AAA" />  */}
                     </TouchableOpacity>
 
                     {/* CALL */}
@@ -574,9 +574,9 @@ const styles = StyleSheet.create({
 
 
   infoBox: {
-    backgroundColor: '#2A2A2A',
-    borderRadius: 14,
-    padding: 14,
+    // backgroundColor: '#2A2A2A',
+    // borderRadius: 14,
+    // padding: 14,
     marginTop: 14,
   },
   infoRow: {

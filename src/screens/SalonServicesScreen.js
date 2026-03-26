@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         borderRadius: 16,
         width: '48%',
-        minHeight: 80,
+        minHeight: 60,
         justifyContent: 'center',
     },
 
@@ -216,8 +216,8 @@ const styles = StyleSheet.create({
 
     checkIcon: {
         position: 'absolute',
-        top: 8,
-        right: 8,
+        bottom: 2,
+        right: 0,
     },
     bookBtnDisabled: {
         opacity: 0.4,

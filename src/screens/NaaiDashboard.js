@@ -505,13 +505,13 @@ const NaaiDashboard = ({ navigation }) => {
     {status.text}
   </Text> */}
 
-              {status.openingTime && (
+              {/* {status.openingTime && (
                 <Text style={{ color: '#aaa', fontSize: 12 }}>
                   (
                   {formatTime12Hour(status.openingTime)} - {formatTime12Hour(status.closingTime)}
                   )
                 </Text>
-              )}
+              )} */}
             </View>
             {/* {distance !== null && (
               <View style={styles.row}>
@@ -542,7 +542,7 @@ const NaaiDashboard = ({ navigation }) => {
               }}
             >
               {/* <Ionicons name="location-outline" size={18} color="#E1B378" /> */}
-              <Text style={styles.linkText} numberOfLines={2}
+              <Text style={styles.linkText} numberOfLines={3}
                 ellipsizeMode="tail">{item.address}</Text>
               {/* <Ionicons name="open-outline" size={14} color="#AAA" style={{ marginLeft: 4 }} /> */}
             </TouchableOpacity>
@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
   },
 
   name: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  genderName: { color: '#fff', fontSize: 13, fontWeight: '500', letterSpacing: 2 },
+  genderName: { color: '#bcb3b3c0', fontSize: 14, fontWeight: '500', letterSpacing: 1, marginBottom: 6 },
 
   ratingRow: {
     flexDirection: 'row',
