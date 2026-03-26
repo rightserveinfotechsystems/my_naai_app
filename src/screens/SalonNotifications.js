@@ -22,13 +22,14 @@ const SalonNotifications = ({ route, navigation }) => {
     const [refreshing, setRefreshing] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
 
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            title: 'Notifications',
-            headerStyle: { backgroundColor: '#121212' },
-            headerTintColor: '#fff',
-        });
-    }, [navigation]);
+    // useLayoutEffect(() => {
+    //     navigation.setOptions({
+    //         title: 'Notifications',
+    //         headerStyle: { backgroundColor: '#121212' },
+    //         headerTintColor: '#fff',
+    //     });
+    // }, [navigation]);
+
 
     useEffect(() => {
         fetchNotifications(1, false);
@@ -108,6 +109,17 @@ const SalonNotifications = ({ route, navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
+
+            {/* 🔥 Custom Header */}
+            <View style={styles.header}>
+                <Ionicons
+                    name="arrow-back"
+                    size={24}
+                    color="#fff"
+                    onPress={() => navigation.goBack()}
+                />
+                <Text style={styles.headerTitle}>Notifications</Text>
+            </View>
             {loading ? (
                 <ActivityIndicator size="large" color="#E1B378" style={{ marginTop: 40 }} />
             ) : (
@@ -115,7 +127,7 @@ const SalonNotifications = ({ route, navigation }) => {
                     data={notifications}
                     keyExtractor={item => item.notificationId}
                     renderItem={renderItem}
-                    contentContainerStyle={{ padding: 16 }}
+                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing}
@@ -149,46 +161,67 @@ const styles = StyleSheet.create({
         backgroundColor: '#121212',
     },
 
-    card: {
+    /* 🔥 HEADER */
+    header: {
         flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 0.5,
+        borderBottomColor: '#2a2a2a',
+        marginBottom: 10,
+    },
+
+    headerTitle: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '600',
+        marginLeft: 12,
+    },
+
+    /* 🔥 CARD */
+    card: {
         backgroundColor: '#1E1E1E',
-        borderRadius: 18,
-        padding: 16,
-        marginBottom: 14,
+        borderRadius: 16,
+        padding: 14,
+        marginBottom: 12,
+
+        // subtle shadow (Android)
+        elevation: 2,
     },
 
     textWrap: {
-        marginLeft: 12,
         flex: 1,
     },
 
     title: {
         color: '#fff',
         fontSize: 15,
-        fontWeight: '700',
+        fontWeight: '600',
     },
 
     message: {
-        color: '#aaa',
-        fontSize: 14,
+        color: '#bbb',
+        fontSize: 13.5,
         marginTop: 4,
-        lineHeight: 20,
+        lineHeight: 18,
     },
 
     time: {
-        color: '#666',
+        color: '#888',
         fontSize: 11,
-        marginTop: 8,
+        marginTop: 6,
     },
 
+    /* 🔥 EMPTY STATE */
     empty: {
         alignItems: 'center',
-        marginTop: 100,
+        marginTop: 120,
     },
 
     emptyText: {
         color: '#777',
-        marginTop: 12,
-        fontSize: 14,
+        marginTop: 10,
+        fontSize: 13,
     },
 });

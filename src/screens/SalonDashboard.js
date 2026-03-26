@@ -239,19 +239,19 @@ const SalonDashboard = ({ navigation }) => {
                 <Ionicons name="add" size={22} color="#000" />
               </TouchableOpacity> */}
 
-              {/* <TouchableOpacity
+              <TouchableOpacity
                 style={styles.iconBtn}
                 onPress={() =>
                   navigation.navigate('SalonNotifications', { salonId, onReadComplete: fetchNotificationCount })
                 }
               >
-                <Ionicons name="notifications-outline" size={20} color="#000" /> */}
-              {/* {notificationCount > 0 && (
+                <Ionicons name="notifications-outline" size={20} color="#000" />
+              {notificationCount > 0 && (
                   <View style={styles.badge}>
                     <Text style={styles.badgeText}>{notificationCount}</Text>
                   </View>
-                )} */}
-              {/* </TouchableOpacity> */}
+                )}
+              </TouchableOpacity>
             </View>
           </View>
 
