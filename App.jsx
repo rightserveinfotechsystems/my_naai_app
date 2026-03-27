@@ -139,7 +139,10 @@ function SalonTabs() {
 /* ---------- AUTH STACK ---------- */
 function AuthStack({ onLoginSuccess }) {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{
+      headerShown: false, animation: 'slide_from_right',
+      contentStyle: { backgroundColor: '#0F0F0F' },
+    }}>
       <Stack.Screen name="SplashLogo" component={SplashLogoScreen} />
       <Stack.Screen name="SplashScreen" component={SplashScreen} />
       {/* <Stack.Screen name="UserLogin">

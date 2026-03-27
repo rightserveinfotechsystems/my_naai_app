@@ -241,7 +241,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                   </View>
                 </View>
 
-                <ScrollView contentContainerStyle={{ paddingBottom: 180, marginTop: 60 }}>
+                <ScrollView contentContainerStyle={{ paddingBottom: 180, marginTop: 80 }}>
                   {/* -------------------- SLIDER -------------------- */}
                   <ScrollView
                     ref={scrollRef}

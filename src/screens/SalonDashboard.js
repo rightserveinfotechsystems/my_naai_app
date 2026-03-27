@@ -129,14 +129,14 @@ const SalonDashboard = ({ navigation }) => {
             try {
               const response = await communication.bookingDone({ salonId, bookingId });
               if (response?.status === 'SUCCESS') {
-                Alert.alert('Success', 'Service completed successfully');
+                console.log('Success', 'Service completed successfully');
                 getCustomerList(1, false);
                 fetchNotificationCount();
               } else {
-                Alert.alert('Error', 'Unable to complete service');
+                console.log('Error', 'Unable to complete service');
               }
             } catch (error) {
-              Alert.alert('Error', error?.response?.data?.message || 'Something went wrong');
+              console.log('Error', error?.response?.data?.message || 'Something went wrong');
             }
           },
         },
@@ -181,7 +181,21 @@ const SalonDashboard = ({ navigation }) => {
     <View style={styles.card}>
       <View style={styles.infoRow}>
         <View style={styles.infoLeft}>
-          <Text style={styles.name}>{item?.userName || 'Guest'}</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+
+            <Text style={styles.name}>
+              {item?.userName || 'Guest'}
+            </Text>
+
+            <TouchableOpacity
+              style={styles.doneBtn}
+              onPress={() => handleBookingDone(item.bookingId)}
+            >
+              <Text style={styles.doneText}>Done</Text>
+            </TouchableOpacity>
+
+          </View>
+
 
           {item?.barberName && (
             <View style={styles.row}>
@@ -212,9 +226,9 @@ const SalonDashboard = ({ navigation }) => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.doneBtn} onPress={() => handleBookingDone(item.bookingId)}>
+        {/* <TouchableOpacity style={styles.doneBtn} onPress={() => handleBookingDone(item.bookingId)}>
           <Text style={styles.doneText}>Done</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </View>
   );
@@ -246,11 +260,11 @@ const SalonDashboard = ({ navigation }) => {
                 }
               >
                 <Ionicons name="notifications-outline" size={20} color="#000" />
-              {notificationCount > 0 && (
+                {/* {notificationCount > 0 && (
                   <View style={styles.badge}>
                     <Text style={styles.badgeText}>{notificationCount}</Text>
                   </View>
-                )}
+                )} */}
               </TouchableOpacity>
             </View>
           </View>

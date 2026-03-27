@@ -21,6 +21,8 @@ const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
 const SalonBusinessInfo = ({ navigation, route }) => {
     const { step1Data } = route.params;
+    console.log("step1Data business data", step1Data);
+
 
     const getDefaultOpeningTime = () => {
         const d = new Date();

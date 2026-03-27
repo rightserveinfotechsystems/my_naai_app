@@ -621,7 +621,7 @@ const SalonAccountScreen = ({ navigation }) => {
   };
 
   const handleDeleteService = (serviceId) => {
-    Alert.alert('Delete Product', 'Are you sure you want to delete this service?', [
+    Alert.alert('Delete Service', 'Are you sure you want to delete this service?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -639,6 +639,33 @@ const SalonAccountScreen = ({ navigation }) => {
             }
           } catch (error) {
             console.log('Error', error?.response?.data?.message || 'Failed to delete service');
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleDeleteBarber = (barberId) => {
+    Alert.alert('Delete Barber', 'Are you sure you want to delete this barber?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const response = await communication.deleteSalonBarber(barberId);
+            console.log("barber delete response", response);
+
+            if (response?.status === 'SUCCESS') {
+              setBarbers(prev =>
+                prev.filter(b => b.id !== barberId)
+              );
+              console.log('Barber deleted successfully');
+            } else {
+              console.log('Error', response?.message || 'Failed to delete barber');
+            }
+          } catch (error) {
+            console.log('Error', error?.response?.data?.message || 'Failed to delete barber');
           }
         },
       },
@@ -1109,7 +1136,11 @@ const SalonAccountScreen = ({ navigation }) => {
                         <Text style={styles.statusPillText}>{opt.label}</Text>
                       </TouchableOpacity>
                     ))}
-
+                    <TouchableOpacity
+                      onPress={() => handleDeleteBarber(b.id)}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="#E53935" />
+                    </TouchableOpacity>
                   </View>
                 </View>
               </View>

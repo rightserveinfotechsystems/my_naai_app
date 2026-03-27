@@ -188,7 +188,7 @@ export default function BookingRequestScreen({ route, navigation }) {
             <View style={styles.modalBox}>
               <Text style={styles.modalTitle}>Select Delay Time</Text>
 
-              {[15, 30, 60].map(min => (
+              {[20, 40, 60].map(min => (
                 <TouchableOpacity
                   key={min}
                   style={[
@@ -198,11 +198,12 @@ export default function BookingRequestScreen({ route, navigation }) {
                   disabled={actionLoading}
                   onPress={() => handleOwnerAction("DELAY", min)}
                 >
-                  {actionLoading && selectedAction === "DELAY" ? (
+                  {/* {actionLoading && selectedAction === "DELAY" ? (
                     <ActivityIndicator color="#E1B378" />
                   ) : (
                     <Text style={styles.timeText}>+{min} Minutes</Text>
-                  )}
+                  )} */}
+                  <Text style={styles.timeText}>+{min} Minutes</Text>
                 </TouchableOpacity>
               ))}
 
@@ -226,6 +227,14 @@ export default function BookingRequestScreen({ route, navigation }) {
         </Modal>
 
       </ScrollView>
+      {actionLoading && (
+        <View style={styles.fullScreenLoader}>
+          <ActivityIndicator size="large" color="#E1B378" />
+          <Text style={{ color: '#fff', marginTop: 10 }}>
+            Processing...
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -376,5 +385,16 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: '#999',
     textAlign: 'center',
+  },
+  fullScreenLoader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
   },
 });

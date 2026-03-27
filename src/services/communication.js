@@ -12,10 +12,12 @@ export const rzp_key = "rzp_test_SRombQCQU03uVL"
 // 
 
 export function getServerUrl() {
+    // return "http://192.168.1.12:5001";
     return "https://backend.mynaai.in";
 }
 
 const api = axios.create({
+    // baseURL: "http://192.168.1.12:5001",
     baseURL: "https://backend.mynaai.in",
 });
 // console.log("api", api);
@@ -483,6 +485,22 @@ export const communication = {
     deleteSalonService: async (serviceId) => {
         try {
             const response = await api.post(`/api/salons/delete-service`, { serviceId }, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            console.log("response.data", response.data);
+
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    deleteSalonBarber: async (barberId) => {
+        try {
+            const response = await api.delete(`/api/barbers/delete-barber`, {
+                data: { barberId },
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`

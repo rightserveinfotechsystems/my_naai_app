@@ -21,6 +21,9 @@ const BookingSchedule = ({ route, navigation }) => {
   // const { salon } = route.params;
   const { salon, selectedServices } = route.params;
   const bookedSlots = salon?.bookedSlots || [];
+  // const bookedSlots = salon?.data || [];
+  console.log("bookedSlots", bookedSlots);
+
 
 
   console.log("salon", salon);
@@ -59,34 +62,59 @@ const BookingSchedule = ({ route, navigation }) => {
   };
 
   /* -------------------- CHECK IF SLOT IS BOOKED -------------------- */
+  // const isSlotBooked = (slotValue) => {
+  //   if (!bookedSlots?.length) return false;
+
+  //   const [slotHour, slotMinute] = slotValue.split(':').map(Number);
+  //   const slotTotalMinutes = slotHour * 60 + slotMinute;
+
+  //   return bookedSlots.some(booked => {
+  //     if (
+  //       !booked ||
+  //       !booked.start ||
+  //       !booked.end ||
+  //       typeof booked.start !== 'string' ||
+  //       typeof booked.end !== 'string' ||
+  //       !booked.start.includes(':') ||
+  //       !booked.end.includes(':')
+  //     ) {
+  //       return false;
+  //     }
+  //     const [startH, startM] = booked.start.split(':').map(Number);
+  //     const [endH, endM] = booked.end.split(':').map(Number);
+
+  //     const startMinutes = startH * 60 + startM;
+  //     const endMinutes = endH * 60 + endM;
+
+  //     return (
+  //       slotTotalMinutes >= startMinutes &&
+  //       slotTotalMinutes < endMinutes
+  //     );
+  //   });
+  // };
   const isSlotBooked = (slotValue) => {
     if (!bookedSlots?.length) return false;
 
-    const [slotHour, slotMinute] = slotValue.split(':').map(Number);
-    const slotTotalMinutes = slotHour * 60 + slotMinute;
+    const toMinutes = (time) => {
+      const clean = time.slice(0, 5); // "15:30:00" → "15:30"
+      const [h, m] = clean.split(':').map(Number);
+      return h * 60 + m;
+    };
 
-    return bookedSlots.some(booked => {
-      if (
-        !booked ||
-        !booked.start ||
-        !booked.end ||
-        typeof booked.start !== 'string' ||
-        typeof booked.end !== 'string' ||
-        !booked.start.includes(':') ||
-        !booked.end.includes(':')
-      ) {
-        return false;
-      }
-      const [startH, startM] = booked.start.split(':').map(Number);
-      const [endH, endM] = booked.end.split(':').map(Number);
+    const slotMinutes = toMinutes(slotValue);
 
-      const startMinutes = startH * 60 + startM;
-      const endMinutes = endH * 60 + endM;
+    // ✅ find selected date object
+    const dayData = bookedSlots.find(
+      (b) => b.date === bookingDate
+    );
 
-      return (
-        slotTotalMinutes >= startMinutes &&
-        slotTotalMinutes < endMinutes
-      );
+    if (!dayData || !dayData.slots?.length) return false;
+
+    return dayData.slots.some((s) => {
+      const startMinutes = toMinutes(s.start);
+      const endMinutes = toMinutes(s.end);
+
+      return slotMinutes >= startMinutes && slotMinutes < endMinutes;
     });
   };
 
@@ -640,13 +668,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   timeSlotBooked: {
-    backgroundColor: '#3A1F1F',
+    backgroundColor: '#2e1b1b',
     borderWidth: 1,
-    borderColor: '#F44336',
+    // borderColor: '#F44336',
   },
 
   timeSlotBookedText: {
-    color: '#F44336',
+    color: '#4e3331',
   },
   pastSlot: {
     backgroundColor: "#2A2A2A",
@@ -659,4 +687,8 @@ const styles = StyleSheet.create({
   disabledText: {
     color: "#888",
   },
+  //   timeSlotBooked: {
+  //   backgroundColor: '#F44336',
+  //   opacity: 0.4,
+  // },
 });

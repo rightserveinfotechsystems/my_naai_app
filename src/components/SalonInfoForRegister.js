@@ -20,6 +20,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoding';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import messaging from '@react-native-firebase/messaging';
 
 Geocoder.init("AIzaSyCz32prVTCy8x0xtd2mB2Q8rTYmvbqi8Tw");
 
@@ -55,6 +56,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
   const [closingTime, setClosingTime] = useState(getDefaultClosingTime());
   const [showOpenPicker, setShowOpenPicker] = useState(false);
   const [showClosePicker, setShowClosePicker] = useState(false);
+  const [deviceToken, setDeviceToken] = useState(null);
   const [loading, setLoading] = useState(false);
 
   /* ---------------- VALIDATION ---------------- */
@@ -184,7 +186,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
   //     userData: payload,
   //   });
   // };
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!naaiName.trim()) {
       Alert.alert('Validation', 'Please enter Naai name');
       return;
@@ -197,6 +199,13 @@ const SalonInfoForRegister = ({ navigation, route }) => {
     //   Alert.alert('Validation', 'Please select a city');
     //   return;
     // }
+    //  const deviceToken = await getDeviceToken();
+
+    if (!deviceToken) {
+      Alert.alert("Please wait", "Getting device token...");
+      return;
+    }
+    const token = await messaging().getToken();
 
     const step1Data = {
       ownerName: naaiName,
@@ -207,13 +216,29 @@ const SalonInfoForRegister = ({ navigation, route }) => {
       latitude,
       longitude,
       tempToken,
+      // deviceToken: messaging().getToken(),
+      deviceToken: token,
     };
+    console.log("step1Data", step1Data);
 
     navigation.navigate("SalonBusinessInfo", {
       step1Data,
     });
   };
 
+  useEffect(() => {
+    const getDeviceToken = async () => {
+      try {
+        const token = await messaging().getToken();
+        console.log('FCM DEVICE TOKEN salon registration:', token);
+        setDeviceToken(token);
+      } catch (e) {
+        console.log('FCM token error', e);
+      }
+    };
+
+    getDeviceToken();
+  }, []);
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
