@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,12 +7,14 @@ import {
   Alert,
   ActivityIndicator,
   DeviceEventEmitter,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { paymentForMembership } from "../utilities/paymentForMembership";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { communication, setCookie } from "../services/communication";
+import { useFocusEffect } from "@react-navigation/native";
 
 const plans = [
   {
@@ -36,14 +38,23 @@ const plans = [
   },
 ];
 
-const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
+const RenewalSubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
   // const { userData } = route.params;
-  const { userData, isUpgrade } = route.params || {};
-  console.log("Received Data:", userData);
+  // const { userData, isUpgrade } = route.params || {};
+  // console.log("Received Data:", userData);
   const insets = useSafeAreaInsets();
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        () => true
+      );
 
+      return () => subscription.remove();
+    }, [])
+  );
   const createPaymentOrder = async (amount) => {
     try {
       const res = await communication.createPaymentOrder({
@@ -71,7 +82,7 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
 
     setLoading(true);
 
-    // 🔥 1. Create Order
+    // 🔥 Create Order
     const orderData = await createPaymentOrder(amount);
 
     if (!orderData) {
@@ -79,76 +90,42 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
       return;
     }
 
-    // 🔥 2. Open Payment Gateway
+    // 🔥 Payment Gateway
     paymentForMembership(
-      userData.ownerName,
-      userData.phoneNumber,
+      "",
+      "",
       amount,
       async (paymentResponse) => {
         try {
+          const renewPayload = {
+            planType: selectedPlan,
+            paymentId: paymentResponse.paymentId,
+            totalAmount: amount,
+          };
 
-          let res;
+          console.log("Renew Payload:", renewPayload);
 
-          if (isUpgrade) {
-            // ✅ RENEW PLAN FLOW
-            const renewPayload = {
-              planType: selectedPlan,
-              paymentId: paymentResponse.paymentId,
-              totalAmount: amount,
-            };
+          const res = await communication.renewSalon(renewPayload);
 
-            console.log("Renew Payload:", renewPayload);
-
-            res = await communication.renewSalon(renewPayload);
-
-          } else {
-            // ✅ NEW REGISTRATION FLOW
-            const finalPayload = {
-              ...userData,
-              planType: selectedPlan,
-              paymentId: paymentResponse.paymentId,
-              orderId: paymentResponse.orderId,
-              signature: paymentResponse.signature,
-            };
-
-            res = await communication.createSalon(finalPayload, {
-              headers: {
-                Authorization: `Bearer ${userData.tempToken}`,
-              },
-            });
-          }
-
-          // ✅ COMMON SUCCESS HANDLING
           if (res?.status === "SUCCESS") {
-
-            if (isUpgrade) {
-              console.log("Success", "Plan renewed successfully ✅");
-              navigation.goBack();
-            } else {
-              await setCookie(res.token);
-              await AsyncStorage.setItem('userType', 'SALON');
-
-              await AsyncStorage.setItem(
-                'mynaaiUser',
-                JSON.stringify({
-                  salon: {
-                    salonId: res.salonId,
-                  },
-                })
-              );
-
-              await AsyncStorage.setItem('isLoggedIn', 'true');
-
-              await AsyncStorage.setItem('redirectTab', 'Account');
-
-              DeviceEventEmitter.emit('AUTH_CHANGED');
-              onLoginSuccess && onLoginSuccess('SALON');
-              // navigation.reset({
-              //   index: 0,
-              //   routes: [{ name: 'Salon' }],
-              // });
-            }
-
+            Alert.alert("Success", "Plan renewed successfully ✅", [
+              {
+                text: "OK",
+                onPress: () => {
+                  navigation.reset({
+                    index: 0,
+                    routes: [
+                      {
+                        name: "Salon",
+                        state: {
+                          routes: [{ name: "Account" }],
+                        },
+                      },
+                    ],
+                  });
+                },
+              },
+            ]);
           } else {
             Alert.alert("Error", res?.message || "Something went wrong");
           }
@@ -156,9 +133,6 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
         } catch (err) {
           console.log("Payment Flow Error:", err);
           Alert.alert("Error", "Payment process failed");
-          setLoading(false);
-
-          navigation.goBack();
         } finally {
           setLoading(false);
         }
@@ -172,15 +146,15 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header(insets)}>
+      {/* <View style={styles.header(insets)}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backBtn}
         >
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
-      </View>
-      <Text style={styles.title}>Choose Your Plan</Text>
+      </View> */}
+      <Text style={styles.title}>Choose Plan For Renew</Text>
 
       {plans.map(plan => (
         <TouchableOpacity
@@ -224,7 +198,7 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
   );
 };
 
-export default SubscriptionsPlan;
+export default RenewalSubscriptionsPlan;
 
 const styles = StyleSheet.create({
 

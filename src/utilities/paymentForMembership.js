@@ -9,10 +9,13 @@ export const paymentForMembership = (
   mobile,
   invest,
   submitFunction,
-  orderId // 👈 NEW PARAM
+  orderId, // 👈 NEW PARAM
+  onFailure
 ) => {
   const convertedAmount =
     Number(invest) === 0 ? 100 : Number(invest) * 100;
+  console.log("convertedAmount", convertedAmount);
+
 
   const options = {
     description: 'Transaction for register as a salon owner',
@@ -22,7 +25,7 @@ export const paymentForMembership = (
     amount: convertedAmount,
     name: 'MyNaai',
 
-    order_id: orderId, // 🔥 VERY IMPORTANT (ADD THIS)
+    order_id: orderId,
 
     prefill: {
       email: '',
@@ -30,7 +33,7 @@ export const paymentForMembership = (
       name: name || ''
     },
 
-    theme: { color: "#E8B97E" } // 👈 fix (see below)
+    theme: { color: "#E8B97E" }
   };
 
   RazorpayCheckout.open(options)
@@ -38,26 +41,29 @@ export const paymentForMembership = (
       submitFunction({
         paymentId: data.razorpay_payment_id,
         orderId: data.razorpay_order_id,
-        signature: data.razorpay_signature, // 👈 useful for backend verification
+        signature: data.razorpay_signature,
       });
     })
     .catch((error) => {
       Alert.alert('Payment Failed', error.message);
+      if (onFailure) {
+        onFailure(error);
+      }
     });
 };
 
 // Default styles
 export const defaultStyle = StyleSheet.create({
-    lightGoldColor: "#E8B97E",
-    // darkGreenColor: "#0e0740",
-    lightBlueColor: "#B4BFFB",
-    whiteColor: "#fff",
-    grayColor: "#ACACAC",
-    darkGrayColor: "#878787",
-    orangeColor: "#F8B146",
-    yellowColor: "#d4b402",
-    redColor: "#f74d2f",
-    greenColor: "#06d433",
-    fontFamilyBold: "Lato-Bold",
-    fontFamilyRegular: "Lato-Regular",
+  lightGoldColor: "#E8B97E",
+  // darkGreenColor: "#0e0740",
+  lightBlueColor: "#B4BFFB",
+  whiteColor: "#fff",
+  grayColor: "#ACACAC",
+  darkGrayColor: "#878787",
+  orangeColor: "#F8B146",
+  yellowColor: "#d4b402",
+  redColor: "#f74d2f",
+  greenColor: "#06d433",
+  fontFamilyBold: "Lato-Bold",
+  fontFamilyRegular: "Lato-Regular",
 });

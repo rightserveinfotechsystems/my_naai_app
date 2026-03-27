@@ -1,7 +1,8 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
-
+import { navigationRef } from "../../App.jsx";
+import { CommonActions } from "@react-navigation/native";
 // const serverUrl = "http://192.168.1.13:5004";
 // const serverUrl = "http://192.168.1.12:5001";
 // const serverUrl = "http://localhost:5001";
@@ -9,10 +10,84 @@ const serverUrl = "https://backend.mynaai.in"
 export const rzp_key = "rzp_test_SRombQCQU03uVL"
 // export const rzp_key = "rzp_test_RyX5e71Zpn3ofA"
 // 
+
 export function getServerUrl() {
-    return serverUrl;
+    return "https://backend.mynaai.in";
 }
-// Save token to AsyncStorage
+
+const api = axios.create({
+    baseURL: "https://backend.mynaai.in",
+});
+// console.log("api", api);
+
+
+api.interceptors.response.use(
+    //      response => {
+    //     console.log("SUCCESS RESPONSE");
+    //     return response;
+    //   },
+    //   error => {
+    //     console.log("INTERCEPTOR ERROR HIT");
+    //     console.log("FULL ERROR 👉", error?.response);
+    //     return Promise.reject(error);
+    //   }
+    // );
+    response => response,
+
+    error => {
+        const status = error?.response?.data?.status;
+        console.log("status", status);
+
+
+        if (status === "PLAN_EXPIRED") {
+            navigationRef.current.navigate("RenewalSubscriptionsPlan", {
+                isUpgrade: true,
+            });
+
+            // Alert.alert(
+            //     "Plan Expired",
+            //     "Your plan is finished, please renew",
+            //     [
+            //         {
+            //             text: "OK",
+            //             onPress: () => {
+            //                 isPlanAlertShown = false;
+
+            //                 if (navigationRef?.current) {
+            //                     navigationRef.current.dispatch(
+            //                         CommonActions.reset({
+            //                             routes: [
+            //                                 {
+            //                                     name: "Salon",
+            //                                     state: {
+            //                                         routes: [
+            //                                             {
+            //                                                 name: "Account",
+            //                                             },
+            //                                         ],
+            //                                     },
+            //                                 },
+            //                                 {
+            //                                     name: "SubscriptionsPlan",
+            //                                     params: { isUpgrade: true },
+            //                                 },
+            //                             ]
+            //                         })
+            //                     );
+            //                 }
+            //             },
+            //         },
+            //     ],
+            //     { cancelable: false }
+            // );
+        }
+
+        return Promise.reject(error);
+    }
+);
+
+
+
 // Save token to AsyncStorage
 export async function setCookie(token) {
     try {
@@ -50,7 +125,7 @@ export const communication = {
     //=================== User API===================//
     sendRegisterOtp: async (userData) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/users/send-otp-register`, userData, {
+            const response = await api.post(`/api/users/send-otp-register`, userData, {
                 headers: {
                     "Content-Type": "application/json",
                 }
@@ -62,7 +137,7 @@ export const communication = {
     },
     createUser: async (userData) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/users/create`, userData, {
+            const response = await api.post(`/api/users/create`, userData, {
                 headers: {
                     "Content-Type": "application/json",
                 }
@@ -74,7 +149,7 @@ export const communication = {
     },
     userLogin: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/users/send-otp`, payload, {
+            const response = await api.post(`/api/users/send-otp`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -86,7 +161,7 @@ export const communication = {
     },
     verifyLogin: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/users/verify-otp`, payload, {
+            const response = await api.post(`/api/users/verify-otp`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -99,7 +174,7 @@ export const communication = {
     // 
     salonByIdInfo: async ({ salonId }) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/get-salon-by-id`, { salonId }, {
+            const response = await api.post(`/api/salons/get-salon-by-id`, { salonId }, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -113,7 +188,7 @@ export const communication = {
     },
     bookSalonService: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/booking/book`, payload, {
+            const response = await api.post(`/api/booking/book`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -126,7 +201,7 @@ export const communication = {
     },
     createBookingRequest: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/bookingRequest/create-booking-request`, payload, {
+            const response = await api.post(`/api/bookingRequest/create-booking-request`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -140,7 +215,7 @@ export const communication = {
     },
     getBookingRequestById: async (bookingRequestId) => {
         try {
-            const response = await axios.get(`${getServerUrl()}/api/bookingRequest/get-bookingRequest-by-id/${bookingRequestId}/`, {
+            const response = await api.get(`/api/bookingRequest/get-bookingRequest-by-id/${bookingRequestId}/`, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -154,8 +229,7 @@ export const communication = {
     },
     bookingRequestOwnerAction: async (bookingRequestId, payload) => {
         try {
-            const response = await axios.post(
-                `${getServerUrl()}/api/bookingRequest/owner-action/${bookingRequestId}/`,
+            const response = await api.post(`/api/bookingRequest/owner-action/${bookingRequestId}/`,
                 payload,
                 {
                     headers: {
@@ -174,8 +248,7 @@ export const communication = {
     },
     customerDelayResponse: async (bookingRequestId, payload) => {
         try {
-            const response = await axios.post(
-                `${getServerUrl()}/api/bookingRequest/customer-delay-response/${bookingRequestId}/`,
+            const response = await api.post(`/api/bookingRequest/customer-delay-response/${bookingRequestId}/`,
                 payload,
                 {
                     headers: {
@@ -193,8 +266,7 @@ export const communication = {
     },
     bookingRequestCancel: async (bookingRequestId) => {
         try {
-            const response = await axios.post(
-                `${getServerUrl()}/api/booking/booking-request-cancel/${bookingRequestId}/`, {},
+            const response = await api.post(`/api/booking/booking-request-cancel/${bookingRequestId}/`, {},
                 {
                     headers: {
                         "Content-Type": "application/json",
@@ -209,7 +281,7 @@ export const communication = {
     },
     userProfile: async ({ userId }) => {
         try {
-            const response = await axios.get(`${getServerUrl()}/api/users/profile`, {
+            const response = await api.get(`/api/users/profile`, {
                 params: { userId },
                 headers: {
                     "Content-Type": "application/json",
@@ -223,7 +295,7 @@ export const communication = {
     },
     updateProfile: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/users/update`, payload, {
+            const response = await api.post(`/api/users/update`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -237,7 +309,7 @@ export const communication = {
 
     userSalonList: async (dataToSend) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/salon-list`, dataToSend, {
+            const response = await api.post(`/api/salons/salon-list`, dataToSend, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -250,7 +322,7 @@ export const communication = {
     },
     bookedSalonList: async ({ userId }) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/booking/get-list`, { userId }, {
+            const response = await api.post(`/api/booking/get-list`, { userId }, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -263,7 +335,7 @@ export const communication = {
     },
     userAds: async () => {
         try {
-            const response = await axios.get(`${getServerUrl()}/api/advertisement/get-advertisement`, {
+            const response = await api.get(`/api/advertisement/get-advertisement`, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -279,7 +351,7 @@ export const communication = {
 
     salonOwnerLogin: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/send-register-otp`, payload, {
+            const response = await api.post(`/api/salons/send-register-otp`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -291,7 +363,7 @@ export const communication = {
     },
     createPaymentOrder: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/create-payment-order`, payload, {
+            const response = await api.post(`/api/salons/create-payment-order`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -303,8 +375,7 @@ export const communication = {
     },
     createSalon: async (payload, config = {}) => {
         try {
-            const response = await axios.post(
-                `${getServerUrl()}/api/salons/create-salon-with-plan`,
+            const response = await api.post(`/api/salons/create-salon-with-plan`,
                 payload,
                 {
                     headers: {
@@ -320,7 +391,7 @@ export const communication = {
     },
     renewSalon: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/renew-salon-plan`, payload, {
+            const response = await api.post(`/api/salons/renew-salon-plan`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -333,7 +404,7 @@ export const communication = {
     },
     verifySalonOwnerLogin: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/verify-otp-register`, payload, {
+            const response = await api.post(`/api/salons/verify-otp-register`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -345,7 +416,7 @@ export const communication = {
     },
     salonRequest: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salonrequest/create-request`, payload, {
+            const response = await api.post(`/api/salonrequest/create-request`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -358,7 +429,7 @@ export const communication = {
 
     SalonLogin: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/send-otp`, payload, {
+            const response = await api.post(`/api/salons/send-otp`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -370,7 +441,7 @@ export const communication = {
     },
     verifySalonLogin: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/login`, payload, {
+            const response = await api.post(`/api/salons/login`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -384,7 +455,7 @@ export const communication = {
     },
     customerList: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/booking/get-booking-list`, payload, {
+            const response = await api.post(`/api/booking/get-booking-list`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -397,7 +468,7 @@ export const communication = {
     },
     salonProfile: async ({ salonId }) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/get-salon`, { salonId }, {
+            const response = await api.post(`/api/salons/get-salon`, { salonId }, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -411,7 +482,7 @@ export const communication = {
 
     deleteSalonService: async (serviceId) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/delete-service`, { serviceId }, {
+            const response = await api.post(`/api/salons/delete-service`, { serviceId }, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -426,7 +497,7 @@ export const communication = {
     },
     updateSalonProfile: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/update-salon`, payload, {
+            const response = await api.post(`/api/salons/update-salon`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -439,7 +510,7 @@ export const communication = {
     },
     SalonOpenClose: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/salons/open-close`, payload, {
+            const response = await api.post(`/api/salons/open-close`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -452,7 +523,7 @@ export const communication = {
     },
     salonQueueHistory: async () => {
         try {
-            const response = await axios.get(`${getServerUrl()}/api/booking/get-completed-bookings`, {
+            const response = await api.get(`/api/booking/get-completed-bookings`, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -465,7 +536,7 @@ export const communication = {
     },
     bookingDone: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/booking/booking-complete`, payload, {
+            const response = await api.post(`/api/booking/booking-complete`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -478,7 +549,7 @@ export const communication = {
     },
     getBarbersList: async (payload) => {
         try {
-            const response = await axios.get(`${getServerUrl()}/api/barbers/get-salon-barbers`, {
+            const response = await api.get(`/api/barbers/get-salon-barbers`, {
                 params: payload,
                 headers: {
                     "Content-Type": "application/json",
@@ -492,7 +563,7 @@ export const communication = {
     },
     walkInBooking: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/booking/create-walk-in`, payload, {
+            const response = await api.post(`/api/booking/create-walk-in`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -506,7 +577,7 @@ export const communication = {
 
     uploadImages: async (formData) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/upload/upload-image`, formData, {
+            const response = await api.post(`/api/upload/upload-image`, formData, {
                 transformRequest: () => formData,
                 timeout: 30000,
             });
@@ -518,7 +589,7 @@ export const communication = {
 
     userProductList: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/products/get-all-salons-products-list`, payload, {
+            const response = await api.post(`/api/products/get-all-salons-products-list`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -531,7 +602,7 @@ export const communication = {
     },
     salonProductList: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/products/list`, payload, {
+            const response = await api.post(`/api/products/list`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -545,7 +616,7 @@ export const communication = {
     // /api/products/create
     createProductList: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/products/create`, payload, {
+            const response = await api.post(`/api/products/create`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -560,7 +631,7 @@ export const communication = {
     },
     updateProductList: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/products/update`, payload, {
+            const response = await api.post(`/api/products/update`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -575,7 +646,7 @@ export const communication = {
     },
     deleteProduct: async (productId) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/products/delete`, { productId }, {
+            const response = await api.post(`/api/products/delete`, { productId }, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -590,7 +661,7 @@ export const communication = {
     },
     userNotificationList: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/notifications/get-notification-list`, payload, {
+            const response = await api.post(`/api/notifications/get-notification-list`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -603,7 +674,7 @@ export const communication = {
     },
     userNotificationCount: async (payload) => {
         try {
-            const response = await axios.get(`${getServerUrl()}/api/notifications/get-notification-count`, {
+            const response = await api.get(`/api/notifications/get-notification-count`, {
                 params: payload,
                 headers: {
                     "Content-Type": "application/json",
@@ -617,7 +688,7 @@ export const communication = {
     },
     toggleSaveSalon: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/users/toggle-saved-salon`, payload, {
+            const response = await api.post(`/api/users/toggle-saved-salon`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -630,7 +701,7 @@ export const communication = {
     },
     saveSalon: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/users/save-salon`, payload, {
+            const response = await api.post(`/api/users/save-salon`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
@@ -643,7 +714,7 @@ export const communication = {
     },
     removeSalon: async (payload) => {
         try {
-            const response = await axios.post(`${getServerUrl()}/api/users/remove-salon`, payload, {
+            const response = await api.post(`/api/users/remove-salon`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`

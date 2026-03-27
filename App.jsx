@@ -33,6 +33,7 @@ import SalonInfoForRegister from './src/components/SalonInfoForRegister';
 import SalonBusinessInfo from './src/components/SalonBusinessInfo';
 import SalonRegisterOtpScreen from './src/components/SalonRegisterOtpScreen';
 import SubscriptionsPlan from './src/screens/SubscriptionsPlan';
+import RenewalSubscriptionsPlan from './src/screens/RenewalSubscriptionsPlan';
 
 /* ---------- USER SCREENS ---------- */
 import NaaiDashboard from './src/screens/NaaiDashboard';
@@ -58,8 +59,11 @@ import DelayRequestScreen from './src/screens/DelayRequestScreen';
 import { Text, TextInput } from 'react-native';
 
 /* ---------- NAV REF ---------- */
-export const navigationRef = React.createRef();
-const isNavigationReady = React.createRef();
+// export const navigationRef = React.createRef();
+// const isNavigationReady = React.createRef();
+import { createNavigationContainerRef } from '@react-navigation/native';
+
+export const navigationRef = createNavigationContainerRef();
 
 /* ---------- Roboto font ---------- */
 
@@ -181,8 +185,9 @@ function AppStack({ userType }) {
       <Stack.Screen name="TermsScreen" component={TermsScreen} />
       <Stack.Screen name="AboutScreen" component={AboutScreen} />
       <Stack.Screen name="SubscriptionsPlan" component={SubscriptionsPlan} />
+      <Stack.Screen name="RenewalSubscriptionsPlan" component={RenewalSubscriptionsPlan} />
       <Stack.Screen name="AddOfflineCustomer" component={AddOfflineCustomer} />
-      <Stack.Screen name="SalonNotifications" component={SalonNotifications}/>
+      <Stack.Screen name="SalonNotifications" component={SalonNotifications} />
       <Stack.Screen name="BookingRequestScreen" component={BookingRequestScreen} />
       <Stack.Screen name="DelayRequestScreen" component={DelayRequestScreen} />
 
@@ -191,12 +196,12 @@ function AppStack({ userType }) {
 }
 
 const safeNavigate = (name, params) => {
-  if (isNavigationReady.current && navigationRef.current) {
-    navigationRef.current.navigate(name, params);
+  if (navigationRef.isReady()) {
+    navigationRef.navigate(name, params);
   } else {
     setTimeout(() => {
-      if (navigationRef.current) {
-        navigationRef.current.navigate(name, params);
+      if (navigationRef.isReady()) {
+        navigationRef.navigate(name, params);
       }
     }, 500);
   }
@@ -507,9 +512,9 @@ export default function App() {
       <NavigationContainer
         key={isLoggedIn ? 'app' : 'auth'}
         ref={navigationRef}
-        onReady={() => {
-          isNavigationReady.current = true;
-        }}
+      // onReady={() => {
+      //   isNavigationReady.current = true;
+      // }}
       >
 
         {isLoggedIn ? (
