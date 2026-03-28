@@ -705,7 +705,19 @@ const NaaiDashboard = ({ navigation }) => {
                     </Text>
                   </TouchableOpacity>
                 </View>
-
+                <TouchableOpacity
+                  style={styles.iconBtn}
+                  onPress={() =>
+                    navigation.navigate('UserNotifications')
+                  }
+                >
+                  <Ionicons name="notifications-outline" size={20} color="#000" />
+                  {/* {notificationCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{notificationCount}</Text>
+                  </View>
+                )} */}
+                </TouchableOpacity>
                 {/* City Dropdown */}
                 {/* <View style={{ position: 'relative', zIndex: 20 }}>
                   <TouchableOpacity
@@ -1055,7 +1067,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 16,
   },
-
+  iconBtn: { backgroundColor: '#E1B378', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginLeft: 8 },
   activeGenderBtn: {
     backgroundColor: '#E1B378',
   },

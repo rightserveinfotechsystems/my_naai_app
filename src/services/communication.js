@@ -7,8 +7,8 @@ import { CommonActions } from "@react-navigation/native";
 // const serverUrl = "http://192.168.1.12:5001";
 // const serverUrl = "http://localhost:5001";
 const serverUrl = "https://backend.mynaai.in"
-export const rzp_key = "rzp_test_SRombQCQU03uVL"
-// export const rzp_key = "rzp_test_RyX5e71Zpn3ofA"
+// export const rzp_key = "rzp_test_SRombQCQU03uVL"
+export const rzp_key = "rzp_live_ST8yVm3RaFMiHW"
 // 
 
 export function getServerUrl() {
@@ -679,7 +679,20 @@ export const communication = {
     },
     userNotificationList: async (payload) => {
         try {
-            const response = await api.post(`/api/notifications/get-notification-list`, payload, {
+            const response = await api.post(`/api/notifications/get-salon-notification-list`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    userNotificationListUser: async (payload) => {
+        try {
+            const response = await api.post(`/api/notifications/get-user-notification-list`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`

@@ -54,6 +54,7 @@ import SalonProduct from './src/screens/SalonProduct';
 import SalonAccountScreen from './src/screens/SalonAccountScreen';
 import AddOfflineCustomer from './src/components/AddOfflineCustomer';
 import SalonNotifications from './src/screens/SalonNotifications';
+import UserNotifications from './src/screens/UserNotifications';
 import BookingRequestScreen from './src/screens/BookingRequestScreen';
 import DelayRequestScreen from './src/screens/DelayRequestScreen';
 import { Text, TextInput } from 'react-native';
@@ -191,6 +192,7 @@ function AppStack({ userType }) {
       <Stack.Screen name="RenewalSubscriptionsPlan" component={RenewalSubscriptionsPlan} />
       <Stack.Screen name="AddOfflineCustomer" component={AddOfflineCustomer} />
       <Stack.Screen name="SalonNotifications" component={SalonNotifications} />
+      <Stack.Screen name="UserNotifications" component={UserNotifications} />
       <Stack.Screen name="BookingRequestScreen" component={BookingRequestScreen} />
       <Stack.Screen name="DelayRequestScreen" component={DelayRequestScreen} />
 

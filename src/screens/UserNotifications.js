@@ -11,8 +11,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { communication } from '../services/communication';
 
-const SalonNotifications = ({ route, navigation }) => {
-    const { salonId } = route.params;
+const UserNotifications = ({ route, navigation }) => {
+    // const { salonId } = route.params;
 
     const [notifications, setNotifications] = useState([]);
     const [page, setPage] = useState(1);
@@ -42,13 +42,13 @@ const SalonNotifications = ({ route, navigation }) => {
         loadMore ? setLoadingMore(true) : setLoading(true);
 
         try {
-            const res = await communication.userNotificationList({
-                salonId,
+            const res = await communication.userNotificationListUser({
+                // salonId,
                 page: pageNo,
             });
 
             if (res?.status === 'SUCCESS') {
-                console.log("userNotificationList", res);
+                console.log("userNotificationListUser", res);
 
                 const newData = res.data.notifications || [];
                 const pagination = res.data.pagination || {};
@@ -153,7 +153,7 @@ const SalonNotifications = ({ route, navigation }) => {
     );
 };
 
-export default SalonNotifications;
+export default UserNotifications;
 
 const styles = StyleSheet.create({
     container: {

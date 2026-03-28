@@ -188,7 +188,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
   // };
   const handleNext = async () => {
     if (!naaiName.trim()) {
-      Alert.alert('Validation', 'Please enter Naai name');
+      Alert.alert('Validation', 'Please enter Salon Owner name');
       return;
     }
     if (!salonName.trim()) {
