@@ -65,6 +65,10 @@ const SalonBusinessInfo = ({ navigation, route }) => {
             Alert.alert("Validation", "Please select salon type");
             return;
         }
+        if (agentCode.length < 10) {
+            Alert.alert("Error", "Agent Code must be 10 digits");
+            return;
+        }
         const openMinutes = getTimeInMinutes(openingTime);
         const closeMinutes = getTimeInMinutes(closingTime);
         if (closeMinutes === openMinutes) {
@@ -168,7 +172,11 @@ const SalonBusinessInfo = ({ navigation, route }) => {
                                 keyboardType="number-pad"
                                 maxLength={10}
                                 value={agentCode}
-                                onChangeText={setAgentCode}
+                                onChangeText={(text) => {
+                                    const cleaned = text.replace(/[^0-9]/g, '');
+                                    setAgentCode(cleaned);
+                                }}
+                                // onChangeText={setAgentCode}
                                 style={styles.input}
                             />
                         </View>

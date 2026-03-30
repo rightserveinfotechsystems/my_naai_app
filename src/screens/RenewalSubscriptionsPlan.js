@@ -19,8 +19,8 @@ import { useFocusEffect } from "@react-navigation/native";
 const plans = [
   {
     id: "trial_2_months",
-    title: "Introductory Trial",
-    price: "₹129",
+    title: "Introductory",
+    price: "₹179",
     duration: "2 Months (60 Days)",
   },
   {
