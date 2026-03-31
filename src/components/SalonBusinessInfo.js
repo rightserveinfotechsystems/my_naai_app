@@ -65,8 +65,8 @@ const SalonBusinessInfo = ({ navigation, route }) => {
             Alert.alert("Validation", "Please select salon type");
             return;
         }
-        if (agentCode.length < 10) {
-            Alert.alert("Error", "Agent Code must be 10 digits");
+        if (agentCode && agentCode.length !== 10) {
+            Alert.alert("Warn", "Agent Code must be exactly 10 digits or Blank");
             return;
         }
         const openMinutes = getTimeInMinutes(openingTime);
