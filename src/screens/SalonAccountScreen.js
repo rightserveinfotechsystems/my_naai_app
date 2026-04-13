@@ -619,7 +619,8 @@ const SalonAccountScreen = ({ navigation }) => {
       ]
     );
   };
-
+  const isValidGuid = (id) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
   const handleDeleteService = (serviceId) => {
     Alert.alert('Delete Service', 'Are you sure you want to delete this service?', [
       { text: 'Cancel', style: 'cancel' },
@@ -627,6 +628,12 @@ const SalonAccountScreen = ({ navigation }) => {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
+
+          // ✅ NEW SERVICE (no API call)
+          if (!isValidGuid(serviceId)) {
+            setServices(prev => prev.filter(s => s.id !== serviceId));
+            return;
+          }
           try {
             const response = await communication.deleteSalonService(serviceId);
             if (response?.status === 'SUCCESS') {
@@ -644,6 +651,9 @@ const SalonAccountScreen = ({ navigation }) => {
       },
     ]);
   };
+  const isValidGuidBarber = (id = '') =>
+    typeof id === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
   const handleDeleteBarber = (barberId) => {
     Alert.alert('Delete Barber', 'Are you sure you want to delete this barber?', [
@@ -652,6 +662,11 @@ const SalonAccountScreen = ({ navigation }) => {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
+          // ✅ NEW BARBER → local delete only
+          if (!isValidGuidBarber(barberId)) {
+            setBarbers(prev => prev.filter(b => b.id !== barberId));
+            return;
+          }
           try {
             const response = await communication.deleteSalonBarber(barberId);
             console.log("barber delete response", response);
@@ -977,7 +992,7 @@ const SalonAccountScreen = ({ navigation }) => {
                   }}
                 />
 
-                <TextInput
+                {/* <TextInput
                   style={[styles.input, styles.smallInput]}
                   placeholder="Time"
                   keyboardType="numeric"
@@ -988,7 +1003,7 @@ const SalonAccountScreen = ({ navigation }) => {
                     updated[index].duration = text;
                     setServices(updated);
                   }}
-                />
+                /> */}
 
                 <TouchableOpacity
                   onPress={() => handleDeleteService(service.id)}
@@ -1007,7 +1022,7 @@ const SalonAccountScreen = ({ navigation }) => {
                     id: Date.now().toString(),
                     name: '',
                     price: '',
-                    duration: '',
+                    duration: '60',
                   },
                 ])
               }
