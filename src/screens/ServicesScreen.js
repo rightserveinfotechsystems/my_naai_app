@@ -60,6 +60,8 @@ const ServicesScreen = () => {
         searchString: '',
       });
 
+      console.log("response bookedSalonList ", response);
+
       if (response?.status === 'SUCCESS') {
         const data = response.data || [];
 
@@ -187,6 +189,8 @@ const ServicesScreen = () => {
 
   /* ---------------- RENDER ITEM ---------------- */
   const renderItem = ({ item }) => {
+    console.log("gghitem", item);
+
     // const btnColor =
     //   item.status === 'pending'
     //     ? '#E1B378'

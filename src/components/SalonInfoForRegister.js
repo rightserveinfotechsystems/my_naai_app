@@ -34,7 +34,8 @@ const SalonInfoForRegister = ({ navigation, route }) => {
   const [naaiName, setNaaiName] = useState('');
   const [salonName, setSalonName] = useState('');
   const [mobile, setMobile] = useState(phoneNumber);
-  const [address, setAddress] = useState('');
+  // const [address, setAddress] = useState('');
+  const [manualAddress, setManualAddress] = useState('');
   const [city, setCity] = useState('');
   const [genderType, setGenderType] = useState('');
   const [latitude, setLatitude] = useState(null);
@@ -94,9 +95,9 @@ const SalonInfoForRegister = ({ navigation, route }) => {
 
             const response = await Geocoder.from(latitude, longitude);
 
-            const address = response.results[0].formatted_address;
+            // const address = response.results[0].formatted_address;
 
-            setAddress(address);
+            // setAddress(address);
 
           },
           (error) => {
@@ -134,8 +135,12 @@ const SalonInfoForRegister = ({ navigation, route }) => {
       Alert.alert('Validation', 'Enter valid 10-digit mobile number');
       return false;
     }
-    if (!address.trim()) {
-      Alert.alert('Validation', 'Please enter address');
+    // if (!address.trim()) {
+    //   Alert.alert('Validation', 'Please enter address');
+    //   return false;
+    // }
+    if (!manualAddress.trim()) {
+      Alert.alert('Validation', 'Please enter manual address');
       return false;
     }
     // if (!city) {
@@ -195,6 +200,10 @@ const SalonInfoForRegister = ({ navigation, route }) => {
       Alert.alert('Validation', 'Please enter Salon name');
       return;
     }
+    if (!manualAddress.trim()) {
+      Alert.alert('Validation', 'Please enter Address');
+      return;
+    }
     // if (!city) {
     //   Alert.alert('Validation', 'Please select a city');
     //   return;
@@ -211,7 +220,8 @@ const SalonInfoForRegister = ({ navigation, route }) => {
       ownerName: naaiName,
       phoneNumber: mobile,
       salonName: salonName,
-      addressLine1: address,
+      addressLine1: manualAddress,
+      // addressLine2: address,
       // city: city,
       latitude,
       longitude,
@@ -288,12 +298,24 @@ const SalonInfoForRegister = ({ navigation, route }) => {
             </View>
 
 
-            <View style={[styles.inputBox, { height: 100, alignItems: 'flex-start' }]}>
+            {/* <View style={[styles.inputBox, { height: 100, alignItems: 'flex-start' }]}>
               <TextInput
                 placeholder="Fetching location..."
                 placeholderTextColor="#999"
                 value={address}
                 editable={false}
+                multiline={true}
+                numberOfLines={4}
+                style={[styles.input, { textAlignVertical: 'top' }]}
+              />
+            </View> */}
+            <View style={[styles.inputBox, { height: 100, alignItems: 'flex-start' }]}>
+              <TextInput
+                placeholder="Enter Address"
+                placeholderTextColor="#999"
+                value={manualAddress}
+                // editable={false}
+                onChangeText={setManualAddress}
                 multiline={true}
                 numberOfLines={4}
                 style={[styles.input, { textAlignVertical: 'top' }]}

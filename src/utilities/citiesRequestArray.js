@@ -260,73 +260,75 @@ export const DEFAULT_SERVICES = {
 
   unisex: [
     // SECTION 1: MEN'S HAIR & GROOMING
-    { serviceName: "Normal Hair Cut", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Stylish / Fade Cut", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Kids Hair Cut", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Beard Trim (Machine)", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Beard Styling (Razor)", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Clean Shave", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Head Massage (Oil/Dry)", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Men's Hair Color (Black)", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Normal Hair Cut - Men", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Stylish / Fade Cut - Men", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Kids Hair Cut - Men", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Beard Trim (Machine) - Men", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Beard Styling (Razor) - Men", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Clean Shave - Men", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Head Massage (Oil/Dry) - Men", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Men's Hair Color (Black) - Men", price: "40", durationMinutes: 40, description: "No description" },
 
     // SECTION 2: THREADING & FACE
-    { serviceName: "Eyebrow Threading", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Upper Lip Threading", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Forehead Threading", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Chin / Side Face Threading", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Full Face Threading", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Eyebrow Threading - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Upper Lip Threading - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Forehead Threading - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Chin / Side Face Threading - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Full Face Threading - Women", price: "40", durationMinutes: 40, description: "No description" },
 
     // SECTION 3: WAXING
-    { serviceName: "Underarms Waxing", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Half Arms Waxing", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Full Arms Waxing", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Half Legs Waxing", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Full Legs Waxing", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Full Body Waxing", price: "40", durationMinutes: 80, description: "No description" },
-    { serviceName: "Bikini / Brazilian Wax", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Rica Wax (Add-on)", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Underarms Waxing - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Half Arms Waxing - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Full Arms Waxing - Women", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Half Legs Waxing - Women", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Full Legs Waxing - Women", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Full Body Waxing - Women", price: "40", durationMinutes: 80, description: "No description" },
+    { serviceName: "Bikini / Brazilian Wax - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Rica Wax (Add-on) - Women", price: "40", durationMinutes: 20, description: "No description" },
 
     // LADIES HAIR CUT
-    { serviceName: "Split-ends Removal", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Fringes / Bangs Cut", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Straight / U / V Cut", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Layer Cut", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Step Cut", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Bob / Pixie Cut", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Advance Multi-Layer Cut", price: "40", durationMinutes: 40, description: "No description" },
-
-    // SECTION 5: SKIN CARE & FACIALS
-    { serviceName: "Face Cleanup", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Face Bleach", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Face Detan", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Fruit / Herbal Facial", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Gold / Silver Facial", price: "40", durationMinutes: 60, description: "No description" },
-    { serviceName: "Diamond / Pearl Facial", price: "40", durationMinutes: 60, description: "No description" },
-    { serviceName: "O3+ / Whitening Facial", price: "40", durationMinutes: 80, description: "No description" },
-    { serviceName: "Charcoal Mask", price: "40", durationMinutes: 20, description: "No description" },
-
-    // SECTION 6: MANICURE & PEDICURE
-    { serviceName: "Manicure (Basic)", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Pedicure (Basic)", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Spa Manicure", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Spa Pedicure", price: "40", durationMinutes: 20, description: "No description" },
-
-    // SECTION 7: HAIR TREATMENTS & CHEMICALS
-    { serviceName: "Hair Spa (Basic)", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Hair Spa (Loreal/Matrix)", price: "40", durationMinutes: 60, description: "No description" },
-    { serviceName: "Root Touchup (Color)", price: "40", durationMinutes: 40, description: "No description" },
-    { serviceName: "Global Hair Color", price: "40", durationMinutes: 80, description: "No description" },
-    { serviceName: "Highlights / Streaks", price: "40", durationMinutes: 100, description: "No description" },
-    { serviceName: "Smoothening", price: "40", durationMinutes: 180, description: "No description" },
-    { serviceName: "Rebonding", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Keratin Treatment", price: "40", durationMinutes: 180, description: "No description" },
-    { serviceName: "Botox / Nanoplastia", price: "40", durationMinutes: 180, description: "No description" },
+    { serviceName: "Split-ends Removal - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Fringes / Bangs Cut - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Straight / U / V Cut - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Layer Cut - Women", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Step Cut - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Bob / Pixie Cut - Women", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Advance Multi-Layer Cut - Women", price: "40", durationMinutes: 40, description: "No description" },
 
     // SECTION 8: MAKEUP & STYLING
-    { serviceName: "Hair Styling / Ironing", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Saree Draping", price: "40", durationMinutes: 20, description: "No description" },
-    { serviceName: "Light / Party Makeup", price: "40", durationMinutes: 60, description: "No description" },
-    { serviceName: "Bridal Makeup", price: "40", durationMinutes: 180, description: "No description" }
+    { serviceName: "Hair Styling / Ironing - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Saree Draping - Women", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Light / Party Makeup - Women", price: "40", durationMinutes: 60, description: "No description" },
+    { serviceName: "Bridal Makeup - Women", price: "40", durationMinutes: 180, description: "No description" },
+
+
+    // SECTION 5: SKIN CARE & FACIALS
+    { serviceName: "Face Cleanup - Unisex", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Face Bleach - Unisex", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Face Detan - Unisex", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Fruit / Herbal Facial - Unisex", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Gold / Silver Facial - Unisex", price: "40", durationMinutes: 60, description: "No description" },
+    { serviceName: "Diamond / Pearl Facial - Unisex", price: "40", durationMinutes: 60, description: "No description" },
+    { serviceName: "O3+ / Whitening Facial - Unisex", price: "40", durationMinutes: 80, description: "No description" },
+    { serviceName: "Charcoal Mask - Unisex", price: "40", durationMinutes: 20, description: "No description" },
+
+    // SECTION 6: MANICURE & PEDICURE
+    { serviceName: "Manicure (Basic) - Unisex", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Pedicure (Basic) - Unisex", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Spa Manicure - Unisex", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Spa Pedicure - Unisex", price: "40", durationMinutes: 20, description: "No description" },
+
+    // SECTION 7: HAIR TREATMENTS & CHEMICALS
+    { serviceName: "Hair Spa (Basic) - Unisex", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Hair Spa (Loreal/Matrix) - Unisex", price: "40", durationMinutes: 60, description: "No description" },
+    { serviceName: "Root Touchup (Color) - Unisex", price: "40", durationMinutes: 40, description: "No description" },
+    { serviceName: "Global Hair Color - Unisex", price: "40", durationMinutes: 80, description: "No description" },
+    { serviceName: "Highlights / Streaks - Unisex", price: "40", durationMinutes: 100, description: "No description" },
+    { serviceName: "Smoothening - Unisex", price: "40", durationMinutes: 180, description: "No description" },
+    { serviceName: "Rebonding - Unisex", price: "40", durationMinutes: 20, description: "No description" },
+    { serviceName: "Keratin Treatment - Unisex", price: "40", durationMinutes: 180, description: "No description" },
+    { serviceName: "Botox / Nanoplastia - Unisex", price: "40", durationMinutes: 180, description: "No description" },
+
 
 
   ],

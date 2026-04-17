@@ -157,7 +157,8 @@ const SalonDetailScreen = ({ route, navigation }) => {
     });
   };
 
-  const address = `${salonDetails?.addressLine1}, ${salonDetails?.addressLine2}, ${salonDetails?.city}`;
+  // const address = `${salonDetails?.addressLine1}, ${salonDetails?.addressLine2}, ${salonDetails?.city}`;
+  const address = `${salonDetails?.addressLine1}`;
 
   const formatTime12Hour = (time) => {
     if (!time) return '';
