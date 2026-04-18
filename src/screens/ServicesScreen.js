@@ -517,11 +517,11 @@ const styles = StyleSheet.create({
   },
 
   statusBadge: {
-    paddingHorizontal: 14,
+    width: 90,
     paddingVertical: 7,
     borderRadius: 20,
-    minWidth: 90,
     alignItems: 'center',
+    justifyContent: 'center',
   },
 
   statusBadgeText: {
@@ -529,6 +529,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
+    textAlign: 'center',
   },
 
   cancelBtn: {
@@ -538,7 +539,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     backgroundColor: '#E53935',
     paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     borderRadius: 20,
     minWidth: 80,
   },

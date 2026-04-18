@@ -298,6 +298,8 @@ const NaaiDashboard = ({ navigation }) => {
 
 
   const toggleSaveSalon = async (salonId) => {
+    console.log("salonId", salonId);
+
     if (savingSalonId) return;
 
     try {
@@ -337,7 +339,8 @@ const NaaiDashboard = ({ navigation }) => {
       }
 
     } catch (error) {
-      Alert.alert("Error", "Something went wrong");
+      // Alert.alert("Error", "Something went wrong");
+      console.log("Error", error);
     } finally {
       setSavingSalonId(null);
     }

@@ -320,11 +320,11 @@ const SalonDetailScreen = ({ route, navigation }) => {
 
 
                     {/* SHOP STATUS */}
-                    <View style={styles.infoBox}>
-                      <View style={styles.infoRow}>
+                    <View style={styles.commonRow}>
+                      <View style={styles.icon}>
                         <Ionicons
                           name="time-outline"
-                          size={16}
+                          size={18}
                           color={
                             isHolidayToday
                               ? '#FF5252'
@@ -333,34 +333,29 @@ const SalonDetailScreen = ({ route, navigation }) => {
                                 : '#F44336'
                           }
                         />
-
-                        <Text
-                          style={[
-                            styles.infoText,
-                            { color: isOpenNow ? '#4CAF50' : '#F44336' },
-                          ]}
-                        >
-                          {isHolidayToday
-                            ? 'HOLIDAY'
-                            : isOpenNow
-                              ? 'OPEN NOW'
-                              : 'CLOSED'}
-                        </Text>
-
-                        <Text style={styles.infoSub}>
-                          (
-                          {salonDetails?.businessHours?.length > 0
-                            ? `${formatTime12Hour(
-                              salonDetails.businessHours[0].openingTime
-                            )} - ${formatTime12Hour(
-                              salonDetails.businessHours[0].closingTime
-                            )}`
-                            : ''}
-                          )
-                        </Text>
                       </View>
 
-                      {/* {salonDetails.businessHours &&
+                      <Text
+                        style={[
+                          styles.infoText,
+                          { color: isOpenNow ? '#4CAF50' : '#F44336' },
+                        ]}
+                      >
+                        {isHolidayToday ? 'HOLIDAY' : isOpenNow ? 'OPEN NOW' : 'CLOSED'}
+                      </Text>
+
+                      <Text style={styles.infoSub}>
+                        ({salonDetails?.businessHours?.length > 0
+                          ? `${formatTime12Hour(
+                            salonDetails.businessHours[0].openingTime
+                          )} - ${formatTime12Hour(
+                            salonDetails.businessHours[0].closingTime
+                          )}`
+                          : ''})
+                      </Text>
+                    </View>
+
+                    {/* {salonDetails.businessHours &&
                       <View style={styles.infoRow}>
                         <Ionicons name="calendar-outline" size={16} color="#E1B378" />
                         <Text style={styles.infoText}>
@@ -375,49 +370,52 @@ const SalonDetailScreen = ({ route, navigation }) => {
                       </View>
                       } */}
 
-                      {weeklyOff.length > 0 && (
-                        <View style={styles.infoRow}>
-                          <Ionicons name="calendar-outline" size={16} color="#E1B378" />
-
-                          <Text
-                            style={styles.infoText}
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                          >
-                            Weekly Off: {weeklyOff.join(', ')}
-                          </Text>
+                    {weeklyOff.length > 0 && (
+                      <View style={styles.commonRow}>
+                        <View style={styles.icon}>
+                          <Ionicons name="calendar-outline" size={15} color="#fff" />
                         </View>
-                      )}
 
-                      {salonDetails.upcomingHoliday && (
-                        <View style={styles.infoRow}>
-                          <Ionicons
-                            name="alert-circle-outline"
-                            size={16}
-                            color="#FF5252"
-                          />
-                          <Text style={[styles.infoText, { color: '#FF5252' }]}>
-                            Holiday: {salonDetails.upcomingHoliday}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
+                        <Text style={styles.infoText}>
+                          Weekly Off: {weeklyOff.join(', ')}
+                        </Text>
+                      </View>
+                    )}
+
+                    {salonDetails.upcomingHoliday && (
+                      <View style={styles.infoRow}>
+                        <Ionicons
+                          name="alert-circle-outline"
+                          size={16}
+                          color="#FF5252"
+                        />
+                        <Text style={[styles.infoText, { color: '#FF5252' }]}>
+                          Holiday: {salonDetails.upcomingHoliday}
+                        </Text>
+                      </View>
+                    )}
+                    {/* </View> */}
 
                     {/* LOCATION */}
-                    <TouchableOpacity style={styles.row} onPress={openMap}>
-                      <Ionicons
-                        name="location-outline"
-                        size={18}
-                        color="#E1B378"
-                      />
-                      <Text style={styles.linkText}>{address}</Text>
-                      {/* <Ionicons name="open-outline" size={14} color="#AAA" />  */}
+                    <TouchableOpacity style={styles.commonRow} onPress={openMap}>
+                      <View style={styles.icon}>
+                        <Ionicons name="location-outline" size={18} color="#E1B378" />
+                      </View>
+
+                      <Text style={styles.linkText}>
+                        {address}
+                      </Text>
                     </TouchableOpacity>
 
                     {/* CALL */}
-                    <TouchableOpacity style={styles.row} onPress={callSalon}>
-                      <Ionicons name="call-outline" size={18} color="#E1B378" />
-                      <Text style={styles.linkText}>{salonDetails.phoneNumber}</Text>
+                    <TouchableOpacity style={styles.commonRow} onPress={callSalon}>
+                      <View style={styles.icon}>
+                        <Ionicons name="call-outline" size={18} color="#E1B378" />
+                      </View>
+
+                      <Text style={styles.linkText}>
+                        {salonDetails.phoneNumber}
+                      </Text>
                     </TouchableOpacity>
 
                     {/* SERVICES */}
@@ -559,19 +557,12 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    // paddingVertical: 10,
     marginTop: 8,
   },
 
   rating: { color: '#FFD700', marginLeft: 6 },
   wait: { color: '#fff', marginLeft: 6, fontSize: 13 },
-  linkText: {
-    color: '#E1B378',
-    marginLeft: 10,
-    flex: 1,
-    lineHeight: 20,
-    textTransform: "capitalize",
-  },
 
 
   infoBox: {
@@ -584,20 +575,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
-  },
-
-  infoText: {
-    color: '#fff',
-    marginLeft: 8,
-    fontWeight: '600',
-    flex: 1,
-  },
-
-  infoSub: {
-    color: '#AAA',
-    marginLeft: 6,
-    fontSize: 12,
-    lineHeight: 18,
   },
 
 
@@ -674,6 +651,43 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
     marginBottom: 4,
+  },
+  // commonRow: {
+  //   flexDirection: 'row',
+  //   alignItems: 'flex-start',
+  //   marginTop: 10,
+  // }
+
+  commonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',   // 👈 SAME LINE alignment
+    marginTop: 15,
+  },
+
+  icon: {
+    width: 22,              // 👈 FIXED width for perfect alignment
+    alignItems: 'center',
+  },
+
+  infoText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    marginLeft: 10,
+  },
+
+  infoSub: {
+    fontSize: 12,
+    color: '#AAA',
+    marginLeft: 6,
+  },
+
+  linkText: {
+    fontSize: 16,
+    color: '#E1B378',
+    marginLeft: 10,
+    flex: 1,
+    lineHeight: 20,
   },
 
 

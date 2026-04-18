@@ -727,6 +727,8 @@ export const communication = {
                     "Authorization": `Bearer ${await getCookie()}`
                 },
             });
+            console.log("response.data", response?.data);
+
             return response.data;
         } catch (error) {
             throw error;
