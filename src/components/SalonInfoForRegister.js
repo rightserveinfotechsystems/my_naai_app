@@ -309,16 +309,18 @@ const SalonInfoForRegister = ({ navigation, route }) => {
                 style={[styles.input, { textAlignVertical: 'top' }]}
               />
             </View> */}
-            <View style={[styles.inputBox, { height: 100, alignItems: 'flex-start' }]}>
+            <View style={[styles.inputBox, { height: 100 }]}>
               <TextInput
                 placeholder="Enter Address"
                 placeholderTextColor="#999"
                 value={manualAddress}
-                // editable={false}
                 onChangeText={setManualAddress}
-                multiline={true}
-                numberOfLines={4}
-                style={[styles.input, { textAlignVertical: 'top' }]}
+                multiline
+                style={[styles.input, {
+                  flex: 1,
+                  textAlignVertical: 'top',
+                  paddingTop: 10,
+                }]}
               />
             </View>
             {/* <View style={styles.inputBox}>
@@ -478,12 +480,13 @@ const styles = StyleSheet.create({
   inputBox: {
     backgroundColor: '#1E1E1E',
     borderRadius: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     height: 54,
     justifyContent: 'center',
     marginBottom: 18,
-  },
+    paddingVertical: 6,
 
+  },
   input: {
     color: '#fff',
     fontSize: 15,
@@ -561,7 +564,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     textAlignVertical: 'top',
-  }
+  },
 
 
 });

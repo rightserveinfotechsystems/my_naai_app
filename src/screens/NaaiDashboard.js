@@ -497,7 +497,8 @@ const NaaiDashboard = ({ navigation }) => {
         <View style={styles.cardContent}>
           <View style={{ flex: 1 }}>
             <Text style={styles.genderName}>{item?.genderType}</Text>
-            <Text style={styles.name}>{item?.name}</Text>
+            <Text style={styles.name} numberOfLines={2}
+              ellipsizeMode="tail">{item?.name}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
               {/* <Ionicons
     name="time-outline"
