@@ -138,7 +138,7 @@ const BookingSchedule = ({ route, navigation }) => {
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-    for (let mins = openingMinutes; mins < closingMinutes; mins += 20) {
+    for (let mins = openingMinutes; mins < closingMinutes; mins += 10) {
       // 👉 Skip past slots ONLY for today
       if (selectedDate === 0 && mins <= currentMinutes) continue;
       const hour = Math.floor(mins / 60);

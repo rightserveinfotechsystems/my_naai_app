@@ -105,7 +105,7 @@ const ServicesScreen = () => {
 
               // ✅ Optimistic remove
               setSalonList(prev =>
-                prev.filter(item => item.bookingRequestId !== bookingRequestId)
+                prev.filter(item => item.bookingId !== bookingRequestId)
               );
 
               const response = await communication.bookingRequestCancel(bookingRequestId);
@@ -312,10 +312,10 @@ const ServicesScreen = () => {
             ) && (
                 <TouchableOpacity
                   style={styles.cancelBtn}
-                  onPress={() => handleCancelBooking(item.bookingRequestId)}
-                  disabled={cancellingId === item.bookingRequestId}
+                  onPress={() => handleCancelBooking(item.bookingId)}
+                  disabled={cancellingId === item.bookingId}
                 >
-                  {cancellingId === item.bookingRequestId ? (
+                  {cancellingId === item.bookingId ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
                     <>

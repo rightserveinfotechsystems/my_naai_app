@@ -270,7 +270,7 @@ export const communication = {
     },
     bookingRequestCancel: async (bookingRequestId) => {
         try {
-            const response = await api.post(`/api/booking/booking-request-cancel/${bookingRequestId}/`, {},
+            const response = await api.post(`/api/booking/booking-request-cancel/${bookingRequestId}`, {},
                 {
                     headers: {
                         "Content-Type": "application/json",
