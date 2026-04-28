@@ -100,13 +100,13 @@ const SplashScreen = ({ navigation }) => {
       <SafeAreaView style={styles.content}>
         {/* Skip Button */}
         <TouchableOpacity style={styles.skipBtn} onPress={skipIntro}>
-          <Text style={styles.skipText}>Skip</Text>
+          <Text allowFontScaling={false}style={styles.skipText}>Skip</Text>
         </TouchableOpacity>
 
         {/* Text */}
         <View style={styles.textBox}>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.desc}>{item.desc}</Text>
+          <Text allowFontScaling={false}style={styles.title}>{item.title}</Text>
+          <Text allowFontScaling={false}style={styles.desc}>{item.desc}</Text>
         </View>
       </SafeAreaView>
     </ImageBackground>

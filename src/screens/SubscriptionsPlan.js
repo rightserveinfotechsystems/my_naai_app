@@ -180,7 +180,7 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
-      <Text style={styles.title}>Choose Your Plan</Text>
+      <Text allowFontScaling={false}style={styles.title}>Choose Your Plan</Text>
 
       {plans.map(plan => (
         <TouchableOpacity
@@ -196,15 +196,15 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
 
           {plan.best && (
             <View style={styles.bestBadge}>
-              <Text style={styles.bestText}>BEST VALUE</Text>
+              <Text allowFontScaling={false}style={styles.bestText}>BEST VALUE</Text>
             </View>
           )}
 
-          <Text style={styles.planTitle}>{plan.title}</Text>
+          <Text allowFontScaling={false}style={styles.planTitle}>{plan.title}</Text>
 
-          <Text style={styles.price}>{plan.price}</Text>
+          <Text allowFontScaling={false}style={styles.price}>{plan.price}</Text>
 
-          <Text style={styles.duration}>{plan.duration}</Text>
+          <Text allowFontScaling={false}style={styles.duration}>{plan.duration}</Text>
         </TouchableOpacity>
       ))}
 
@@ -216,7 +216,7 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
         {loading ? (
           <ActivityIndicator color="#000" />
         ) : (
-          <Text style={styles.payText}>Continue</Text>
+          <Text allowFontScaling={false}style={styles.payText}>Continue</Text>
         )}
       </TouchableOpacity>
 

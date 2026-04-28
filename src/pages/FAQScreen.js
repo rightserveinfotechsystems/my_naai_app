@@ -23,7 +23,7 @@ const FAQScreen = ({ navigation }) => {
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>FAQ</Text>
+        <Text allowFontScaling={false}style={styles.headerTitle}>FAQ</Text>
 
         <View style={{ width: 24 }} />
       </View>
@@ -34,54 +34,54 @@ const FAQScreen = ({ navigation }) => {
         contentContainerStyle={{ paddingBottom: 30 }}
       >
         <View style={styles.card}>
-          <Text style={styles.title}>Frequently Asked Questions</Text>
+          <Text allowFontScaling={false}style={styles.title}>Frequently Asked Questions</Text>
 
           {/* CUSTOMER FAQs */}
-          <Text style={styles.q}>How does MYNAAI work for customers?</Text>
-          <Text style={styles.a}>
+          <Text allowFontScaling={false}style={styles.q}>How does MYNAAI work for customers?</Text>
+          <Text allowFontScaling={false}style={styles.a}>
             Customers can browse nearby salons, select services, book appointments,
             and join a live queue to reduce waiting time at the salon.
           </Text>
 
-          <Text style={styles.q}>Can I book an appointment in advance?</Text>
-          <Text style={styles.a}>
+          <Text allowFontScaling={false}style={styles.q}>Can I book an appointment in advance?</Text>
+          <Text allowFontScaling={false}style={styles.a}>
             Yes. You can book an appointment or join the live queue based on salon availability.
           </Text>
 
-          <Text style={styles.q}>How do I know my queue position?</Text>
-          <Text style={styles.a}>
+          <Text allowFontScaling={false}style={styles.q}>How do I know my queue position?</Text>
+          <Text allowFontScaling={false}style={styles.a}>
             Once booked, the app shows your live queue number and estimated waiting time.
           </Text>
 
           {/* SALON FAQs */}
-          <Text style={styles.q}>How can a salon join MYNAAI?</Text>
-          <Text style={styles.a}>
+          <Text allowFontScaling={false}style={styles.q}>How can a salon join MYNAAI?</Text>
+          <Text allowFontScaling={false}style={styles.a}>
             Salon owners can request account creation. After admin approval,
             the salon account is activated for login.
           </Text>
 
-          <Text style={styles.q}>What can salon owners manage?</Text>
-          <Text style={styles.a}>
+          <Text allowFontScaling={false}style={styles.q}>What can salon owners manage?</Text>
+          <Text allowFontScaling={false}style={styles.a}>
             Salon owners can update salon profile, add barbers and services,
             manage customer queue, and mark barbers as available or on leave.
           </Text>
 
-          <Text style={styles.q}>Can salons add walk-in customers?</Text>
-          <Text style={styles.a}>
+          <Text allowFontScaling={false}style={styles.q}>Can salons add walk-in customers?</Text>
+          <Text allowFontScaling={false}style={styles.a}>
             Yes. Salon owners can add walk-in customers directly to the queue
             with service duration.
           </Text>
 
           {/* PAYMENTS */}
-          <Text style={styles.q}>Is online payment supported?</Text>
-          <Text style={styles.a}>
+          <Text allowFontScaling={false}style={styles.q}>Is online payment supported?</Text>
+          <Text allowFontScaling={false}style={styles.a}>
             Currently, payments are handled directly at the salon.
             Online payment support may be added in future updates.
           </Text>
 
           {/* SUPPORT */}
-          <Text style={styles.q}>Who do I contact for support?</Text>
-          <Text style={styles.a}>
+          <Text allowFontScaling={false}style={styles.q}>Who do I contact for support?</Text>
+          <Text allowFontScaling={false}style={styles.a}>
             You can contact support through the app or reach out to the MYNAAI admin team
             for any account or booking issues.
           </Text>

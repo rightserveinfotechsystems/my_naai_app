@@ -61,14 +61,14 @@ const SalonServicesScreen = ({ route, navigation }) => {
                 onPress={() => toggleService(item)}
             >
                 <View style={styles.cardContent}>
-                    <Text style={styles.serviceName}>
+                    <Text allowFontScaling={false}style={styles.serviceName}>
                         {item.serviceName}
                     </Text>
 
-                    {/* <Text style={styles.serviceTime}>
+                    {/* <Text allowFontScaling={false}style={styles.serviceTime}>
                         ⏱ {item.durationMinutes} min
                     </Text> */}
-                    <Text style={styles.servicePrice}>
+                    <Text allowFontScaling={false}style={styles.servicePrice}>
                         ₹{item.price}
                     </Text>
 
@@ -96,7 +96,7 @@ const SalonServicesScreen = ({ route, navigation }) => {
                     <Ionicons name="arrow-back" size={24} color="#fff" />
                 </TouchableOpacity>
 
-                <Text style={styles.headerTitle}>
+                <Text allowFontScaling={false}style={styles.headerTitle}>
                     Select Services
                 </Text>
             </View>
@@ -129,7 +129,7 @@ const SalonServicesScreen = ({ route, navigation }) => {
                     disabled={selectedServices.length === 0}
                 >
 
-                    <Text style={styles.bookText}>Continue</Text>
+                    <Text allowFontScaling={false}style={styles.bookText}>Continue</Text>
                 </TouchableOpacity>
             </View>
 

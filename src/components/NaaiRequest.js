@@ -167,10 +167,10 @@ const NaaiRequest = ({ navigation }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
           >
-            <Text style={styles.title}>Register as a Salon Owner</Text>
+            <Text allowFontScaling={false}style={styles.title}>Register as a Salon Owner</Text>
 
             {/* <View style={styles.inputBox}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="Salon Owner Name"
                 placeholderTextColor="#999"
                 value={naaiName}
@@ -180,7 +180,7 @@ const NaaiRequest = ({ navigation }) => {
             </View>
 
             <View style={styles.inputBox}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="Salon Name"
                 placeholderTextColor="#999"
                 value={salonName}
@@ -191,8 +191,8 @@ const NaaiRequest = ({ navigation }) => {
 
             <View style={styles.inputBox}>
               <View style={styles.phoneContainer}>
-                <Text style={styles.countryCode}>+91</Text>
-                <TextInput
+                <Text allowFontScaling={false}style={styles.countryCode}>+91</Text>
+                <TextInput allowFontScaling={false}
                   placeholder="Phone Number"
                   placeholderTextColor="#999"
                   keyboardType="number-pad"
@@ -205,7 +205,7 @@ const NaaiRequest = ({ navigation }) => {
             </View>
 
             {/* <View style={styles.inputBox}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="Fetching location..."
                 placeholderTextColor="#999"
                 value={address}
@@ -228,7 +228,7 @@ const NaaiRequest = ({ navigation }) => {
               />
             </View> */}
             {/* <View style={styles.inputBox}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="City"
                 placeholderTextColor="#999"
                 value={city}
@@ -237,7 +237,7 @@ const NaaiRequest = ({ navigation }) => {
               />
             </View> */}
             {/* <View style={styles.inputBox}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="Agent Code"
                 placeholderTextColor="#999"
                 value={agentCode}
@@ -268,18 +268,18 @@ const NaaiRequest = ({ navigation }) => {
               {loading ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text style={styles.signupText}>Send OTP</Text>
+                <Text allowFontScaling={false}style={styles.signupText}>Send OTP</Text>
               )}
             </TouchableOpacity>
 
-            {/* <Text style={styles.terms}>
+            {/* <Text allowFontScaling={false}style={styles.terms}>
               By continuing you agree to our{'\n'}
               Terms & Conditions
             </Text> */}
 
-            <Text style={styles.footer}>
+            <Text allowFontScaling={false}style={styles.footer}>
               Already registered?{' '}
-              <Text
+              <Text allowFontScaling={false}
                 style={styles.link}
                 onPress={() => navigation.navigate('NaaiLogin')}
               >

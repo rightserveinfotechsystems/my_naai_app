@@ -75,10 +75,10 @@ const UserSignup = ({ navigation }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.container}
           >
-            <Text style={styles.title}>Create an Account</Text>
+            <Text allowFontScaling={false}style={styles.title}>Create an Account</Text>
 
             <View style={styles.inputBox}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="User name"
                 placeholderTextColor="#999"
                 value={name}
@@ -88,7 +88,7 @@ const UserSignup = ({ navigation }) => {
             </View>
 
             {/* <View style={styles.inputBox}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="Phone number"
                 placeholderTextColor="#999"
                 keyboardType="number-pad"
@@ -100,9 +100,9 @@ const UserSignup = ({ navigation }) => {
             </View> */}
             <View style={styles.inputBox}>
               <View style={styles.phoneContainer}>
-                <Text style={styles.countryCode}>+91</Text>
+                <Text allowFontScaling={false}style={styles.countryCode}>+91</Text>
 
-                <TextInput
+                <TextInput allowFontScaling={false}
                   placeholder="Phone number"
                   placeholderTextColor="#999"
                   keyboardType="number-pad"
@@ -125,13 +125,13 @@ const UserSignup = ({ navigation }) => {
               {loading ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text style={styles.signupText}>Send OTP</Text>
+                <Text allowFontScaling={false}style={styles.signupText}>Send OTP</Text>
               )}
             </TouchableOpacity>
 
-            <Text style={styles.footer}>
+            <Text allowFontScaling={false}style={styles.footer}>
               Already have an account?{' '}
-              <Text
+              <Text allowFontScaling={false}
                 style={styles.link}
                 onPress={() => navigation.navigate('UserLogin')}
               >
@@ -145,7 +145,7 @@ const UserSignup = ({ navigation }) => {
               onPress={() => navigation.navigate('NaaiRequest')}
               activeOpacity={0.8}
             >
-              <Text style={styles.partnerBtnText}>
+              <Text allowFontScaling={false}style={styles.partnerBtnText}>
                 Salon Partner Login / Register
               </Text>
             </TouchableOpacity>

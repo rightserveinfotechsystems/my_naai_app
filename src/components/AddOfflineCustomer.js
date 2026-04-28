@@ -117,15 +117,15 @@ const AddOfflineCustomer = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.formCard}>
-        <Text style={styles.title}>Walk-in Customers</Text>
-        <Text style={styles.subtitle}>
+        <Text allowFontScaling={false}style={styles.title}>Walk-in Customers</Text>
+        <Text allowFontScaling={false}style={styles.subtitle}>
           Enter name and service duration of walk-in customers
         </Text>
 
         {/* CUSTOMER NAME */}
         <View style={styles.inputBox}>
           <Ionicons name="person-outline" size={20} color="#999" />
-          <TextInput
+          <TextInput allowFontScaling={false}
             placeholder="Customer Name"
             placeholderTextColor="#999"
             style={styles.input}
@@ -137,7 +137,7 @@ const AddOfflineCustomer = ({ route, navigation }) => {
         {/* SERVICE DURATION */}
         <View style={styles.inputBox}>
           <Ionicons name="time-outline" size={20} color="#999" />
-          <TextInput
+          <TextInput allowFontScaling={false}
             placeholder="Duration in minutes"
             placeholderTextColor="#999"
             style={styles.input}
@@ -176,7 +176,7 @@ const AddOfflineCustomer = ({ route, navigation }) => {
           {loading ? (
             <ActivityIndicator color="#000" />
           ) : (
-            <Text style={styles.addText}>Add to Queue</Text>
+            <Text allowFontScaling={false}style={styles.addText}>Add to Queue</Text>
           )}
         </TouchableOpacity>
       </View>

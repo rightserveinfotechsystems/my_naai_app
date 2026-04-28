@@ -103,26 +103,26 @@ const UserProduct = () => {
       )}
 
       <View style={styles.cardContent}>
-        <Text style={styles.productName} numberOfLines={1}>
+        <Text allowFontScaling={false}style={styles.productName} numberOfLines={1}>
           {item.name}
         </Text>
 
         {/* Salon Name */}
         {item.salonName ? (
-          <Text style={styles.salonName} numberOfLines={1}>
+          <Text allowFontScaling={false}style={styles.salonName} numberOfLines={1}>
             {item.salonName}
           </Text>
         ) : null}
 
         <View style={styles.row}>
-          <Text style={styles.price}>₹ {item.price}</Text>
+          <Text allowFontScaling={false}style={styles.price}>₹ {item.price}</Text>
           <View style={styles.rating}>
             <Ionicons name="star" size={14} color="#FFD700" />
-            <Text style={styles.ratingText}>{Math.min(item.rating, 5)}</Text>
+            <Text allowFontScaling={false}style={styles.ratingText}>{Math.min(item.rating, 5)}</Text>
           </View>
         </View>
 
-        <Text
+        <Text allowFontScaling={false}
           style={[
             styles.availability,
             { color: item.available ? '#4CAF50' : '#F44336' },
@@ -141,7 +141,7 @@ const UserProduct = () => {
           {/* SEARCH BAR */}
           <View style={styles.searchBox}>
             <Ionicons name="search-outline" size={18} color="#999" />
-            <TextInput
+            <TextInput allowFontScaling={false}
               placeholder="Search products"
               placeholderTextColor="#999"
               value={search}
@@ -163,7 +163,7 @@ const UserProduct = () => {
               !loading && (
                 <View style={styles.noResult}>
                   <Ionicons name="search-circle-outline" size={64} color="#555" />
-                  <Text style={styles.noResultText}>No results found</Text>
+                  <Text allowFontScaling={false}style={styles.noResultText}>No results found</Text>
                 </View>
               )
             }

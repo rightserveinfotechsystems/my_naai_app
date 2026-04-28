@@ -183,7 +183,7 @@ const SalonDashboard = ({ navigation }) => {
         <View style={styles.infoLeft}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
 
-            <Text style={styles.name}>
+            <Text allowFontScaling={false}style={styles.name}>
               {item?.userName || 'Guest'}
             </Text>
 
@@ -191,7 +191,7 @@ const SalonDashboard = ({ navigation }) => {
               style={styles.doneBtn}
               onPress={() => handleBookingDone(item.bookingId)}
             >
-              <Text style={styles.doneText}>Done</Text>
+              <Text allowFontScaling={false}style={styles.doneText}>Done</Text>
             </TouchableOpacity>
 
           </View>
@@ -200,7 +200,7 @@ const SalonDashboard = ({ navigation }) => {
           {item?.barberName && (
             <View style={styles.row}>
               <Ionicons name="person-outline" size={14} color="#E8B97E" />
-              <Text style={styles.barber}>Barber: {item?.barberName}</Text>
+              <Text allowFontScaling={false}style={styles.barber}>Barber: {item?.barberName}</Text>
             </View>
           )}
 
@@ -208,26 +208,26 @@ const SalonDashboard = ({ navigation }) => {
             <View style={styles.row}>
               <Ionicons name="call-outline" size={14} color="#E8B97E" />
               <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.userPhone}`)}>
-                <Text style={styles.subText}>{item.userPhone}</Text>
+                <Text allowFontScaling={false}style={styles.subText}>{item.userPhone}</Text>
               </TouchableOpacity>
             </View>
           )}
 
           <View style={styles.row}>
             <Ionicons name="cut-outline" size={14} color="#E8B97E" />
-            <Text style={styles.subText}>{item?.serviceNames}</Text>
+            <Text allowFontScaling={false}style={styles.subText}>{item?.serviceNames}</Text>
           </View>
 
           <View style={styles.row}>
             <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
-            <Text style={styles.subText}>
+            <Text allowFontScaling={false}style={styles.subText}>
               {formatDateReadable(item?.bookingDate)}, token: {item?.queueNumber}
             </Text>
           </View>
         </View>
 
         {/* <TouchableOpacity style={styles.doneBtn} onPress={() => handleBookingDone(item.bookingId)}>
-          <Text style={styles.doneText}>Done</Text>
+          <Text allowFontScaling={false}style={styles.doneText}>Done</Text>
         </TouchableOpacity> */}
       </View>
     </View>
@@ -236,7 +236,7 @@ const SalonDashboard = ({ navigation }) => {
   const EmptyState = () => (
     <View style={styles.empty}>
       <Ionicons name="people-outline" size={60} color="#666" />
-      <Text style={styles.emptyText}>No customers in queue</Text>
+      <Text allowFontScaling={false}style={styles.emptyText}>No customers in queue</Text>
     </View>
   );
 
@@ -247,7 +247,7 @@ const SalonDashboard = ({ navigation }) => {
         <SafeAreaView style={styles.container}>
           {/* TOP BAR */}
           <View style={styles.topBar}>
-            <Text style={styles.title}>Customer Queue</Text>
+            <Text allowFontScaling={false}style={styles.title}>Customer Queue</Text>
             <View style={styles.actions}>
               {/* <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('AddOfflineCustomer', { salonId })}>
                 <Ionicons name="add" size={22} color="#000" />
@@ -262,7 +262,7 @@ const SalonDashboard = ({ navigation }) => {
                 <Ionicons name="notifications-outline" size={20} color="#000" />
                 {/* {notificationCount > 0 && (
                   <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{notificationCount}</Text>
+                    <Text allowFontScaling={false}style={styles.badgeText}>{notificationCount}</Text>
                   </View>
                 )} */}
               </TouchableOpacity>
@@ -288,7 +288,7 @@ const SalonDashboard = ({ navigation }) => {
                 <>
                   {todayBookings.length > 0 && (
                     <>
-                      <Text style={styles.sectionHeader}>Today</Text>
+                      <Text allowFontScaling={false}style={styles.sectionHeader}>Today</Text>
                       {todayBookings.map(item => (
                         <React.Fragment key={item.bookingId}>{renderSalon({ item })}</React.Fragment>
                       ))}
@@ -296,7 +296,7 @@ const SalonDashboard = ({ navigation }) => {
                   )}
                   {tomorrowBookings.length > 0 && (
                     <>
-                      <Text style={styles.sectionHeader}>Tomorrow</Text>
+                      <Text allowFontScaling={false}style={styles.sectionHeader}>Tomorrow</Text>
                       {tomorrowBookings.map(item => (
                         <React.Fragment key={item.bookingId}>{renderSalon({ item })}</React.Fragment>
                       ))}
@@ -304,7 +304,7 @@ const SalonDashboard = ({ navigation }) => {
                   )}
                   {dayAfterBookings.length > 0 && (
                     <>
-                      <Text style={styles.sectionHeader}>Day After Tomorrow</Text>
+                      <Text allowFontScaling={false}style={styles.sectionHeader}>Day After Tomorrow</Text>
                       {dayAfterBookings.map(item => (
                         <React.Fragment key={item.bookingId}>{renderSalon({ item })}</React.Fragment>
                       ))}

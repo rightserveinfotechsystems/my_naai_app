@@ -79,15 +79,15 @@ const NaaiLogin = ({ navigation }) => {
           >
             {/* Title */}
 
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Login as Salon Owner</Text>
+            <Text allowFontScaling={false}style={styles.title}>Welcome Back</Text>
+            <Text allowFontScaling={false}style={styles.subtitle}>Login as Salon Owner</Text>
 
             {/* Phone Input */}
             <View style={styles.inputBox}>
               <View style={styles.phoneContainer}>
-                <Text style={styles.countryCode}>+91</Text>
+                <Text allowFontScaling={false}style={styles.countryCode}>+91</Text>
 
-                <TextInput
+                <TextInput allowFontScaling={false}
                   placeholder="Mobile Number"
                   placeholderTextColor="#999"
                   keyboardType="number-pad"
@@ -107,15 +107,15 @@ const NaaiLogin = ({ navigation }) => {
               {loading ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text style={styles.loginText}>Login with OTP</Text>
+                <Text allowFontScaling={false}style={styles.loginText}>Login with OTP</Text>
               )}
             </TouchableOpacity>
 
             {/* Footer */}
             <View style={styles.footer}>
-              <Text style={styles.footerText}>
+              <Text allowFontScaling={false}style={styles.footerText}>
                 Don’t have an account? {' '}
-                <Text
+                <Text allowFontScaling={false}
                   style={styles.signup}
                   onPress={() => navigation.navigate('NaaiRequest')}
                 >

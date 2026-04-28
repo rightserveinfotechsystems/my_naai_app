@@ -266,20 +266,20 @@ const SalonProduct = () => {
                 </View>
             )}
             <View style={styles.cardContent}>
-                <Text style={styles.productName} numberOfLines={1}>
+                <Text allowFontScaling={false}style={styles.productName} numberOfLines={1}>
                     {item.name}
                 </Text>
 
                 <View style={styles.row}>
-                    <Text style={styles.price}>₹ {item.price}</Text>
+                    <Text allowFontScaling={false}style={styles.price}>₹ {item.price}</Text>
                     <View style={styles.rating}>
                         <Ionicons name="star" size={14} color="#FFD700" />
-                        <Text style={styles.ratingText}>{item.rating}</Text>
+                        <Text allowFontScaling={false}style={styles.ratingText}>{item.rating}</Text>
                     </View>
                 </View>
 
                 <View style={styles.row}>
-                    <Text style={[styles.availability, { color: item.available ? '#4CAF50' : '#F44336' }]}>
+                    <Text allowFontScaling={false}style={[styles.availability, { color: item.available ? '#4CAF50' : '#F44336' }]}>
                         {item.available ? 'In Stock' : 'Out of Stock'}
                     </Text>
                     <Switch
@@ -316,7 +316,7 @@ const SalonProduct = () => {
                         numColumns={2}
                         columnWrapperStyle={{ justifyContent: 'space-between' }}
                         contentContainerStyle={{ paddingBottom: 120 }}
-                        ListEmptyComponent={<Text style={styles.empty}>No products available</Text>}
+                        ListEmptyComponent={<Text allowFontScaling={false}style={styles.empty}>No products available</Text>}
                     />
 
                     <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
@@ -326,7 +326,7 @@ const SalonProduct = () => {
                     <Modal visible={modalVisible} transparent animationType="slide">
                         <View style={styles.modalOverlay}>
                             <View style={styles.modal}>
-                                <Text style={styles.modalTitle}>{editId ? 'Edit Product' : 'Add Product'}</Text>
+                                <Text allowFontScaling={false}style={styles.modalTitle}>{editId ? 'Edit Product' : 'Add Product'}</Text>
                                 <ScrollView>
                                     <TouchableOpacity style={styles.imagePicker} onPress={pickAndUploadImage}>
                                         {productForm.productImage ? (
@@ -340,7 +340,7 @@ const SalonProduct = () => {
                                         )}
                                     </TouchableOpacity>
 
-                                    <TextInput
+                                    <TextInput allowFontScaling={false}
                                         placeholder="Product Name"
                                         placeholderTextColor="#999"
                                         style={styles.input}
@@ -348,7 +348,7 @@ const SalonProduct = () => {
                                         onChangeText={text => setProductForm(prev => ({ ...prev, productName: text }))}
                                     />
 
-                                    <TextInput
+                                    <TextInput allowFontScaling={false}
                                         placeholder="Price"
                                         placeholderTextColor="#999"
                                         keyboardType="numeric"
@@ -357,7 +357,7 @@ const SalonProduct = () => {
                                         onChangeText={text => setProductForm(prev => ({ ...prev, price: text }))}
                                     />
 
-                                    <TextInput
+                                    <TextInput allowFontScaling={false}
                                         placeholder="Rating (0-5)"
                                         placeholderTextColor="#999"
                                         keyboardType="numeric"
@@ -369,7 +369,7 @@ const SalonProduct = () => {
                                     />
 
                                     <View style={styles.switchRow}>
-                                        <Text style={{ color: '#fff' }}>Available</Text>
+                                        <Text allowFontScaling={false}style={{ color: '#fff' }}>Available</Text>
                                         <Switch
                                             value={productForm.isAvailable}
                                             onValueChange={value => setProductForm(prev => ({ ...prev, isAvailable: value }))}
@@ -387,7 +387,7 @@ const SalonProduct = () => {
                                         {isSaving ? (
                                             <ActivityIndicator color="#000" />
                                         ) : (
-                                            <Text style={styles.saveText}>
+                                            <Text allowFontScaling={false}style={styles.saveText}>
                                                 {editId ? 'UPDATE PRODUCT' : 'ADD PRODUCT'}
                                             </Text>
                                         )}
@@ -395,7 +395,7 @@ const SalonProduct = () => {
 
 
                                     <TouchableOpacity onPress={resetForm}>
-                                        <Text style={styles.cancelText}>Cancel</Text>
+                                        <Text allowFontScaling={false}style={styles.cancelText}>Cancel</Text>
                                     </TouchableOpacity>
                                 </ScrollView>
                             </View>

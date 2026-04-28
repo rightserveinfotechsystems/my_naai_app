@@ -122,12 +122,12 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Phone Verification</Text>
-      <Text style={styles.subtitle}>
+      <Text allowFontScaling={false}style={styles.title}>Phone Verification</Text>
+      <Text allowFontScaling={false}style={styles.subtitle}>
         Enter the code sent to +91 {mobile}
       </Text>
 
-      <TextInput
+      <TextInput allowFontScaling={false}
         ref={inputRef}
         style={styles.otpInput}
         keyboardType="number-pad"
@@ -147,18 +147,18 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
           {loading ? (
             <ActivityIndicator color="#000" />
           ) : (
-            <Text style={styles.btnText}>Verify Code</Text>
+            <Text allowFontScaling={false}style={styles.btnText}>Verify Code</Text>
           )}
         </TouchableOpacity>
       )}
 
       {!canResend ? (
-        <Text style={styles.timerText}>
+        <Text allowFontScaling={false}style={styles.timerText}>
           Resend code in 00:{secondsLeft < 10 ? `0${secondsLeft}` : secondsLeft}
         </Text>
       ) : (
         <TouchableOpacity onPress={resendOtp}>
-          <Text style={styles.resend}>Resend a new Code</Text>
+          <Text allowFontScaling={false}style={styles.resend}>Resend a new Code</Text>
         </TouchableOpacity>
       )}
     </SafeAreaView>

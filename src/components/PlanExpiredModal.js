@@ -28,8 +28,8 @@ export default function PlanExpiredModal({ modalVisible, setModalVisible, data }
     >
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
-          <Text style={styles.title}>Plan Expired</Text>
-          <Text style={styles.message}>
+          <Text allowFontScaling={false}style={styles.title}>Plan Expired</Text>
+          <Text allowFontScaling={false}style={styles.message}>
             {data?.message || "Your plan has expired. Please renew."}
           </Text>
           <View style={styles.buttonContainer}>

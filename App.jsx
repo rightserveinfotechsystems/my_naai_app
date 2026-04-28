@@ -64,15 +64,42 @@ import { Text, TextInput } from 'react-native';
 // const isNavigationReady = React.createRef();
 import { createNavigationContainerRef } from '@react-navigation/native';
 
+
+// if (!Text.defaultProps) Text.defaultProps = {};
+// Text.defaultProps.maxFontSizeMultiplier = 1.2;
+// Text.defaultProps.style = { fontFamily: 'Roboto-Regular' };
+
+// if (!TextInput.defaultProps) TextInput.defaultProps = {};
+// TextInput.defaultProps.maxFontSizeMultiplier = 1.2;
+// TextInput.defaultProps.style = { fontFamily: 'Roboto-Regular' };
+
+
+
+const TextRender = Text.render;
+Text.render = function (...args) {
+  const origin = TextRender.call(this, ...args);
+  return React.cloneElement(origin, {
+    allowFontScaling: false,
+  });
+};
+
+const TextInputRender = TextInput.render;
+TextInput.render = function (...args) {
+  const origin = TextInputRender.call(this, ...args);
+  return React.cloneElement(origin, {
+    allowFontScaling: false,
+  });
+};
+
 export const navigationRef = createNavigationContainerRef();
 
 /* ---------- Roboto font ---------- */
 
-Text.defaultProps = Text.defaultProps || {};
-Text.defaultProps.style = { fontFamily: 'Roboto-Regular' };
+// Text.defaultProps = Text.defaultProps || {};
+// Text.defaultProps.style = { fontFamily: 'Roboto-Regular' };
 
-TextInput.defaultProps = TextInput.defaultProps || {};
-TextInput.defaultProps.style = { fontFamily: 'Roboto-Regular' };
+// TextInput.defaultProps = TextInput.defaultProps || {};
+// TextInput.defaultProps.style = { fontFamily: 'Roboto-Regular' };
 
 /* ---------- NAV ---------- */
 const Stack = createNativeStackNavigator();
@@ -116,11 +143,35 @@ const tabOptions = ({ route }) => ({
 /* ---------- USER TABS ---------- */
 function MainTabs() {
   return (
-    <Tab.Navigator screenOptions={tabOptions}>
-      <Tab.Screen name="Salon Naai" component={NaaiDashboard} />
-      <Tab.Screen name="Booked Salon" component={ServicesScreen} />
-      <Tab.Screen name="Products" component={UserProduct} />
-      <Tab.Screen name="Account" component={AccountScreen} />
+    <Tab.Navigator screenOptions={tabOptions} >
+      <Tab.Screen name="Salon Naai" component={NaaiDashboard} options={{
+        tabBarLabel: ({ color }) => (
+          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
+            Salon Naai
+          </Text>
+        ),
+      }} />
+      <Tab.Screen name="Booked Salon" component={ServicesScreen} options={{
+        tabBarLabel: ({ color }) => (
+          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
+            Booked Salon
+          </Text>
+        ),
+      }} />
+      <Tab.Screen name="Products" component={UserProduct} options={{
+        tabBarLabel: ({ color }) => (
+          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
+            Products
+          </Text>
+        ),
+      }} />
+      <Tab.Screen name="Account" component={AccountScreen} options={{
+        tabBarLabel: ({ color }) => (
+          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
+            Account
+          </Text>
+        ),
+      }} />
     </Tab.Navigator>
   );
 }
@@ -129,10 +180,34 @@ function MainTabs() {
 function SalonTabs() {
   return (
     <Tab.Navigator screenOptions={tabOptions}>
-      <Tab.Screen name="Queue" component={SalonDashboard} />
-      <Tab.Screen name="Queue History" component={SalonBookingHistory} />
-      <Tab.Screen name="Product" component={SalonProduct} />
-      <Tab.Screen name="Account" component={SalonAccountScreen} />
+      <Tab.Screen name="Queue" component={SalonDashboard} options={{
+        tabBarLabel: ({ color }) => (
+          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
+            Queue
+          </Text>
+        ),
+      }} />
+      <Tab.Screen name="Queue History" component={SalonBookingHistory} options={{
+        tabBarLabel: ({ color }) => (
+          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
+            Queue History
+          </Text>
+        ),
+      }} />
+      <Tab.Screen name="Product" component={SalonProduct} options={{
+        tabBarLabel: ({ color }) => (
+          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
+            Product
+          </Text>
+        ),
+      }} />
+      <Tab.Screen name="Account" component={SalonAccountScreen} options={{
+        tabBarLabel: ({ color }) => (
+          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
+            Account
+          </Text>
+        ),
+      }} />
     </Tab.Navigator>
   );
 }

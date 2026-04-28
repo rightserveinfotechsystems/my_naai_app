@@ -264,10 +264,10 @@ const SalonInfoForRegister = ({ navigation, route }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
           >
-            <Text style={styles.title}>Register as a Salon Owner</Text>
+            <Text allowFontScaling={false}style={styles.title}>Register as a Salon Owner</Text>
 
             <View style={styles.inputBox}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="Salon Owner Name"
                 placeholderTextColor="#999"
                 value={naaiName}
@@ -277,7 +277,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
             </View>
 
             <View style={styles.inputBox}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="Salon Name"
                 placeholderTextColor="#999"
                 value={salonName}
@@ -288,8 +288,8 @@ const SalonInfoForRegister = ({ navigation, route }) => {
 
             <View style={styles.inputBox}>
               <View style={styles.phoneContainer}>
-                <Text style={styles.countryCode}>+91</Text>
-                <TextInput
+                <Text allowFontScaling={false}style={styles.countryCode}>+91</Text>
+                <TextInput allowFontScaling={false}
                   value={mobile}
                   editable={false}
                   style={styles.input}
@@ -299,7 +299,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
 
 
             {/* <View style={[styles.inputBox, { height: 100, alignItems: 'flex-start' }]}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="Fetching location..."
                 placeholderTextColor="#999"
                 value={address}
@@ -310,7 +310,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
               />
             </View> */}
             <View style={[styles.inputBox, { height: 100 }]}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="Enter Address"
                 placeholderTextColor="#999"
                 value={manualAddress}
@@ -338,7 +338,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
               />
             </View> */}
             {/* <View style={styles.inputBox}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="City"
                 placeholderTextColor="#999"
                 value={city}
@@ -347,7 +347,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
               />
             </View> */}
             {/* <View style={styles.inputBox}>
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="Agent Code"
                 placeholderTextColor="#999"
                 value={agentCode}
@@ -373,7 +373,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
             </View>
             <View style={styles.inputBox}>
               <TouchableOpacity onPress={() => setShowOpenPicker(true)}>
-                <Text style={{ color: '#fff' }}>
+                <Text allowFontScaling={false}style={{ color: '#fff' }}>
                   {formatDisplayTime(openingTime)}
                 </Text>
               </TouchableOpacity>
@@ -381,7 +381,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
 
             <View style={styles.inputBox}>
               <TouchableOpacity onPress={() => setShowClosePicker(true)}>
-                <Text style={{ color: '#fff' }}>
+                <Text allowFontScaling={false}style={{ color: '#fff' }}>
                   {formatDisplayTime(closingTime)}
                 </Text>
               </TouchableOpacity>
@@ -395,18 +395,18 @@ const SalonInfoForRegister = ({ navigation, route }) => {
               {loading ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text style={styles.signupText}>Next</Text>
+                <Text allowFontScaling={false}style={styles.signupText}>Next</Text>
               )}
             </TouchableOpacity>
 
-            {/* <Text style={styles.terms}>
+            {/* <Text allowFontScaling={false}style={styles.terms}>
               By continuing you agree to our{'\n'}
               Terms & Conditions
             </Text> */}
 
-            <Text style={styles.footer}>
+            <Text allowFontScaling={false}style={styles.footer}>
               Already registered?{' '}
-              <Text
+              <Text allowFontScaling={false}
                 style={styles.link}
                 onPress={() => navigation.navigate('NaaiLogin')}
               >

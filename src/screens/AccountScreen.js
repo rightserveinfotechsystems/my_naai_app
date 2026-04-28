@@ -152,7 +152,7 @@ const AccountScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={GOLD} />
-        <Text style={{ color: '#aaa', marginTop: 10 }}>Loading profile...</Text>
+        <Text allowFontScaling={false}style={{ color: '#aaa', marginTop: 10 }}>Loading profile...</Text>
       </SafeAreaView>
     );
   }
@@ -163,16 +163,16 @@ const AccountScreen = ({ navigation }) => {
 
         {/* PROFILE */}
         <View style={styles.profileCard}>
-          <Text style={styles.name}>
+          <Text allowFontScaling={false}style={styles.name}>
             {profileData?.fullName || 'User'}
           </Text>
 
-          <Text style={styles.mobile}>
+          <Text allowFontScaling={false}style={styles.mobile}>
             📞 {profileData?.phoneNumber || ''}
           </Text>
 
           <TouchableOpacity style={styles.editBtn} onPress={openEditModal}>
-            <Text style={styles.editText}>Edit Profile</Text>
+            <Text allowFontScaling={false}style={styles.editText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
 
@@ -186,7 +186,7 @@ const AccountScreen = ({ navigation }) => {
             >
               <View style={styles.menuLeft}>
                 <Ionicons name={item.icon} size={20} color={GOLD} />
-                <Text style={styles.menuText}>{item.label}</Text>
+                <Text allowFontScaling={false}style={styles.menuText}>{item.label}</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#777" />
             </TouchableOpacity>
@@ -196,19 +196,19 @@ const AccountScreen = ({ navigation }) => {
         {/* LOGOUT */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={18} color="#fff" />
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text allowFontScaling={false}style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 
-        {/* <Text style={styles.version}>App Version 1.0.1</Text> */}
+        {/* <Text allowFontScaling={false}style={styles.version}>App Version 1.0.1</Text> */}
       </ScrollView>
 
       {/* EDIT PROFILE MODAL */}
       <Modal visible={editVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Edit Profile</Text>
+            <Text allowFontScaling={false}style={styles.modalTitle}>Edit Profile</Text>
 
-            <TextInput
+            <TextInput allowFontScaling={false}
               style={styles.input}
               placeholder="Name"
               placeholderTextColor="#999"
@@ -216,7 +216,7 @@ const AccountScreen = ({ navigation }) => {
               onChangeText={setName}
             />
 
-            <TextInput
+            <TextInput allowFontScaling={false}
               style={[styles.input, { backgroundColor: '#2E2E2E', color: '#AAA' }]}
               placeholder="Mobile Number"
               keyboardType="number-pad"
@@ -229,11 +229,11 @@ const AccountScreen = ({ navigation }) => {
                 style={styles.cancelBtn}
                 onPress={() => setEditVisible(false)}
               >
-                <Text style={styles.cancelText}>Cancel</Text>
+                <Text allowFontScaling={false}style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.saveBtn} onPress={updateProfile}>
-                <Text style={styles.saveText}>Save</Text>
+                <Text allowFontScaling={false}style={styles.saveText}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>

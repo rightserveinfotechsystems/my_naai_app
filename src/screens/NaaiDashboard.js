@@ -435,7 +435,7 @@ const NaaiDashboard = ({ navigation }) => {
     return (
       <View style={{ alignItems: 'center', marginTop: 60 }}>
         <Ionicons name="cut-outline" size={40} color="#777" />
-        <Text style={{ color: '#aaa', marginTop: 10, fontSize: 14 }}>
+        <Text allowFontScaling={false}style={{ color: '#aaa', marginTop: 10, fontSize: 14 }}>
           No salons available
         </Text>
       </View>
@@ -487,7 +487,7 @@ const NaaiDashboard = ({ navigation }) => {
 
           {distance !== null && distance !== undefined && (
             <View style={styles.distanceBadge}>
-              <Text style={styles.distanceBadgeText}>{distance} KM</Text>
+              <Text allowFontScaling={false}style={styles.distanceBadgeText}>{distance} KM</Text>
             </View>
           )}
         </View>
@@ -496,8 +496,8 @@ const NaaiDashboard = ({ navigation }) => {
 
         <View style={styles.cardContent}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.genderName}>{item?.genderType}</Text>
-            <Text style={styles.name} numberOfLines={2}
+            <Text allowFontScaling={false}style={styles.genderName}>{item?.genderType}</Text>
+            <Text allowFontScaling={false}style={styles.name} numberOfLines={2}
               ellipsizeMode="tail">{item?.name}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
               {/* <Ionicons
@@ -506,12 +506,12 @@ const NaaiDashboard = ({ navigation }) => {
     color={status.color}
   /> */}
 
-              {/* <Text style={{ color: status.color, marginLeft: 4, fontSize: 12, fontWeight: '700' }}>
+              {/* <Text allowFontScaling={false}style={{ color: status.color, marginLeft: 4, fontSize: 12, fontWeight: '700' }}>
     {status.text}
   </Text> */}
 
               {/* {status.openingTime && (
-                <Text style={{ color: '#aaa', fontSize: 12 }}>
+                <Text allowFontScaling={false}style={{ color: '#aaa', fontSize: 12 }}>
                   (
                   {formatTime12Hour(status.openingTime)} - {formatTime12Hour(status.closingTime)}
                   )
@@ -521,14 +521,14 @@ const NaaiDashboard = ({ navigation }) => {
             {/* {distance !== null && (
               <View style={styles.row}>
                 <Ionicons name="location-outline" size={14} color="#E1B378" />
-                <Text style={styles.distanceText}>
+                <Text allowFontScaling={false}style={styles.distanceText}>
                   {distance} KM
                 </Text>
               </View>
             )} */}
             {/* <View style={styles.ratingRow}>
             <Ionicons name="star" size={14} color="#E1B378" />
-            <Text style={styles.ratingText}>
+            <Text allowFontScaling={false}style={styles.ratingText}>
               {item.rating} ({item.reviews})
             </Text>
           </View> */}
@@ -547,16 +547,16 @@ const NaaiDashboard = ({ navigation }) => {
               }}
             >
               {/* <Ionicons name="location-outline" size={18} color="#E1B378" /> */}
-              <Text style={styles.linkText} numberOfLines={2}
-                ellipsizeMode="tail">{item.address}</Text>
+              <Text allowFontScaling={false}style={styles.linkText} numberOfLines={2}
+                ellipsizeMode="tail" >{item.address}</Text>
               {/* <Ionicons name="open-outline" size={14} color="#AAA" style={{ marginLeft: 4 }} /> */}
             </TouchableOpacity>
-            {/* <Text style={styles.address}>{item.address}</Text> */}
+            {/* <Text allowFontScaling={false}style={styles.address}>{item.address}</Text> */}
             {/* <TouchableOpacity style={styles.row}
               onPress={() => Linking.openURL(`tel:${item?.phoneNumber}`)}
             >
               <Ionicons name="call-outline" size={18} color="#E1B378" />
-              <Text style={styles.linkText}>{item?.phoneNumber}</Text>
+              <Text allowFontScaling={false}style={styles.linkText}>{item?.phoneNumber}</Text>
             </TouchableOpacity> */}
 
 
@@ -568,8 +568,8 @@ const NaaiDashboard = ({ navigation }) => {
                 <View style={styles.waitTime}>
 
                   <Ionicons name="time-outline" size={14} color="#E1B378" />
-                  <Text style={styles.waitText}>{item?.waitTime}</Text>
-                  <Text style={styles.queueText}>
+                  <Text allowFontScaling={false}style={styles.waitText}>{item?.waitTime}</Text>
+                  <Text allowFontScaling={false}style={styles.queueText}>
                     Queue: {item?.raw?.queueLength} people
                   </Text>
 
@@ -616,7 +616,7 @@ const NaaiDashboard = ({ navigation }) => {
             onPress={() => navigation.navigate('SalonDetail', { salonId: item.id })}
 
           >
-            <Text style={styles.bookText}>
+            <Text allowFontScaling={false}style={styles.bookText}>
               {status.isOpen
                 ? 'Book Now'
                 : status.text === 'Closed (Holiday)'
@@ -674,7 +674,7 @@ const NaaiDashboard = ({ navigation }) => {
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <Text style={styles.greeting}>Hi {firstName} 👋</Text>
+              <Text allowFontScaling={false}style={styles.greeting}>Hi {firstName} 👋</Text>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
 
@@ -687,7 +687,7 @@ const NaaiDashboard = ({ navigation }) => {
                     ]}
                     onPress={() => setGenderFilter('male')}
                   >
-                    <Text style={[
+                    <Text allowFontScaling={false}style={[
                       styles.genderText,
                       genderFilter === 'male' && styles.activeGenderText
                     ]}>
@@ -702,7 +702,7 @@ const NaaiDashboard = ({ navigation }) => {
                     ]}
                     onPress={() => setGenderFilter('female')}
                   >
-                    <Text style={[
+                    <Text allowFontScaling={false}style={[
                       styles.genderText,
                       genderFilter === 'female' && styles.activeGenderText
                     ]}>
@@ -719,7 +719,7 @@ const NaaiDashboard = ({ navigation }) => {
                   <Ionicons name="notifications-outline" size={20} color="#000" />
                   {/* {notificationCount > 0 && (
                   <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{notificationCount}</Text>
+                    <Text allowFontScaling={false}style={styles.badgeText}>{notificationCount}</Text>
                   </View>
                 )} */}
                 </TouchableOpacity>
@@ -730,7 +730,7 @@ const NaaiDashboard = ({ navigation }) => {
                     onPress={() => setShowCityDropdown(!showCityDropdown)}
                   >
                     <Ionicons name="location-outline" size={16} color="#000" />
-                    <Text style={styles.dropdownText}>{locationFilter}</Text>
+                    <Text allowFontScaling={false}style={styles.dropdownText}>{locationFilter}</Text>
                     <Ionicons
                       name={showCityDropdown ? 'chevron-up' : 'chevron-down'}
                       size={16}
@@ -749,7 +749,7 @@ const NaaiDashboard = ({ navigation }) => {
                             setShowCityDropdown(false);
                           }}
                         >
-                          <Text
+                          <Text allowFontScaling={false}
                             style={[
                               styles.dropdownItemText,
                               locationFilter === city &&
@@ -769,7 +769,7 @@ const NaaiDashboard = ({ navigation }) => {
 
             {/* <View style={styles.searchBox}>
               <Ionicons name="search" size={18} color="#999" />
-              <TextInput
+              <TextInput allowFontScaling={false}
                 placeholder="Find salon, specialists..."
                 placeholderTextColor="#999"
                 style={styles.searchInput}
@@ -823,7 +823,7 @@ const NaaiDashboard = ({ navigation }) => {
                 <>
                   <View style={styles.searchBox}>
                     <Ionicons name="search" size={18} color="#999" />
-                    <TextInput
+                    <TextInput allowFontScaling={false}
                       placeholder="Find salon, specialists..."
                       placeholderTextColor="#999"
                       style={styles.searchInput}

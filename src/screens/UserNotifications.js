@@ -90,9 +90,9 @@ const UserNotifications = ({ route, navigation }) => {
     const renderItem = ({ item }) => (
         <View style={styles.card}>
             <View style={styles.textWrap}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.message}>{item.body}</Text>
-                <Text style={styles.time}>
+                <Text allowFontScaling={false}style={styles.title}>{item.title}</Text>
+                <Text allowFontScaling={false}style={styles.message}>{item.body}</Text>
+                <Text allowFontScaling={false}style={styles.time}>
                     {new Date(item.createdAt).toLocaleString()}
                 </Text>
             </View>
@@ -103,7 +103,7 @@ const UserNotifications = ({ route, navigation }) => {
     const EmptyState = () => (
         <View style={styles.empty}>
             <Ionicons name="notifications-off-outline" size={50} color="#666" />
-            <Text style={styles.emptyText}>No notifications yet</Text>
+            <Text allowFontScaling={false}style={styles.emptyText}>No notifications yet</Text>
         </View>
     );
 
@@ -118,7 +118,7 @@ const UserNotifications = ({ route, navigation }) => {
                     color="#fff"
                     onPress={() => navigation.goBack()}
                 />
-                <Text style={styles.headerTitle}>Notifications</Text>
+                <Text allowFontScaling={false}style={styles.headerTitle}>Notifications</Text>
             </View>
             {loading ? (
                 <ActivityIndicator size="large" color="#E1B378" style={{ marginTop: 40 }} />

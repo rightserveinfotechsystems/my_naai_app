@@ -122,10 +122,10 @@ const SalonBusinessInfo = ({ navigation, route }) => {
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         style={styles.container}
                     >
-                        <Text style={styles.title}>Business Details</Text>
+                        <Text allowFontScaling={false}style={styles.title}>Business Details</Text>
 
                         {/* Step Indicator */}
-                        <Text style={styles.stepText}>Step 2 of 2</Text>
+                        <Text allowFontScaling={false}style={styles.stepText}>Step 2 of 2</Text>
 
 
                         {/* Salon Type */}
@@ -145,20 +145,20 @@ const SalonBusinessInfo = ({ navigation, route }) => {
                         </View>
 
                         {/* Opening Time */}
-                        <Text style={styles.label}>Opening Time</Text>
+                        <Text allowFontScaling={false}style={styles.label}>Opening Time</Text>
                         <View style={styles.inputBox}>
                             <TouchableOpacity onPress={() => setShowOpenPicker(true)}>
-                                <Text style={{ color: '#fff' }}>
+                                <Text allowFontScaling={false}style={{ color: '#fff' }}>
                                     {formatDisplayTime(openingTime)}
                                 </Text>
                             </TouchableOpacity>
                         </View>
 
                         {/* Closing Time */}
-                        <Text style={styles.label}>Closing Time</Text>
+                        <Text allowFontScaling={false}style={styles.label}>Closing Time</Text>
                         <View style={styles.inputBox}>
                             <TouchableOpacity onPress={() => setShowClosePicker(true)}>
-                                <Text style={{ color: '#fff' }}>
+                                <Text allowFontScaling={false}style={{ color: '#fff' }}>
                                     {formatDisplayTime(closingTime)}
                                 </Text>
                             </TouchableOpacity>
@@ -166,7 +166,7 @@ const SalonBusinessInfo = ({ navigation, route }) => {
 
                         {/* Agent Code */}
                         <View style={styles.inputBox}>
-                            <TextInput
+                            <TextInput allowFontScaling={false}
                                 placeholder="Agent Code"
                                 placeholderTextColor="#999"
                                 keyboardType="number-pad"
@@ -191,7 +191,7 @@ const SalonBusinessInfo = ({ navigation, route }) => {
                             {loading ? (
                                 <ActivityIndicator color="#000" />
                             ) : (
-                                <Text style={styles.signupText}>Continue</Text>
+                                <Text allowFontScaling={false}style={styles.signupText}>Continue</Text>
                             )}
                         </TouchableOpacity>
 

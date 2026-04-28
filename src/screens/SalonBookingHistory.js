@@ -131,14 +131,14 @@ const CustomerBookingHistory = () => {
 
           {/* LEFT INFO */}
           <View style={styles.infoLeft}>
-            <Text style={styles.name}>
+            <Text allowFontScaling={false}style={styles.name}>
               {item.userName || 'Guest'}
             </Text>
 
             {item?.barberName && (
               <View style={styles.row}>
                 <Ionicons name="person-outline" size={14} color="#E8B97E" />
-                <Text style={styles.barber}>
+                <Text allowFontScaling={false}style={styles.barber}>
                   Barber: {item?.barberName}
                 </Text>
               </View>
@@ -152,7 +152,7 @@ const CustomerBookingHistory = () => {
                 onPress={() => Linking.openURL(`tel:${item.userPhone}`)}
               >
                 <Ionicons name="call-outline" size={14} color="#E8B97E" />
-                <Text style={styles.subText}>
+                <Text allowFontScaling={false}style={styles.subText}>
                   {item.userPhone}
                 </Text>
               </TouchableOpacity>
@@ -162,14 +162,14 @@ const CustomerBookingHistory = () => {
             {item.services ? (
               <View style={styles.row}>
                 <Ionicons name="cut-outline" size={14} color="#E8B97E" />
-                <Text style={styles.subText}>{item.services}</Text>
+                <Text allowFontScaling={false}style={styles.subText}>{item.services}</Text>
               </View>
             ) : null}
 
             {/* DATE & TIME */}
             <View style={styles.row}>
               <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
-              <Text style={styles.subText}>
+              <Text allowFontScaling={false}style={styles.subText}>
                 {formatDateReadable(item.bookingDate)}
                 {/* {item.bookingTime ? ` • ${formatTime(item.bookingTime)}` : ''} */}
               </Text>
@@ -178,7 +178,7 @@ const CustomerBookingHistory = () => {
 
           {/* STATUS */}
           {/* <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-            <Text style={styles.statusText}>COMPLETED</Text>
+            <Text allowFontScaling={false}style={styles.statusText}>COMPLETED</Text>
           </View> */}
 
         </View>
@@ -191,7 +191,7 @@ const CustomerBookingHistory = () => {
   const EmptyState = () => (
     <View style={styles.empty}>
       <Ionicons name="calendar-outline" size={60} color="#555" />
-      <Text style={styles.emptyText}>No bookings found</Text>
+      <Text allowFontScaling={false}style={styles.emptyText}>No bookings found</Text>
     </View>
   );
 
@@ -204,14 +204,14 @@ const CustomerBookingHistory = () => {
     <ImageBackground source={BG_IMAGE} style={styles.bg} resizeMode="cover">
       <View style={styles.overlay}>
         <SafeAreaView style={styles.container}>
-          <Text style={styles.title}>
+          <Text allowFontScaling={false}style={styles.title}>
             Customer history
           </Text>
 
           {/* {WEEKLY_CUSTOMERS.length === 0 ? (
             <View style={styles.emptyBox}>
               <Ionicons name="people-outline" size={48} color="#777" />
-              <Text style={styles.emptyText}>
+              <Text allowFontScaling={false}style={styles.emptyText}>
                 No customers in the last 7 days
               </Text>
             </View>

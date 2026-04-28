@@ -262,7 +262,7 @@ const BookingSchedule = ({ route, navigation }) => {
         //             },
         //           ],
         //         )
-        Alert.alert('Request sent for Salon Appointment');
+        Alert.alert('Request Sent for Salon Appointment, Wait for Salon Response');
 
         navigation.navigate('Main', {
           screen: 'Booked Salon',
@@ -321,7 +321,7 @@ const BookingSchedule = ({ route, navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
+        <Text allowFontScaling={false}style={styles.headerTitle}>
           Schedule Appointment
         </Text>
       </View>
@@ -343,7 +343,7 @@ const BookingSchedule = ({ route, navigation }) => {
             {/* -------------------- BARBERS -------------------- */}
             <View style={styles.card}>
               {salon?.barbers.length > 0 && (
-                <Text style={styles.section}>
+                <Text allowFontScaling={false}style={styles.section}>
                   Select Barber (Optional)
                 </Text>
               )}
@@ -372,7 +372,7 @@ const BookingSchedule = ({ route, navigation }) => {
                         imageStyle={{ borderRadius: 12 }}
                       />
 
-                      <Text style={styles.barberName}>{b.fullName}</Text>
+                      <Text allowFontScaling={false}style={styles.barberName}>{b.fullName}</Text>
 
                       <View style={styles.statusRow}>
                         <View
@@ -381,12 +381,12 @@ const BookingSchedule = ({ route, navigation }) => {
                             { backgroundColor: getStatusColor(b.isAvailable) },
                           ]}
                         />
-                        <Text style={styles.statusText}>
+                        <Text allowFontScaling={false}style={styles.statusText}>
                           {b.isAvailable ? 'Available' : 'Not available'}
                         </Text>
                       </View>
 
-                      <Text style={styles.barberInfo}>
+                      <Text allowFontScaling={false}style={styles.barberInfo}>
                         ⭐ {b.ratingAverage || 0}
                       </Text>
                     </TouchableOpacity>
@@ -397,7 +397,7 @@ const BookingSchedule = ({ route, navigation }) => {
 
             {/* -------------------- DATE -------------------- */}
             <View style={styles.card}>
-              <Text style={styles.section}>Select Date</Text>
+              <Text allowFontScaling={false}style={styles.section}>Select Date</Text>
               <View style={styles.dateRow}>
                 {[0, 1, 2].map(i => {
                   const date = new Date(Date.now() + i * 86400000);
@@ -413,7 +413,7 @@ const BookingSchedule = ({ route, navigation }) => {
                       ]}
                       onPress={() => setSelectedDate(i)}
                     >
-                      <Text
+                      <Text allowFontScaling={false}
                         style={[
                           styles.dateDay,
                           selectedDate === i && styles.activeText,
@@ -421,7 +421,7 @@ const BookingSchedule = ({ route, navigation }) => {
                       >
                         {label}
                       </Text>
-                      <Text
+                      <Text allowFontScaling={false}
                         style={[
                           styles.dateNum,
                           selectedDate === i && styles.activeText,
@@ -438,13 +438,13 @@ const BookingSchedule = ({ route, navigation }) => {
             {/* -------------------- TIME -------------------- */}
             {isHoliday ? (
               <View style={styles.card}>
-                <Text style={[styles.section, { color: 'red' }]}>
+                <Text allowFontScaling={false}style={[styles.section, { color: 'red' }]}>
                   Salon is closed on {selectedDayName}
                 </Text>
               </View>
             ) : (
               <View style={styles.card}>
-                <Text style={styles.section}>Select Time</Text>
+                <Text allowFontScaling={false}style={styles.section}>Select Time</Text>
 
                 <View style={styles.timeGrid}>
                   {timeSlots.map(slot => {
@@ -465,7 +465,7 @@ const BookingSchedule = ({ route, navigation }) => {
                         ]}
                         onPress={() => setSelectedTime(slot.value)}
                       >
-                        <Text
+                        <Text allowFontScaling={false}
                           style={[
                             styles.timeSlotText,
                             selectedTime === slot.value && styles.activeText,
@@ -501,7 +501,7 @@ const BookingSchedule = ({ route, navigation }) => {
           {loading ? (
             <ActivityIndicator color="#000" />
           ) : (
-            <Text style={styles.confirmText}>
+            <Text allowFontScaling={false}style={styles.confirmText}>
               Confirm Booking
             </Text>
           )}

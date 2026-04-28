@@ -241,45 +241,45 @@ const ServicesScreen = () => {
 
         <View style={styles.infoContainer}>
           <View style={styles.info}>
-            <Text style={styles.name}>{item.salonName}</Text>
-            <Text style={styles.address}>{item.salonCity}</Text>
+            <Text allowFontScaling={false}style={styles.name}>{item.salonName}</Text>
+            <Text allowFontScaling={false}style={styles.address}>{item.salonCity}</Text>
 
             <View style={styles.barberRow}>
               <Ionicons name="person-outline" size={14} color="#aaa" />
-              <Text style={styles.barberText}>
+              <Text allowFontScaling={false}style={styles.barberText}>
                 Barber: {item.barberName || 'N/A'}
               </Text>
             </View>
             <View style={styles.barberRow}>
               <Ionicons name="cut-outline" size={14} color="#aaa" />
-              <Text style={styles.barberText}>
+              <Text allowFontScaling={false}style={styles.barberText}>
                 Service: {item.serviceName || 'N/A'}
               </Text>
             </View>
 
             {/* <View style={styles.dateRow}>
               <Ionicons name="calendar-outline" size={14} color="#E1B378" />
-              <Text style={styles.dateText}>
+              <Text allowFontScaling={false}style={styles.dateText}>
                 {item.bookingDate} • {item.bookingTime}
               </Text>
             </View> */}
 
             <View style={styles.dateRow}>
               <Ionicons name="calendar-outline" size={14} color="#E1B378" />
-              <Text style={styles.dateText}>
+              <Text allowFontScaling={false}style={styles.dateText}>
                 {formatDateReadable(item.bookingDate)}
                 {/* • {formatTime(item.bookingTime)} */}
               </Text>
               {/* {item.queueNumber && (
                 <View style={[styles.dateRow, { marginLeft: 4 }]}>
                   <Ionicons name="time-outline" size={14} color="#E1B378" />
-                  <Text style={styles.dateText}>
+                  <Text allowFontScaling={false}style={styles.dateText}>
                     Queue:{item.queueNumber} People
                   </Text>
                 </View>
               )} */}
               {/* <View style={styles.dateRow}> */}
-              {/* <Text style={styles.dateText}>
+              {/* <Text allowFontScaling={false}style={styles.dateText}>
                 ,Token Number: {item.queueNumber}
               </Text> */}
               {/* </View> */}
@@ -289,7 +289,7 @@ const ServicesScreen = () => {
             {/* {item.status === "pending" &&
               <View style={styles.dateRow}>
                 <Ionicons name="time-outline" size={14} color="#E1B378" />
-                <Text style={styles.dateText}>
+                <Text allowFontScaling={false}style={styles.dateText}>
                   Waiting Time: {item?.waitingTimeDisplay}
                 </Text>
               </View>} */}
@@ -301,7 +301,7 @@ const ServicesScreen = () => {
           <View style={styles.rightSection}>
             {/* STATUS BADGE */}
             <View style={[styles.statusBadge, { backgroundColor: btnColor }]}>
-              <Text style={styles.statusBadgeText}>
+              <Text allowFontScaling={false}style={styles.statusBadgeText}>
                 {STATUS_LABELS[item.status?.toLowerCase()] || "Unknown"}
               </Text>
             </View>
@@ -320,7 +320,7 @@ const ServicesScreen = () => {
                   ) : (
                     <>
                       <Ionicons name="close-circle-outline" size={14} color="#fff" />
-                      <Text style={[styles.cancelBtnText, { marginLeft: 4 }]}>
+                      <Text allowFontScaling={false}style={[styles.cancelBtnText, { marginLeft: 4 }]}>
                         Cancel
                       </Text>
                     </>
@@ -337,7 +337,7 @@ const ServicesScreen = () => {
   const EmptyState = () => (
     <View style={styles.empty}>
       <Ionicons name="calendar-outline" size={60} color="#555" />
-      <Text style={styles.emptyText}>No bookings found</Text>
+      <Text allowFontScaling={false}style={styles.emptyText}>No bookings found</Text>
     </View>
   );
 
@@ -350,7 +350,7 @@ const ServicesScreen = () => {
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
         <SafeAreaView style={styles.container}>
-          <Text style={styles.title}>My Bookings</Text>
+          <Text allowFontScaling={false}style={styles.title}>My Bookings</Text>
 
           {loading ? (
             <>

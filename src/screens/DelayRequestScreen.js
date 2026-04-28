@@ -39,23 +39,23 @@ export default function DelayRequestScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Delay Request</Text>
+      <Text allowFontScaling={false}style={styles.title}>Delay Request</Text>
 
       <View style={styles.card}>
-        <Text style={styles.message}>
+        <Text allowFontScaling={false}style={styles.message}>
           The salon has requested to delay your booking by{" "}
-          <Text style={styles.highlight}>
+          <Text allowFontScaling={false}style={styles.highlight}>
             {delayMinutes} minutes
           </Text>.
         </Text>
-        <Text style={styles.message}>
+        <Text allowFontScaling={false}style={styles.message}>
           Your new booking time will be{" "}
-          <Text style={styles.highlight}>
+          <Text allowFontScaling={false}style={styles.highlight}>
             {proposedTime}
           </Text>
         </Text>
 
-        <Text style={styles.subMessage}>
+        <Text allowFontScaling={false}style={styles.subMessage}>
           Do you want to accept this change?
         </Text>
       </View>
@@ -72,7 +72,7 @@ export default function DelayRequestScreen({ route, navigation }) {
           {loading && selectedAction === "ACCEPT" ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.btnText}>Accept</Text>
+            <Text allowFontScaling={false}style={styles.btnText}>Accept</Text>
           )}
         </TouchableOpacity>
 
@@ -87,7 +87,7 @@ export default function DelayRequestScreen({ route, navigation }) {
           {loading && selectedAction === "REJECT" ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.btnText}>Reject</Text>
+            <Text allowFontScaling={false}style={styles.btnText}>Reject</Text>
           )}
         </TouchableOpacity>
       </View>

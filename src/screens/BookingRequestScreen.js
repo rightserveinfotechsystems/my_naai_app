@@ -91,7 +91,7 @@ export default function BookingRequestScreen({ route, navigation }) {
         <StatusBar backgroundColor="#0F0F0F" barStyle="light-content" />
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#E1B378" />
-          {/* <Text style={{ color: '#fff', marginTop: 15 }}>
+          {/* <Text allowFontScaling={false}style={{ color: '#fff', marginTop: 15 }}>
             Loading booking details...
           </Text> */}
         </View>
@@ -108,30 +108,30 @@ export default function BookingRequestScreen({ route, navigation }) {
       <StatusBar backgroundColor="#0F0F0F" barStyle="light-content" />
 
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>New Booking Request</Text>
+        <Text allowFontScaling={false}style={styles.title}>New Booking Request</Text>
 
         {/* Booking Details */}
         <View style={styles.card}>
-          <Text style={styles.label}>Customer Name</Text>
-          <Text style={styles.value}>
+          <Text allowFontScaling={false}style={styles.label}>Customer Name</Text>
+          <Text allowFontScaling={false}style={styles.value}>
             {bookingDetails?.customerName}
           </Text>
 
-          <Text style={styles.label}>Selected Date</Text>
-          <Text style={styles.value}>
+          <Text allowFontScaling={false}style={styles.label}>Selected Date</Text>
+          <Text allowFontScaling={false}style={styles.value}>
             {bookingDetails?.bookingDate}
           </Text>
 
-          <Text style={styles.label}>Time Slot</Text>
-          <Text style={styles.value}>
+          <Text allowFontScaling={false}style={styles.label}>Time Slot</Text>
+          <Text allowFontScaling={false}style={styles.value}>
             {bookingDetails?.startTime} - {bookingDetails?.endTime}
           </Text>
 
-          <Text style={styles.label}>Services</Text>
+          <Text allowFontScaling={false}style={styles.label}>Services</Text>
           {bookingDetails?.services
             ?.split(',')
             ?.map((service, index) => (
-              <Text key={index} style={styles.serviceItem}>
+              <Text allowFontScaling={false}key={index} style={styles.serviceItem}>
                 • {service.trim()}
               </Text>
             ))}
@@ -151,7 +151,7 @@ export default function BookingRequestScreen({ route, navigation }) {
             {actionLoading && selectedAction === "ACCEPT" ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.btnWhiteText}>Accept</Text>
+              <Text allowFontScaling={false}style={styles.btnWhiteText}>Accept</Text>
             )}
           </TouchableOpacity>
 
@@ -166,7 +166,7 @@ export default function BookingRequestScreen({ route, navigation }) {
             {actionLoading && selectedAction === "REJECT" ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.btnWhiteText}>Reject</Text>
+              <Text allowFontScaling={false}style={styles.btnWhiteText}>Reject</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -179,14 +179,14 @@ export default function BookingRequestScreen({ route, navigation }) {
           disabled={actionLoading}
           onPress={() => setShowDelayOptions(true)}
         >
-          <Text style={styles.delayText}>Delay</Text>
+          <Text allowFontScaling={false}style={styles.delayText}>Delay</Text>
         </TouchableOpacity>
 
         {/* Delay Modal */}
         <Modal visible={showDelayOptions} transparent animationType="fade">
           <View style={styles.modalContainer}>
             <View style={styles.modalBox}>
-              <Text style={styles.modalTitle}>Select Delay Time</Text>
+              <Text allowFontScaling={false}style={styles.modalTitle}>Select Delay Time</Text>
 
               {[20, 40, 60].map(min => (
                 <TouchableOpacity
@@ -201,9 +201,9 @@ export default function BookingRequestScreen({ route, navigation }) {
                   {/* {actionLoading && selectedAction === "DELAY" ? (
                     <ActivityIndicator color="#E1B378" />
                   ) : (
-                    <Text style={styles.timeText}>+{min} Minutes</Text>
+                    <Text allowFontScaling={false}style={styles.timeText}>+{min} Minutes</Text>
                   )} */}
-                  <Text style={styles.timeText}>+{min} Minutes</Text>
+                  <Text allowFontScaling={false}style={styles.timeText}>+{min} Minutes</Text>
                 </TouchableOpacity>
               ))}
 
@@ -213,7 +213,7 @@ export default function BookingRequestScreen({ route, navigation }) {
                   if (!actionLoading) setShowDelayOptions(false);
                 }}
               >
-                <Text
+                <Text allowFontScaling={false}
                   style={[
                     styles.cancelText,
                     actionLoading && { opacity: 0.5 }
@@ -230,7 +230,7 @@ export default function BookingRequestScreen({ route, navigation }) {
       {actionLoading && (
         <View style={styles.fullScreenLoader}>
           <ActivityIndicator size="large" color="#E1B378" />
-          <Text style={{ color: '#fff', marginTop: 10 }}>
+          <Text allowFontScaling={false}style={{ color: '#fff', marginTop: 10 }}>
             Processing...
           </Text>
         </View>

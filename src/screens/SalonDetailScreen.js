@@ -235,8 +235,8 @@ const SalonDetailScreen = ({ route, navigation }) => {
                   </TouchableOpacity>
 
                   <View>
-                    <Text style={styles.headerTitle}>{salonDetails.salonName}</Text>
-                    <Text style={styles.salonType}>
+                    <Text allowFontScaling={false}style={styles.headerTitle}>{salonDetails.salonName}</Text>
+                    <Text allowFontScaling={false}style={styles.salonType}>
                       {salonDetails.genderType || ''} SALON
                     </Text>
                   </View>
@@ -293,7 +293,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
 
                       <View style={{ flexDirection: 'row' }}>
                         <Ionicons name="star" size={16} color="#FFD700" />
-                        <Text style={styles.rating}>
+                        <Text allowFontScaling={false}style={styles.rating}>
                           {salonDetails.ratingAverage} ({salonDetails.totalReviews} reviews)
                         </Text>
                       </View>
@@ -304,14 +304,14 @@ const SalonDetailScreen = ({ route, navigation }) => {
                       <>
                         <View style={styles.waitRow}>
                           <Ionicons name="people-outline" size={14} color="#E1B378" />
-                          <Text style={styles.waitText}>
+                          <Text allowFontScaling={false}style={styles.waitText}>
                             Queue: {salonDetails?.queueLength} People
                           </Text>
                         </View>
 
                         <View style={styles.waitRow}>
                           <Ionicons name="time-outline" size={14} color="#E1B378" />
-                          <Text style={styles.waitText}>
+                          <Text allowFontScaling={false}style={styles.waitText}>
                             Avg Waiting Time: {salonDetails?.totalWaitTime?.display}
                           </Text>
                         </View>
@@ -335,7 +335,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         />
                       </View>
 
-                      <Text
+                      <Text allowFontScaling={false}
                         style={[
                           styles.infoText,
                           { color: isOpenNow ? '#4CAF50' : '#F44336' },
@@ -344,7 +344,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         {isHolidayToday ? 'HOLIDAY' : isOpenNow ? 'OPEN NOW' : 'CLOSED'}
                       </Text>
 
-                      <Text style={styles.infoSub}>
+                      <Text allowFontScaling={false}style={styles.infoSub}>
                         ({salonDetails?.businessHours?.length > 0
                           ? `${formatTime12Hour(
                             salonDetails.businessHours[0].openingTime
@@ -358,7 +358,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                     {/* {salonDetails.businessHours &&
                       <View style={styles.infoRow}>
                         <Ionicons name="calendar-outline" size={16} color="#E1B378" />
-                        <Text style={styles.infoText}>
+                        <Text allowFontScaling={false}style={styles.infoText}>
                           Weekly Off:{' '}
                           {salonDetails.businessHours?.length
                             ? salonDetails.businessHours
@@ -376,7 +376,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                           <Ionicons name="calendar-outline" size={15} color="#fff" />
                         </View>
 
-                        <Text style={styles.infoText}>
+                        <Text allowFontScaling={false}style={styles.infoText}>
                           Weekly Off: {weeklyOff.join(', ')}
                         </Text>
                       </View>
@@ -389,7 +389,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                           size={16}
                           color="#FF5252"
                         />
-                        <Text style={[styles.infoText, { color: '#FF5252' }]}>
+                        <Text allowFontScaling={false}style={[styles.infoText, { color: '#FF5252' }]}>
                           Holiday: {salonDetails.upcomingHoliday}
                         </Text>
                       </View>
@@ -402,7 +402,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         <Ionicons name="location-outline" size={18} color="#E1B378" />
                       </View>
 
-                      <Text style={styles.linkText}>
+                      <Text allowFontScaling={false}style={styles.linkText}>
                         {address}
                       </Text>
                     </TouchableOpacity>
@@ -413,13 +413,13 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         <Ionicons name="call-outline" size={18} color="#E1B378" />
                       </View>
 
-                      <Text style={styles.linkText}>
+                      <Text allowFontScaling={false}style={styles.linkText}>
                         {salonDetails.phoneNumber}
                       </Text>
                     </TouchableOpacity>
 
                     {/* SERVICES */}
-                    {/* <Text style={styles.section}>Services</Text>
+                    {/* <Text allowFontScaling={false}style={styles.section}>Services</Text>
                     {services.map(service => {
 
                       return (
@@ -428,18 +428,18 @@ const SalonDetailScreen = ({ route, navigation }) => {
                           style={styles.serviceRow}
                         >
                           <View>
-                            <Text style={styles.serviceName}>{service.serviceName}</Text>
-                            <Text style={styles.serviceTime}>
+                            <Text allowFontScaling={false}style={styles.serviceName}>{service.serviceName}</Text>
+                            <Text allowFontScaling={false}style={styles.serviceTime}>
                               ⏱ {service.durationMinutes} min
                             </Text>
                           </View>
-                          <Text style={styles.servicePrice}>₹{service.price}</Text>
+                          <Text allowFontScaling={false}style={styles.servicePrice}>₹{service.price}</Text>
                         </TouchableOpacity>
                       );
                     })} */}
 
                     {/* BARBERS */}
-                    {/* <Text style={styles.section}>Barbers</Text>
+                    {/* <Text allowFontScaling={false}style={styles.section}>Barbers</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                       {barbers.map(b => (
                         <TouchableOpacity
@@ -455,7 +455,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         >
                           <ImageBackground source={{ uri: `${getServerUrl()}/getfiles/${b.profileImageUrl}` }
                           } style={styles.barberImg} />
-                          <Text style={styles.barberName}>{b.fullName}</Text>
+                          <Text allowFontScaling={false}style={styles.barberName}>{b.fullName}</Text>
 
                           <View style={styles.statusRow}>
                             <View
@@ -464,26 +464,26 @@ const SalonDetailScreen = ({ route, navigation }) => {
                                 { backgroundColor: getStatusColor(b.isAvailable) },
                               ]}
                             />
-                            <Text style={styles.statusText}>
+                            <Text allowFontScaling={false}style={styles.statusText}>
                               {b.isAvailable ? 'Available' : 'Not available'}
                             </Text>
 
                           </View>
 
-                          <Text style={styles.barberInfo}>
+                          <Text allowFontScaling={false}style={styles.barberInfo}>
                             ⭐ {b.ratingAverage} • ⏱ {b.durationTime}
                           </Text>
                         </TouchableOpacity>
                       ))}
                     </ScrollView> */}
                     <View style={styles.staticInfoBox}>
-                      <Text style={styles.staticText}>
+                      <Text allowFontScaling={false}style={styles.staticText}>
                         • Please arrive at least 10 minutes before your scheduled time.
                       </Text>
-                      <Text style={styles.staticText}>
+                      <Text allowFontScaling={false}style={styles.staticText}>
                         • Service duration may vary based on requirements.
                       </Text>
-                      <Text style={styles.staticText}>
+                      <Text allowFontScaling={false}style={styles.staticText}>
                         • Walk-ins are subject to availability and waiting time.
                       </Text>
                     </View>
@@ -499,7 +499,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
       {/* BOTTOM */}
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.bookBtn} onPress={handleContinue}>
-          <Text style={styles.bookText}>Continue</Text>
+          <Text allowFontScaling={false}style={styles.bookText}>Continue</Text>
         </TouchableOpacity>
       </View>
 

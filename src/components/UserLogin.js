@@ -171,11 +171,11 @@ const UserLogin = ({ navigation }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.container}
           >
-            <Text style={styles.title}>
+            <Text allowFontScaling={false}style={styles.title}>
               {otpSent ? 'Verify OTP' : 'Welcome Back'}
             </Text>
 
-            <Text style={styles.subtitle}>
+            <Text allowFontScaling={false}style={styles.subtitle}>
               {otpSent
                 ? `Enter OTP sent to ${mobile}`
                 : 'Login to your account'}
@@ -185,9 +185,9 @@ const UserLogin = ({ navigation }) => {
             {!otpSent && (
               <View style={styles.inputBox}>
                 <View style={styles.phoneContainer}>
-                  <Text style={styles.countryCode}>+91</Text>
+                  <Text allowFontScaling={false}style={styles.countryCode}>+91</Text>
 
-                  <TextInput
+                  <TextInput allowFontScaling={false}
                     placeholder="Mobile Number"
                     placeholderTextColor="#999"
                     keyboardType="number-pad"
@@ -203,7 +203,7 @@ const UserLogin = ({ navigation }) => {
             {/* OTP INPUT */}
             {otpSent && (
               <View style={styles.inputBox}>
-                <TextInput
+                <TextInput allowFontScaling={false}
                   placeholder="Enter OTP"
                   placeholderTextColor="#999"
                   keyboardType="number-pad"
@@ -231,7 +231,7 @@ const UserLogin = ({ navigation }) => {
               {loading ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text style={styles.loginText}>
+                <Text allowFontScaling={false}style={styles.loginText}>
                   {otpSent ? 'Verify OTP' : 'Login with OTP'}
                 </Text>
               )}
@@ -240,7 +240,7 @@ const UserLogin = ({ navigation }) => {
             {/* RESEND OTP */}
             {otpSent && (
               !canResend ? (
-                <Text style={styles.timerText}>
+                <Text allowFontScaling={false}style={styles.timerText}>
                   Resend OTP in 00:{secondsLeft < 10 ? `0${secondsLeft}` : secondsLeft}
                 </Text>
               ) : (
@@ -249,7 +249,7 @@ const UserLogin = ({ navigation }) => {
                   style={{ marginTop: 16 }}
                   disabled={loading}
                 >
-                  <Text style={styles.resend}>Resend OTP</Text>
+                  <Text allowFontScaling={false}style={styles.resend}>Resend OTP</Text>
                 </TouchableOpacity>
               )
             )}
@@ -259,9 +259,9 @@ const UserLogin = ({ navigation }) => {
             {!otpSent && (
               <>
                 <View style={styles.footer}>
-                  <Text style={styles.footerText}>
+                  <Text allowFontScaling={false}style={styles.footerText}>
                     Don’t have an account?{' '}
-                    <Text
+                    <Text allowFontScaling={false}
                       style={styles.signup}
                       onPress={() => navigation.navigate('UserSignup')}
                     >
@@ -271,9 +271,9 @@ const UserLogin = ({ navigation }) => {
                 </View>
 
                 {/* <View style={styles.naaiFooter}>
-                  <Text style={styles.footerText}>
+                  <Text allowFontScaling={false}style={styles.footerText}>
                    Salon Partner Login / Register{' '}
-                    <Text
+                    <Text allowFontScaling={false}
                       style={styles.signup}
                       onPress={() => navigation.navigate('NaaiLogin')}
                     >
@@ -288,7 +288,7 @@ const UserLogin = ({ navigation }) => {
                   onPress={() => navigation.navigate('NaaiRequest')}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.partnerBtnText}>
+                  <Text allowFontScaling={false}style={styles.partnerBtnText}>
                     Salon Partner Login / Register
                   </Text>
                 </TouchableOpacity>
