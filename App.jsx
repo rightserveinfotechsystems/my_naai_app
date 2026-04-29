@@ -63,6 +63,7 @@ import { Text, TextInput } from 'react-native';
 // export const navigationRef = React.createRef();
 // const isNavigationReady = React.createRef();
 import { createNavigationContainerRef } from '@react-navigation/native';
+import { communication } from './src/services/communication';
 
 
 // if (!Text.defaultProps) Text.defaultProps = {};
@@ -362,17 +363,87 @@ export default function App() {
       await notifee.displayNotification({
         title: msg.notification?.title,
         body: msg.notification?.body,
-        android: { channelId: 'default_channel' },
+        android: {
+          channelId: 'default_channel',
+          // color: '#E1B378',
+          smallIcon: 'ic_notification',
+          actions:
+            msg.data?.type === "BOOKING_REQUEST"
+              ? [
+                {
+                  title: '✅ Accept',
+                  pressAction: {
+                    id: 'ACCEPT_BOOKING',
+                  },
+                },
+                {
+                  title: '⏳ Delay',
+                  pressAction: {
+                    id: 'DELAY_BOOKING',
+                    launchActivity: 'default',
+                  },
+                },
+                {
+                  title: '❌ Reject',
+                  pressAction: {
+                    id: 'REJECT_BOOKING',
+                  },
+                },
+
+              ] : [],
+        },
         data: msg.data,
       });
     });
 
     const unsubscribeNotifee = notifee.onForegroundEvent(
-      ({ type, detail }) => {
+      async ({ type, detail }) => {
 
+        const { notification, pressAction } = detail;
+        const data = notification?.data;
+
+        console.log("Type 👉", type);
+        console.log("Action 👉", pressAction?.id);
+
+        /* ---------------- ACTION BUTTON CLICK ---------------- */
+        if (type === EventType.ACTION_PRESS) {
+
+          const bookingRequestId = data?.bookingRequestId;
+
+          // 👉 ACCEPT
+          if (pressAction?.id === 'ACCEPT_BOOKING') {
+            await communication.bookingRequestOwnerAction(
+              bookingRequestId,
+              { action: "ACCEPT" }
+            );
+
+            await notifee.cancelNotification(notification.id);
+            return;
+          }
+
+          // 👉 REJECT
+          if (pressAction?.id === 'REJECT_BOOKING') {
+            await communication.bookingRequestOwnerAction(
+              bookingRequestId,
+              { action: "REJECT" }
+            );
+
+            await notifee.cancelNotification(notification.id);
+            return;
+          }
+
+          // 👉 DELAY
+          if (pressAction?.id === 'DELAY_BOOKING') {
+            safeNavigate("BookingRequestScreen", {
+              bookingRequestId: data?.bookingRequestId,
+              openDelayModal: true,   // 👈 important
+            });
+            return;
+          }
+        }
+
+        /* ---------------- NORMAL NOTIFICATION CLICK ---------------- */
         if (type !== EventType.PRESS) return;
-
-        const data = detail.notification?.data;
 
         console.log("Pressed Data 👉", data);
         console.log("UserType 👉", userTypeRef.current);
@@ -389,7 +460,6 @@ export default function App() {
           });
           return;
         }
-
 
         // 👉 USER - Booking Confirmed
         if (

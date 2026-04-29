@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { communication } from '../services/communication';
 
 export default function BookingRequestScreen({ route, navigation }) {
-  const { bookingRequestId } = route.params || {};
+ const { bookingRequestId, openDelayModal } = route.params || {};
 
   const [bookingDetails, setBookingDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +29,12 @@ export default function BookingRequestScreen({ route, navigation }) {
       fetchBookingDetails();
     }
   }, [bookingRequestId]);
+
+  useEffect(() => {
+  if (openDelayModal) {
+    setShowDelayOptions(true);
+  }
+}, [openDelayModal]);
 
   const fetchBookingDetails = async () => {
     try {

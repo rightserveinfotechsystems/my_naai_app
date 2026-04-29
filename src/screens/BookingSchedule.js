@@ -262,7 +262,7 @@ const BookingSchedule = ({ route, navigation }) => {
         //             },
         //           ],
         //         )
-        Alert.alert('Request Sent for Salon Appointment, Wait for Salon Response');
+        Alert.alert('Request Sent, Wait for Salon Response');
 
         navigation.navigate('Main', {
           screen: 'Booked Salon',
