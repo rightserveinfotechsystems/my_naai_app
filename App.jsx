@@ -154,7 +154,7 @@ const tabOptions = ({ route }) => ({
   headerShown: false,
   tabBarStyle: {
     backgroundColor: COLORS.primary,
-    height: 50,
+    height: 70,
     borderTopWidth: 0,
   },
   tabBarActiveTintColor: COLORS.accent,

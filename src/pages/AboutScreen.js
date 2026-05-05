@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -70,6 +71,12 @@ const AboutScreen = ({ navigation }) => {
             MyNaai is built for customers looking for convenient grooming services and
             salon owners who want better control over bookings and daily operations.
           </Text>
+          <Text allowFontScaling={false}style={styles.subTitle}>Want help?</Text>
+            <TouchableOpacity style={styles.row}
+              onPress={() => Linking.openURL(`tel:8380017393`)}
+            >
+              <Text allowFontScaling={false}style={styles.text}>Call On : 8380017393</Text>
+            </TouchableOpacity> 
 
           {/* <Text allowFontScaling={false}style={styles.subTitle}>Version</Text> */}
           {/* <Text allowFontScaling={false}style={styles.text}>App Version 1.0.0</Text> */}

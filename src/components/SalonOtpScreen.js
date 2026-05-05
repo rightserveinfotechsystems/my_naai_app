@@ -43,13 +43,24 @@ const SalonOtpScreen = ({ route }) => {
   }, [secondsLeft, canResend]);
 
   /* ---------- GET STORED FCM TOKEN ---------- */
-  const getStoredToken = async () => {
-    try {
-      return await AsyncStorage.getItem('FCM_TOKEN');
-    } catch {
-      return '';
-    }
-  };
+ const getStoredToken = async () => {
+  const token = await AsyncStorage.getItem('FCM_TOKEN');
+  return token;
+};
+
+const waitForToken = async (retries = 5) => {
+  for (let i = 0; i < retries; i++) {
+    const token = await AsyncStorage.getItem('FCM_TOKEN');
+
+    if (token) return token;
+
+    console.log(`⏳ Waiting for token... (${i + 1})`);
+    await new Promise(res => setTimeout(res, 1000));
+  }
+
+  return '';
+};
+
 
   /* ---------- VERIFY OTP ---------- */
   const verifyOtp = async () => {
@@ -61,7 +72,9 @@ const SalonOtpScreen = ({ route }) => {
     setVerifyLoading(true);
 
     try {
-      const token = await getStoredToken();
+      const token = await waitForToken();
+      console.log("token",token);
+      
 
       const payload = {
         phoneNumber: mobile,

@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   DeviceEventEmitter,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -35,6 +36,8 @@ const MENUS = [
   { label: 'FAQ', screen: 'FAQScreen', icon: 'help-circle-outline' },
   { label: 'Terms & Conditions', screen: 'TermsScreen', icon: 'document-text-outline' },
   { label: 'Subscription Plans', screen: 'SubscriptionsPlan', icon: 'card-outline' },
+  { label: 'Want Help ? Call on : 8380017393', action: 'CALL', phone: '8380017393', icon: 'call-outline' },
+
 ];
 
 const SalonAccountScreen = ({ navigation }) => {
@@ -721,23 +724,23 @@ const SalonAccountScreen = ({ navigation }) => {
             style={styles.salonImage}
           />
 
-          <Text allowFontScaling={false}style={styles.name}>
+          <Text allowFontScaling={false} style={styles.name}>
             {profileData?.salonName || ''}
           </Text>
 
-          <Text allowFontScaling={false}style={styles.mobile}>{address}</Text>
+          <Text allowFontScaling={false} style={styles.mobile}>{address}</Text>
 
           <TouchableOpacity
             style={styles.editBtn}
             onPress={() => setEditVisible(true)}
           >
-            <Text allowFontScaling={false}style={styles.editText}>Edit Salon Profile</Text>
+            <Text allowFontScaling={false} style={styles.editText}>Edit Salon Profile</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.editBtn, { marginTop: 10, backgroundColor: '#2A2A2A' }]}
             onPress={handleRefreshProfile}
           >
-            <Text allowFontScaling={false}style={[styles.editText, { color: GOLD }]}>
+            <Text allowFontScaling={false} style={[styles.editText, { color: GOLD }]}>
               Refresh Account Details
             </Text>
           </TouchableOpacity>
@@ -769,7 +772,9 @@ const SalonAccountScreen = ({ navigation }) => {
               style={styles.menuRow}
               // onPress={() => navigation.navigate(item.screen)}
               onPress={() => {
-                if (item.screen === 'SubscriptionsPlan') {
+                if (item.action === 'CALL') {
+                  Linking.openURL(`tel:${item.phone}`);
+                } else if (item.screen === 'SubscriptionsPlan') {
                   navigation.navigate('SubscriptionsPlan', {
                     userData: profileData,
                     isUpgrade: true,
@@ -781,7 +786,7 @@ const SalonAccountScreen = ({ navigation }) => {
             >
               <View style={styles.menuLeft}>
                 <Ionicons name={item.icon} size={20} color={GOLD} />
-                <Text allowFontScaling={false}style={styles.menuText}>{item.label}</Text>
+                <Text allowFontScaling={false} style={styles.menuText}>{item.label}</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#777" />
             </TouchableOpacity>
@@ -790,7 +795,7 @@ const SalonAccountScreen = ({ navigation }) => {
         {/* LOGOUT */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={18} color="#fff" />
-          <Text allowFontScaling={false}style={styles.logoutText}>Logout</Text>
+          <Text allowFontScaling={false} style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 
         {/* <Text allowFontScaling={false}style={styles.version}>App Version 1.0.1</Text> */}
@@ -802,7 +807,7 @@ const SalonAccountScreen = ({ navigation }) => {
         <View style={styles.modalOverlay}>
           <ScrollView style={styles.modalCard}>
 
-            <Text allowFontScaling={false}style={styles.modalTitle}>Salon Settings</Text>
+            <Text allowFontScaling={false} style={styles.modalTitle}>Salon Settings</Text>
 
             <View style={styles.profileCardEdit}>
               {Array.from({
@@ -854,7 +859,7 @@ const SalonAccountScreen = ({ navigation }) => {
         </View> */}
                         </View>
 
-                        <Text allowFontScaling={false}style={styles.changeImg}>Change Image</Text>
+                        <Text allowFontScaling={false} style={styles.changeImg}>Change Image</Text>
 
                         {/* 🧠 USER GUIDANCE */}
                         {/* <Text allowFontScaling={false}style={styles.longPressHint}>
@@ -866,7 +871,7 @@ const SalonAccountScreen = ({ navigation }) => {
                         <View style={styles.addImageBox}>
                           <Ionicons name="add" size={32} color={GOLD} />
                         </View>
-                        <Text allowFontScaling={false}style={styles.changeImg}>Add Image</Text>
+                        <Text allowFontScaling={false} style={styles.changeImg}>Add Image</Text>
                       </>
                     )}
 
@@ -877,7 +882,7 @@ const SalonAccountScreen = ({ navigation }) => {
               })}
 
             </View>
-            <Text allowFontScaling={false}style={styles.longPressHint}>
+            <Text allowFontScaling={false} style={styles.longPressHint}>
               Note: Long press on image to remove
             </Text>
             <TextInput allowFontScaling={false}
@@ -902,7 +907,7 @@ const SalonAccountScreen = ({ navigation }) => {
                 style={styles.timeBtn}
                 onPress={() => setPickerType('open')}
               >
-                <Text allowFontScaling={false}style={styles.timeText}>
+                <Text allowFontScaling={false} style={styles.timeText}>
                   Open: {formatTime12Hour(openTime)}
                 </Text>
               </TouchableOpacity>
@@ -911,20 +916,20 @@ const SalonAccountScreen = ({ navigation }) => {
                 style={styles.timeBtn}
                 onPress={() => setPickerType('close')}
               >
-                <Text allowFontScaling={false}style={styles.timeText}>
+                <Text allowFontScaling={false} style={styles.timeText}>
                   Close: {formatTime12Hour(closeTime)}
                 </Text>
               </TouchableOpacity>
             </View>
 
             {/* Week Off */}
-            <Text allowFontScaling={false}style={styles.sectionTitle}>Week Off</Text>
+            <Text allowFontScaling={false} style={styles.sectionTitle}>Week Off</Text>
 
             <TouchableOpacity
               style={styles.addBtn}
               onPress={() => setHolidayPickerVisible(prev => !prev)}
             >
-              <Text allowFontScaling={false}style={styles.addText}>
+              <Text allowFontScaling={false} style={styles.addText}>
                 {holiday !== null
                   ? `Week Off: ${DAYS.find(d => d.value === holiday)?.label}`
                   : '+ Add Week Off'}
@@ -952,7 +957,7 @@ const SalonAccountScreen = ({ navigation }) => {
                       size={18}
                       color={holiday === day.value ? '#4CAF50' : '#999'}
                     />
-                    <Text allowFontScaling={false}style={styles.dropdownText}>{day.label}</Text>
+                    <Text allowFontScaling={false} style={styles.dropdownText}>{day.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -963,7 +968,7 @@ const SalonAccountScreen = ({ navigation }) => {
 
 
             {/* ================= SERVICES ================= */}
-            <Text allowFontScaling={false}style={styles.sectionTitle}>Services</Text>
+            <Text allowFontScaling={false} style={styles.sectionTitle}>Services</Text>
 
             {services.map((service, index) => (
               <View key={service.id} style={styles.serviceRow}>
@@ -1027,12 +1032,12 @@ const SalonAccountScreen = ({ navigation }) => {
                 ])
               }
             >
-              <Text allowFontScaling={false}style={styles.addText}>+ Add Service</Text>
+              <Text allowFontScaling={false} style={styles.addText}>+ Add Service</Text>
             </TouchableOpacity>
 
 
             {/* BARBERS */}
-            <Text allowFontScaling={false}style={styles.sectionTitle}>Barbers</Text>
+            <Text allowFontScaling={false} style={styles.sectionTitle}>Barbers</Text>
 
             {barbers.map((b, index) => (
               <View key={b.id} style={styles.barberCard}>
@@ -1103,7 +1108,7 @@ const SalonAccountScreen = ({ navigation }) => {
                     }}
                   />
 
-                  <Text allowFontScaling={false}style={{ color: '#777', fontSize: 11, marginTop: 4 }}>
+                  <Text allowFontScaling={false} style={{ color: '#777', fontSize: 11, marginTop: 4 }}>
                     Out of 5
                   </Text>
 
@@ -1148,7 +1153,7 @@ const SalonAccountScreen = ({ navigation }) => {
                         }}
 
                       >
-                        <Text allowFontScaling={false}style={styles.statusPillText}>{opt.label}</Text>
+                        <Text allowFontScaling={false} style={styles.statusPillText}>{opt.label}</Text>
                       </TouchableOpacity>
                     ))}
                     <TouchableOpacity
@@ -1178,7 +1183,7 @@ const SalonAccountScreen = ({ navigation }) => {
                 ])
               }
             >
-              <Text allowFontScaling={false}style={styles.addText}>+ Add Barber</Text>
+              <Text allowFontScaling={false} style={styles.addText}>+ Add Barber</Text>
             </TouchableOpacity>
 
             {/* SAVE */}
@@ -1187,7 +1192,7 @@ const SalonAccountScreen = ({ navigation }) => {
                 style={styles.cancelBtn}
                 onPress={() => setEditVisible(false)}
               >
-                <Text allowFontScaling={false}style={styles.cancelText}>Cancel</Text>
+                <Text allowFontScaling={false} style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1195,7 +1200,7 @@ const SalonAccountScreen = ({ navigation }) => {
                 onPress={handleSaveProfile}
 
               >
-                <Text allowFontScaling={false}style={styles.saveText}>Save</Text>
+                <Text allowFontScaling={false} style={styles.saveText}>Save</Text>
               </TouchableOpacity>
             </View>
 

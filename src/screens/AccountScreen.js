@@ -11,6 +11,7 @@ import {
   Alert,
   ActivityIndicator,
   DeviceEventEmitter,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -24,6 +25,8 @@ const MENUS = [
   { label: 'About', screen: 'AboutScreen', icon: 'information-circle-outline' },
   { label: 'FAQ', screen: 'FAQScreen', icon: 'help-circle-outline' },
   { label: 'Terms & Conditions', screen: 'TermsScreen', icon: 'document-text-outline' },
+  { label: 'Want Help ? Call on : 8380017393', action: 'CALL', phone: '8380017393', icon: 'call-outline' },
+
 ];
 
 const AccountScreen = ({ navigation }) => {
@@ -152,7 +155,7 @@ const AccountScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={GOLD} />
-        <Text allowFontScaling={false}style={{ color: '#aaa', marginTop: 10 }}>Loading profile...</Text>
+        <Text allowFontScaling={false} style={{ color: '#aaa', marginTop: 10 }}>Loading profile...</Text>
       </SafeAreaView>
     );
   }
@@ -163,16 +166,16 @@ const AccountScreen = ({ navigation }) => {
 
         {/* PROFILE */}
         <View style={styles.profileCard}>
-          <Text allowFontScaling={false}style={styles.name}>
+          <Text allowFontScaling={false} style={styles.name}>
             {profileData?.fullName || 'User'}
           </Text>
 
-          <Text allowFontScaling={false}style={styles.mobile}>
+          <Text allowFontScaling={false} style={styles.mobile}>
             📞 {profileData?.phoneNumber || ''}
           </Text>
 
           <TouchableOpacity style={styles.editBtn} onPress={openEditModal}>
-            <Text allowFontScaling={false}style={styles.editText}>Edit Profile</Text>
+            <Text allowFontScaling={false} style={styles.editText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
 
@@ -182,11 +185,18 @@ const AccountScreen = ({ navigation }) => {
             <TouchableOpacity
               key={item.label}
               style={styles.menuRow}
-              onPress={() => navigation.navigate(item.screen)}
+              // onPress={() => navigation.navigate(item.screen)}
+              onPress={() => {
+                if (item.action === 'CALL') {
+                  Linking.openURL(`tel:${item.phone}`);
+                } else {
+                  navigation.navigate(item.screen);
+                }
+              }}
             >
               <View style={styles.menuLeft}>
                 <Ionicons name={item.icon} size={20} color={GOLD} />
-                <Text allowFontScaling={false}style={styles.menuText}>{item.label}</Text>
+                <Text allowFontScaling={false} style={styles.menuText}>{item.label}</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#777" />
             </TouchableOpacity>
@@ -196,7 +206,7 @@ const AccountScreen = ({ navigation }) => {
         {/* LOGOUT */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={18} color="#fff" />
-          <Text allowFontScaling={false}style={styles.logoutText}>Logout</Text>
+          <Text allowFontScaling={false} style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 
         {/* <Text allowFontScaling={false}style={styles.version}>App Version 1.0.1</Text> */}
@@ -206,7 +216,7 @@ const AccountScreen = ({ navigation }) => {
       <Modal visible={editVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text allowFontScaling={false}style={styles.modalTitle}>Edit Profile</Text>
+            <Text allowFontScaling={false} style={styles.modalTitle}>Edit Profile</Text>
 
             <TextInput allowFontScaling={false}
               style={styles.input}
@@ -229,11 +239,11 @@ const AccountScreen = ({ navigation }) => {
                 style={styles.cancelBtn}
                 onPress={() => setEditVisible(false)}
               >
-                <Text allowFontScaling={false}style={styles.cancelText}>Cancel</Text>
+                <Text allowFontScaling={false} style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.saveBtn} onPress={updateProfile}>
-                <Text allowFontScaling={false}style={styles.saveText}>Save</Text>
+                <Text allowFontScaling={false} style={styles.saveText}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
