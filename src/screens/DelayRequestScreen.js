@@ -8,6 +8,7 @@ export default function DelayRequestScreen({ route, navigation }) {
   const { bookingRequestId, delayMinutes, proposedTime } = route.params;
   const [loading, setLoading] = useState(false);
   const [selectedAction, setSelectedAction] = useState(null);
+console.log("bookingRequestId, delayMinutes, proposedTime",bookingRequestId, delayMinutes, proposedTime);
 
   const handleCustomerAction = async (action) => {
     if (loading) return;

@@ -268,7 +268,7 @@ const ServicesScreen = () => {
               <Ionicons name="calendar-outline" size={14} color="#E1B378" />
               <Text allowFontScaling={false}style={styles.dateText}>
                 {formatDateReadable(item.bookingDate)}
-                {/* • {formatTime(item.bookingTime)} */}
+                 - {formatTime(item.bookingTime)}
               </Text>
               {/* {item.queueNumber && (
                 <View style={[styles.dateRow, { marginLeft: 4 }]}>

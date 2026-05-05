@@ -41,6 +41,7 @@
     "react-native-screens": "^4.19.0",
     "react-native-tts": "^4.1.1",
     "react-native-vector-icons": "^10.3.0",
+    "react-native-version-check": "^3.5.0",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {

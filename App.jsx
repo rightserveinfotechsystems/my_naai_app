@@ -2,9 +2,9 @@ import 'react-native-gesture-handler'; // MUST be first
 
 import React, { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppState, DeviceEventEmitter } from 'react-native';
+import { AppState, DeviceEventEmitter, Image, Linking, TouchableOpacity, View } from 'react-native';
 
-import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
+import notifee, { AndroidImportance, AndroidStyle, EventType } from '@notifee/react-native';
 import messaging from '@react-native-firebase/messaging';
 
 import { NavigationContainer } from '@react-navigation/native';
@@ -64,7 +64,8 @@ import { Text, TextInput } from 'react-native';
 // const isNavigationReady = React.createRef();
 import { createNavigationContainerRef } from '@react-navigation/native';
 import { communication } from './src/services/communication';
-
+import VersionCheck from 'react-native-version-check';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // if (!Text.defaultProps) Text.defaultProps = {};
 // Text.defaultProps.maxFontSizeMultiplier = 1.2;
@@ -73,6 +74,8 @@ import { communication } from './src/services/communication';
 // if (!TextInput.defaultProps) TextInput.defaultProps = {};
 // TextInput.defaultProps.maxFontSizeMultiplier = 1.2;
 // TextInput.defaultProps.style = { fontFamily: 'Roboto-Regular' };
+
+
 
 
 
@@ -91,6 +94,39 @@ TextInput.render = function (...args) {
     allowFontScaling: false,
   });
 };
+
+
+//  useEffect(() => {
+//     checkForceUpdate();
+//   }, []);
+
+//   const checkForceUpdate = async () => {
+//     try {
+//       const latestVersion = await VersionCheck.getLatestVersion();
+//       const currentVersion = VersionCheck.getCurrentVersion();
+
+//       console.log("Current:", currentVersion);
+//       console.log("Latest:", latestVersion);
+//       if (!latestVersion) {
+//         setForceUpdate(false);
+//         return;
+//       }
+
+//       const isUpdateNeeded =
+//         currentVersion.localeCompare(latestVersion, undefined, { numeric: true }) === -1;
+
+//       if (isUpdateNeeded) {
+//         const url = await VersionCheck.getStoreUrl();
+//         setStoreUrl(url);
+//         setForceUpdate(true);
+//       }
+//     } catch (err) {
+//       console.log("Update check error:", err);
+//       setForceUpdate(false);
+//     } finally {
+//       setCheckingUpdate(false);
+//     }
+//   };
 
 export const navigationRef = createNavigationContainerRef();
 
@@ -118,14 +154,14 @@ const tabOptions = ({ route }) => ({
   headerShown: false,
   tabBarStyle: {
     backgroundColor: COLORS.primary,
-    height: 70,
+    height: 50,
     borderTopWidth: 0,
   },
   tabBarActiveTintColor: COLORS.accent,
   tabBarInactiveTintColor: COLORS.inactive,
   tabBarLabelStyle: {
     fontSize: 13,
-    marginBottom: 6,
+    marginBottom: 2,
   },
   tabBarIcon: ({ color }) => {
     const icons = {
@@ -137,7 +173,7 @@ const tabOptions = ({ route }) => ({
       'Product': 'storefront-outline',
       'Account': 'person',
     };
-    return <Ionicons name={icons[route.name]} size={22} color={color} />;
+    return <Ionicons name={icons[route.name]} size={25} color={color} />;
   },
 });
 
@@ -146,32 +182,16 @@ function MainTabs() {
   return (
     <Tab.Navigator screenOptions={tabOptions} >
       <Tab.Screen name="Salon Naai" component={NaaiDashboard} options={{
-        tabBarLabel: ({ color }) => (
-          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
-            Salon Naai
-          </Text>
-        ),
+        tabBarLabel: ""
       }} />
       <Tab.Screen name="Booked Salon" component={ServicesScreen} options={{
-        tabBarLabel: ({ color }) => (
-          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
-            Booked Salon
-          </Text>
-        ),
+        tabBarLabel: ""
       }} />
       <Tab.Screen name="Products" component={UserProduct} options={{
-        tabBarLabel: ({ color }) => (
-          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
-            Products
-          </Text>
-        ),
+        tabBarLabel: ""
       }} />
       <Tab.Screen name="Account" component={AccountScreen} options={{
-        tabBarLabel: ({ color }) => (
-          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
-            Account
-          </Text>
-        ),
+        tabBarLabel: ""
       }} />
     </Tab.Navigator>
   );
@@ -181,33 +201,20 @@ function MainTabs() {
 function SalonTabs() {
   return (
     <Tab.Navigator screenOptions={tabOptions}>
-      <Tab.Screen name="Queue" component={SalonDashboard} options={{
-        tabBarLabel: ({ color }) => (
-          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
-            Queue
-          </Text>
-        ),
-      }} />
-      <Tab.Screen name="Queue History" component={SalonBookingHistory} options={{
-        tabBarLabel: ({ color }) => (
-          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
-            Queue History
-          </Text>
-        ),
-      }} />
+      <Tab.Screen name="Queue" component={SalonDashboard}
+        options={{
+          tabBarLabel: ""
+        }}
+      />
+      <Tab.Screen name="Queue History" component={SalonBookingHistory}
+        options={{
+          tabBarLabel: ""
+        }} />
       <Tab.Screen name="Product" component={SalonProduct} options={{
-        tabBarLabel: ({ color }) => (
-          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
-            Product
-          </Text>
-        ),
+        tabBarLabel: ""
       }} />
       <Tab.Screen name="Account" component={SalonAccountScreen} options={{
-        tabBarLabel: ({ color }) => (
-          <Text allowFontScaling={false} style={{ color, fontSize: 13 }}>
-            Account
-          </Text>
-        ),
+        tabBarLabel: ""
       }} />
     </Tab.Navigator>
   );
@@ -295,6 +302,44 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState(null);
   const [userId, setUserId] = useState('');
+  const [checkingUpdate, setCheckingUpdate] = useState(true);
+  const [forceUpdate, setForceUpdate] = useState(false);
+  const [storeUrl, setStoreUrl] = useState('');
+
+
+
+  useEffect(() => {
+    checkForceUpdate();
+  }, []);
+
+  const checkForceUpdate = async () => {
+    try {
+      const latestVersion = await VersionCheck.getLatestVersion();
+      const currentVersion = VersionCheck.getCurrentVersion();
+
+      console.log("Current:", currentVersion);
+      console.log("Latest:", latestVersion);
+      if (!latestVersion) {
+        setForceUpdate(false);
+        return;
+      }
+
+      const isUpdateNeeded =
+        currentVersion.localeCompare(latestVersion, undefined, { numeric: true }) === -1;
+
+      if (isUpdateNeeded) {
+        const url = await VersionCheck.getStoreUrl();
+        setStoreUrl(url);
+        setForceUpdate(true);
+      }
+    } catch (err) {
+      console.log("Update check error:", err);
+      setForceUpdate(false);
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
 
   const userTypeRef = useRef(null);
   useEffect(() => {
@@ -354,6 +399,13 @@ export default function App() {
       sound: 'buzzer',
     });
 
+    notifee.createChannel({
+      id: 'booking',
+      name: 'Default Notifications',
+      importance: AndroidImportance.HIGH,
+      sound: 'buzzer_old',
+    });
+
     requestNotificationPermission();
     initTTS();
 
@@ -364,9 +416,23 @@ export default function App() {
         title: msg.notification?.title,
         body: msg.notification?.body,
         android: {
-          channelId: 'default_channel',
+          channelId: msg.data?.type === "BOOKING_REQUEST" ? 'booking' : 'default_channel',
           // color: '#E1B378',
+          // style: {
+          //   type: AndroidStyle.BIGTEXT,
+          //   text: msg.notification?.body
+          // },
+          style: {
+            type: AndroidStyle.BIGTEXT,
+            text: msg.notification?.body || msg.data?.body || ''
+          },
           smallIcon: 'ic_notification',
+
+          // ongoing: false,
+          ongoing: msg.data?.type === "BOOKING_REQUEST" ? true : false,
+          // autoCancel: msg.data?.type === "BOOKING_REQUEST" ? true : false,
+          // autoCancel: true,
+          timeoutAfter: msg.data?.type === "BOOKING_REQUEST" ? 70000 : undefined,
           actions:
             msg.data?.type === "BOOKING_REQUEST"
               ? [
@@ -656,6 +722,108 @@ export default function App() {
 
 
   if (loading) return null;
+
+
+  if (checkingUpdate) {
+    return null; // ⏳ wait for version check
+  }
+
+  if (forceUpdate) {
+    return (
+
+      <SafeAreaView style={{
+        flex: 1,
+        backgroundColor: '#0F0F0F',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20
+      }}>
+
+        {/* App Icon / Illustration */}
+        <View style={{
+          width: 100,
+          height: 100,
+          borderRadius: 50,
+          backgroundColor: '#1C1C1C',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: 25,
+          shadowColor: '#E8B97E',
+          shadowOpacity: 0.3,
+          shadowRadius: 12,
+          elevation: 6
+        }}>
+          <Image
+            source={require('./src/assets/my_naai.png')}
+            style={{
+              width: 60,
+              height: 60,
+              resizeMode: 'contain'
+            }}
+          />
+        </View>
+
+        {/* Title */}
+        <Text style={{
+          fontSize: 24,
+          fontWeight: '700',
+          color: '#FFFFFF',
+          marginBottom: 10
+        }}>
+          Update Required
+        </Text>
+
+        {/* Subtitle */}
+        <Text style={{
+          textAlign: 'center',
+          color: '#B0B0B0',
+          fontSize: 16,
+          lineHeight: 22,
+          marginBottom: 30
+        }}>
+          A new version of MyNaai is available.
+          Please update the app to continue.
+        </Text>
+
+        {/* Update Button */}
+        <TouchableOpacity
+          onPress={() => Linking.openURL(storeUrl)}
+          activeOpacity={0.8}
+          style={{
+            width: '100%',
+            backgroundColor: '#E8B97E',
+            paddingVertical: 14,
+            borderRadius: 10,
+            alignItems: 'center',
+            shadowColor: '#E8B97E',
+            shadowOpacity: 0.4,
+            shadowRadius: 10,
+            elevation: 5
+          }}
+        >
+          <Text style={{
+            color: '#000',
+            fontSize: 16,
+            fontWeight: '600'
+          }}>
+            Update Now
+          </Text>
+        </TouchableOpacity>
+
+        {/* Optional note */}
+        <Text style={{
+          marginTop: 20,
+          fontSize: 13,
+          color: '#666',
+          textAlign: 'center'
+        }}>
+          This update is mandatory to continue using the app.
+        </Text>
+
+      </SafeAreaView>
+    );
+  }
+
 
   return (
     <NotificationProvider userId={userId}>

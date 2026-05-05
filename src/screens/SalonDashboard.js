@@ -176,6 +176,21 @@ const SalonDashboard = ({ navigation }) => {
     return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
+
+  const formatTime = (time) => {
+      if (!time) return '';
+
+      const [h, m] = time.split(':');
+      const date = new Date();
+      date.setHours(Number(h), Number(m));
+
+      return date.toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+    };
+
   /* ---------------- RENDER SINGLE BOOKING ---------------- */
   const renderSalon = ({ item }) => (
     <View style={styles.card}>
@@ -222,6 +237,7 @@ const SalonDashboard = ({ navigation }) => {
             <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
             <Text allowFontScaling={false}style={styles.subText}>
               {formatDateReadable(item?.bookingDate)}, token: {item?.queueNumber}
+              {/* {formatDateReadable(item?.bookingDate)}, {formatTime(item?.bookingTime)}, token: {item?.queueNumber} */}
             </Text>
           </View>
         </View>
