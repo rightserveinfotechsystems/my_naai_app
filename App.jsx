@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler'; // MUST be first
-
+import './src/utilities/notifeeBackgroundHandler';
 import React, { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, DeviceEventEmitter, Image, Linking, TouchableOpacity, View } from 'react-native';
@@ -660,6 +660,74 @@ export default function App() {
       unsubscribeNotifee();
       unsubscribeOpened();
     };
+
+  }, []);
+
+  // useEffect(() => {
+  //   async function handleInitialNotifee() {
+  //     const initialNotification = await notifee.getInitialNotification();
+
+  //     if (!initialNotification) return;
+
+  //     const { pressAction, notification } = initialNotification;
+  //     const data = notification?.data;
+
+  //     console.log("Initial Action 👉", pressAction?.id);
+
+  //     // ✅ DELAY BUTTON
+  //     if (pressAction?.id === 'DELAY_BOOKING') {
+  //       safeNavigate("BookingRequestScreen", {
+  //         bookingRequestId: data?.bookingRequestId,
+  //         openDelayModal: true,
+  //       });
+  //       return;
+  //     }
+
+  //     // ✅ ACCEPT
+  //     if (pressAction?.id === 'ACCEPT_BOOKING') {
+  //       await communication.bookingRequestOwnerAction(
+  //         data?.bookingRequestId,
+  //         { action: "ACCEPT" }
+  //       );
+  //       return;
+  //     }
+
+  //     // ✅ REJECT
+  //     if (pressAction?.id === 'REJECT_BOOKING') {
+  //       await communication.bookingRequestOwnerAction(
+  //         data?.bookingRequestId,
+  //         { action: "REJECT" }
+  //       );
+  //       return;
+  //     }
+  //   }
+
+  //   handleInitialNotifee();
+  // }, []);
+
+
+  useEffect(() => {
+
+    const handlePendingNavigation = async () => {
+
+      const pending = await AsyncStorage.getItem('PENDING_NAVIGATION');
+
+      if (!pending) return;
+
+      const parsed = JSON.parse(pending);
+
+      setTimeout(() => {
+
+        if (navigationRef.isReady()) {
+          navigationRef.navigate(parsed.screen, parsed.params);
+        }
+
+      }, 1500);
+
+      await AsyncStorage.removeItem('PENDING_NAVIGATION');
+    };
+
+    handlePendingNavigation();
 
   }, []);
 

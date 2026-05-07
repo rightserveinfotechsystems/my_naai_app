@@ -12,37 +12,38 @@ import notifee, { AndroidStyle } from '@notifee/react-native';
 messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('Background notification received:', remoteMessage);
 
-  const { notification, data } = remoteMessage;
+  // const { notification, data } = remoteMessage;
+  const { data } = remoteMessage;
 
   // IMPORTANT: Replicate the display logic here for background/quit states
   await notifee.displayNotification({
-    title: notification?.title,
-    body: notification?.body,
+    title: data?.title,
+    body: data?.body,
     android: {
-      channelId: 'default_channel', // Must match your foreground channel ID
+      channelId: 'default_channel',
       style: {
         type: AndroidStyle.BIGTEXT,
-        text: notification?.body || '', // This forces the expansion
+        text: data?.body || '',
       },
       smallIcon: 'ic_notification',
       pressAction: {
         id: 'default',
       },
-      actions: data?.type === "BOOKING_REQUEST" 
+      actions: data?.type === "BOOKING_REQUEST"
         ? [
-            {
-              title: '✅ Accept',
-              pressAction: { id: 'ACCEPT_BOOKING' },
-            },
-            {
-              title: '⏳ Delay',
-              pressAction: { id: 'DELAY_BOOKING' },
-            },
-            {
-              title: '❌ Reject',
-              pressAction: { id: 'REJECT_BOOKING' },
-            },
-          ] 
+          {
+            title: '✅ Accept',
+            pressAction: { id: 'ACCEPT_BOOKING' },
+          },
+          {
+            title: '⏳ Delay',
+            pressAction: { id: 'DELAY_BOOKING', launchActivity: 'default' },
+          },
+          {
+            title: '❌ Reject',
+            pressAction: { id: 'REJECT_BOOKING' },
+          },
+        ]
         : [],
     },
     data: data,
