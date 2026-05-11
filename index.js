@@ -9,18 +9,30 @@ import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidStyle, EventType } from '@notifee/react-native';
 
 // 1. Handle background events (This is what catches the button click in "Killed" state)
+import { communication } from './src/services/communication';
+
 notifee.onBackgroundEvent(async ({ type, detail }) => {
   const { notification, pressAction } = detail;
+  const bookingRequestId = notification?.data?.bookingRequestId;
 
-  // Check if the user pressed the 'Delay' button
-  if (type === EventType.ACTION_PRESS && pressAction.id === 'DELAY_BOOKING') {
-    console.log('User pressed Delay in background/killed state');
+  if (type === EventType.ACTION_PRESS) {
+    if (pressAction.id === 'ACCEPT_BOOKING') {
+      console.log('Background: Accepting', bookingRequestId);
+      await communication.bookingRequestOwnerAction(bookingRequestId, { action: "ACCEPT" });
+      await notifee.cancelNotification(notification.id);
+    } 
     
-    // You can perform background logic here (like calling an API)
-    // The 'launchActivity: default' in your displayNotification will handle opening the app.
-    
-    // Clean up the notification
-    await notifee.cancelNotification(notification.id);
+    else if (pressAction.id === 'REJECT_BOOKING') {
+      console.log('Background: Rejecting', bookingRequestId);
+      await communication.bookingRequestOwnerAction(bookingRequestId, { action: "REJECT" });
+      await notifee.cancelNotification(notification.id);
+    }
+
+    else if (pressAction.id === 'DELAY_BOOKING') {
+      // Delay opens the app via 'launchActivity: default', 
+      // logic is handled in App.js useEffect/Foreground handler
+      await notifee.cancelNotification(notification.id);
+    }
   }
 });
 
@@ -38,15 +50,18 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
         text: data?.body || '',
       },
       smallIcon: 'ic_notification',
-      pressAction: {
-        id: 'default',
-        launchActivity: 'default', // Ensures clicking the notification body opens the app
-      },
+      // pressAction: {
+      //   id: 'default',
+      //   launchActivity: 'default', 
+      // },
+
+      // ongoing: true,    // ❌ Prevents the user from swiping it away
+      autoCancel: false, // ❌ Prevents dismissal when the notification body is tapped
       actions: data?.type === "BOOKING_REQUEST"
         ? [
           {
             title: '✅ Accept',
-            pressAction: { id: 'ACCEPT_BOOKING', launchActivity: 'default' },
+            pressAction: { id: 'ACCEPT_BOOKING'},
           },
           {
             title: '⏳ Delay',
@@ -54,7 +69,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
           },
           {
             title: '❌ Reject',
-            pressAction: { id: 'REJECT_BOOKING', launchActivity: 'default' },
+            pressAction: { id: 'REJECT_BOOKING'},
           },
         ]
         : [],
