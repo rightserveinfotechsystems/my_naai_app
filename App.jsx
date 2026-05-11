@@ -284,6 +284,7 @@ function AppStack({ userType }) {
 }
 
 const safeNavigate = (name, params) => {
+  console.log(`🚀 Navigating to ${name} with params:`, params);
   if (navigationRef.isReady()) {
     navigationRef.navigate(name, params);
   } else {
@@ -735,20 +736,43 @@ export default function App() {
   useEffect(() => {
     const initFCM = async () => {
       try {
+        // Request notification permission
         const authStatus = await messaging().requestPermission();
+
         const enabled =
           authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
           authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-        if (enabled) {
-          const token = await messaging().getToken();
-          await AsyncStorage.setItem('FCM_TOKEN', token);
+        console.log('Permission Status:', authStatus);
 
+        if (!enabled) {
+          console.log('❌ Notification permission denied');
+          return;
         }
 
-      } catch { }
+        // Important for Android
+        await messaging().registerDeviceForRemoteMessages();
+
+        // Enable auto init
+        await messaging().setAutoInitEnabled(true);
+
+        // Get FCM token
+        const token = await messaging().getToken();
+
+        console.log('🔥 FCM TOKEN:', token);
+
+        if (token) {
+          await AsyncStorage.setItem('FCM_TOKEN', token);
+        } else {
+          console.log('❌ FCM token is empty');
+        }
+
+      } catch (error) {
+        console.log('❌ FCM INIT ERROR:', error);
+      }
     };
 
+    // Initialize FCM
     initFCM();
 
     const unsubscribe = messaging().onTokenRefresh(async token => {
@@ -787,6 +811,39 @@ export default function App() {
   //   return unsubscribe;
 
   // }, []);
+  useEffect(() => {
+    const handleInitialNotification = async () => {
+      const initial = await notifee.getInitialNotification();
+
+      // Check if the notification exists and the ID matches
+      if (initial && initial.pressAction?.id === 'DELAY_BOOKING') {
+        const checkNavReady = setInterval(() => {
+          if (navigationRef.isReady()) {
+            // FIX: Pass the specific ID and the flag to open the modal
+            safeNavigate('BookingRequestScreen', {
+              bookingRequestId: initial.notification.data?.bookingRequestId,
+              openDelayModal: true
+            });
+            clearInterval(checkNavReady);
+          }
+        }, 100);
+      }
+    };
+
+    handleInitialNotification();
+
+    const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
+      if (type === EventType.ACTION_PRESS && detail.pressAction?.id === 'DELAY_BOOKING') {
+        // FIX: Ensure parameters match what BookingRequestScreen expects
+        safeNavigate('BookingRequestScreen', {
+          bookingRequestId: detail.notification.data?.bookingRequestId,
+          openDelayModal: true
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
 
   if (loading) return null;
@@ -891,7 +948,6 @@ export default function App() {
       </SafeAreaView>
     );
   }
-
 
   return (
     <NotificationProvider userId={userId}>

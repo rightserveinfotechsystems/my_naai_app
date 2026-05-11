@@ -6,16 +6,28 @@ import { AppRegistry } from 'react-native';
 import App from './App';
 import { name as appName } from './app.json';
 import messaging from '@react-native-firebase/messaging';
-import notifee, { AndroidStyle } from '@notifee/react-native';
+import notifee, { AndroidStyle, EventType } from '@notifee/react-native';
 
-// Background & quit state handler
+// 1. Handle background events (This is what catches the button click in "Killed" state)
+notifee.onBackgroundEvent(async ({ type, detail }) => {
+  const { notification, pressAction } = detail;
+
+  // Check if the user pressed the 'Delay' button
+  if (type === EventType.ACTION_PRESS && pressAction.id === 'DELAY_BOOKING') {
+    console.log('User pressed Delay in background/killed state');
+    
+    // You can perform background logic here (like calling an API)
+    // The 'launchActivity: default' in your displayNotification will handle opening the app.
+    
+    // Clean up the notification
+    await notifee.cancelNotification(notification.id);
+  }
+});
+
+// 2. FCM Background handler (Your existing code)
 messaging().setBackgroundMessageHandler(async remoteMessage => {
-  console.log('Background notification received:', remoteMessage);
-
-  // const { notification, data } = remoteMessage;
   const { data } = remoteMessage;
 
-  // IMPORTANT: Replicate the display logic here for background/quit states
   await notifee.displayNotification({
     title: data?.title,
     body: data?.body,
@@ -28,12 +40,13 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
       smallIcon: 'ic_notification',
       pressAction: {
         id: 'default',
+        launchActivity: 'default', // Ensures clicking the notification body opens the app
       },
       actions: data?.type === "BOOKING_REQUEST"
         ? [
           {
             title: '✅ Accept',
-            pressAction: { id: 'ACCEPT_BOOKING' },
+            pressAction: { id: 'ACCEPT_BOOKING', launchActivity: 'default' },
           },
           {
             title: '⏳ Delay',
@@ -41,7 +54,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
           },
           {
             title: '❌ Reject',
-            pressAction: { id: 'REJECT_BOOKING' },
+            pressAction: { id: 'REJECT_BOOKING', launchActivity: 'default' },
           },
         ]
         : [],
