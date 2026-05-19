@@ -65,7 +65,7 @@ import { Text, TextInput } from 'react-native';
 import { createNavigationContainerRef } from '@react-navigation/native';
 import { communication } from './src/services/communication';
 import VersionCheck from 'react-native-version-check';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // if (!Text.defaultProps) Text.defaultProps = {};
 // Text.defaultProps.maxFontSizeMultiplier = 1.2;
@@ -150,19 +150,37 @@ const COLORS = {
 };
 
 /* ---------- TAB OPTIONS ---------- */
-const tabOptions = ({ route }) => ({
+
+const tabOptions = ({ route, insets }) => ({
   headerShown: false,
+
+  tabBarShowLabel: false,
+
+  tabBarActiveTintColor: COLORS.accent,
+
+  tabBarInactiveTintColor: COLORS.inactive,
+
   tabBarStyle: {
     backgroundColor: COLORS.primary,
-    height: 70,
+
     borderTopWidth: 0,
+
+    position: 'absolute',
+
+    elevation: 10,
+
+    height: 40 + Math.max(insets.bottom, 10),
+
+    paddingBottom: Math.max(insets.bottom, 10),
+
+    paddingTop: 4,
   },
-  tabBarActiveTintColor: COLORS.accent,
-  tabBarInactiveTintColor: COLORS.inactive,
+
   tabBarLabelStyle: {
     fontSize: 13,
     marginBottom: 2,
   },
+
   tabBarIcon: ({ color }) => {
     const icons = {
       'Salon Naai': 'list-circle',
@@ -173,49 +191,74 @@ const tabOptions = ({ route }) => ({
       'Product': 'storefront-outline',
       'Account': 'person',
     };
-    return <Ionicons name={icons[route.name]} size={25} color={color} />;
+
+    return (
+      <Ionicons
+        name={icons[route.name]}
+        size={28}
+        color={color}
+      />
+    );
   },
 });
 
+
 /* ---------- USER TABS ---------- */
 function MainTabs() {
+  const insets = useSafeAreaInsets();
+
   return (
-    <Tab.Navigator screenOptions={tabOptions} >
-      <Tab.Screen name="Salon Naai" component={NaaiDashboard} options={{
-        tabBarLabel: ""
-      }} />
-      <Tab.Screen name="Booked Salon" component={ServicesScreen} options={{
-        tabBarLabel: ""
-      }} />
-      <Tab.Screen name="Products" component={UserProduct} options={{
-        tabBarLabel: ""
-      }} />
-      <Tab.Screen name="Account" component={AccountScreen} options={{
-        tabBarLabel: ""
-      }} />
+    <Tab.Navigator
+      screenOptions={({ route }) =>
+        tabOptions({
+          route,
+          insets,
+        })
+      }
+    >
+      <Tab.Screen
+        name="Salon Naai"
+        component={NaaiDashboard}
+      />
+
+      <Tab.Screen
+        name="Booked Salon"
+        component={ServicesScreen}
+      />
+
+      <Tab.Screen
+        name="Products"
+        component={UserProduct}
+      />
+
+      <Tab.Screen
+        name="Account"
+        component={AccountScreen}
+      />
     </Tab.Navigator>
   );
 }
 
 /* ---------- SALON TABS ---------- */
 function SalonTabs() {
+  const insets = useSafeAreaInsets();
   return (
-    <Tab.Navigator screenOptions={tabOptions}>
+    // <Tab.Navigator screenOptions={tabOptions}>
+    <Tab.Navigator
+      screenOptions={({ route }) =>
+        tabOptions({
+          route,
+          insets,
+        })
+      }
+    >
       <Tab.Screen name="Queue" component={SalonDashboard}
-        options={{
-          tabBarLabel: ""
-        }}
+
       />
       <Tab.Screen name="Queue History" component={SalonBookingHistory}
-        options={{
-          tabBarLabel: ""
-        }} />
-      <Tab.Screen name="Product" component={SalonProduct} options={{
-        tabBarLabel: ""
-      }} />
-      <Tab.Screen name="Account" component={SalonAccountScreen} options={{
-        tabBarLabel: ""
-      }} />
+      />
+      <Tab.Screen name="Product" component={SalonProduct} />
+      <Tab.Screen name="Account" component={SalonAccountScreen} />
     </Tab.Navigator>
   );
 }
@@ -414,8 +457,12 @@ export default function App() {
       console.log("Full message 👉", msg);
       console.log("Notification data 👉", msg.data);
       await notifee.displayNotification({
-        title: msg.notification?.title,
-        body: msg.notification?.body,
+        title: msg.notification?.title ||
+          msg.data?.title ||
+          'Notification',
+        body: msg.notification?.body ||
+          msg.data?.body ||
+          '',
         android: {
           channelId: msg.data?.type === "BOOKING_REQUEST" ? 'booking' : 'default_channel',
           // color: '#E1B378',
@@ -951,25 +998,27 @@ export default function App() {
 
   return (
     <NotificationProvider userId={userId}>
-      <NavigationContainer
-        key={isLoggedIn ? 'app' : 'auth'}
-        ref={navigationRef}
-      // onReady={() => {
-      //   isNavigationReady.current = true;
-      // }}
-      >
+      <SafeAreaProvider>
+        <NavigationContainer
+          key={isLoggedIn ? 'app' : 'auth'}
+          ref={navigationRef}
+        // onReady={() => {
+        //   isNavigationReady.current = true;
+        // }}
+        >
 
-        {isLoggedIn ? (
-          <AppStack userType={userType} />
-        ) : (
-          <AuthStack
-            onLoginSuccess={type => {
-              setUserType(type);
-              setIsLoggedIn(true);
-            }}
-          />
-        )}
-      </NavigationContainer>
+          {isLoggedIn ? (
+            <AppStack userType={userType} />
+          ) : (
+            <AuthStack
+              onLoginSuccess={type => {
+                setUserType(type);
+                setIsLoggedIn(true);
+              }}
+            />
+          )}
+        </NavigationContainer>
+      </SafeAreaProvider>
     </NotificationProvider>
   );
 }

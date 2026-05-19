@@ -20,8 +20,8 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
       console.log('Background: Accepting', bookingRequestId);
       await communication.bookingRequestOwnerAction(bookingRequestId, { action: "ACCEPT" });
       await notifee.cancelNotification(notification.id);
-    } 
-    
+    }
+
     else if (pressAction.id === 'REJECT_BOOKING') {
       console.log('Background: Rejecting', bookingRequestId);
       await communication.bookingRequestOwnerAction(bookingRequestId, { action: "REJECT" });
@@ -44,7 +44,8 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
     title: data?.title,
     body: data?.body,
     android: {
-      channelId: 'default_channel',
+      // channelId: 'default_channel',
+      channelId: data?.type === "BOOKING_REQUEST" ? 'booking' : 'default_channel',
       style: {
         type: AndroidStyle.BIGTEXT,
         text: data?.body || '',
@@ -56,12 +57,15 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
       // },
 
       // ongoing: true,    // ❌ Prevents the user from swiping it away
-      autoCancel: false, // ❌ Prevents dismissal when the notification body is tapped
+      ongoing: data?.type === "BOOKING_REQUEST" ? true : false,
+      timeoutAfter: data?.type === "BOOKING_REQUEST" ? 70000 : undefined,
+
+      // autoCancel: false, // ❌ Prevents dismissal when the notification body is tapped
       actions: data?.type === "BOOKING_REQUEST"
         ? [
           {
             title: '✅ Accept',
-            pressAction: { id: 'ACCEPT_BOOKING'},
+            pressAction: { id: 'ACCEPT_BOOKING' },
           },
           {
             title: '⏳ Delay',
@@ -69,7 +73,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
           },
           {
             title: '❌ Reject',
-            pressAction: { id: 'REJECT_BOOKING'},
+            pressAction: { id: 'REJECT_BOOKING' },
           },
         ]
         : [],

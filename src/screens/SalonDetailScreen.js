@@ -7,18 +7,22 @@ import {
   ScrollView,
   ImageBackground,
   Image,
-  Dimensions,
+  // Dimensions,
   Modal,
   Linking,
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication, getServerUrl } from '../services/communication';
+import { wp, hp } from '../utils/AppScreen';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
-const { width } = Dimensions.get('window');
+// const { width } = Dimensions.get('window');
 
 const GOLD = '#E8B97E';
 const DARK = '#121212';
@@ -26,6 +30,7 @@ const DARK = '#121212';
 
 
 const SalonDetailScreen = ({ route, navigation }) => {
+  const insets = useSafeAreaInsets();
   const { salonId } = route.params;
 
   const [salonDetails, setSalonDetails] = useState(null);
@@ -88,7 +93,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
         const next = (prev + 1) % images.length;
 
         scrollRef.current?.scrollTo({
-          x: next * width,
+          x: next * wp(100),
           animated: true,
         });
 
@@ -226,7 +231,10 @@ const SalonDetailScreen = ({ route, navigation }) => {
             <ActivityIndicator size="small" color="#a71818ff" />
           ) : (
             <>
-              <SafeAreaView style={{ flex: 1 }}>
+              <SafeAreaView
+                style={{ flex: 1 }}
+                edges={['top', 'left', 'right']}
+              >
 
                 {/* -------------------- HEADER -------------------- */}
                 <View style={styles.header}>
@@ -235,14 +243,19 @@ const SalonDetailScreen = ({ route, navigation }) => {
                   </TouchableOpacity>
 
                   <View>
-                    <Text allowFontScaling={false}style={styles.headerTitle}>{salonDetails.salonName}</Text>
-                    <Text allowFontScaling={false}style={styles.salonType}>
+                    <Text allowFontScaling={false} style={styles.headerTitle}>{salonDetails.salonName}</Text>
+                    <Text allowFontScaling={false} style={styles.salonType}>
                       {salonDetails.genderType || ''} SALON
                     </Text>
                   </View>
                 </View>
 
-                <ScrollView contentContainerStyle={{ paddingBottom: 180, marginTop: 80 }}>
+                <ScrollView
+                  contentContainerStyle={{
+                    paddingBottom: 180 + Math.max(insets.bottom, 20),
+                    marginTop: 80,
+                  }}
+                >
                   {/* -------------------- SLIDER -------------------- */}
                   <ScrollView
                     ref={scrollRef}
@@ -344,7 +357,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         {isHolidayToday ? 'HOLIDAY' : isOpenNow ? 'OPEN NOW' : 'CLOSED'}
                       </Text>
 
-                      <Text allowFontScaling={false}style={styles.infoSub}>
+                      <Text allowFontScaling={false} style={styles.infoSub}>
                         ({salonDetails?.businessHours?.length > 0
                           ? `${formatTime12Hour(
                             salonDetails.businessHours[0].openingTime
@@ -376,7 +389,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                           <Ionicons name="calendar-outline" size={15} color="#fff" />
                         </View>
 
-                        <Text allowFontScaling={false}style={styles.infoText}>
+                        <Text allowFontScaling={false} style={styles.infoText}>
                           Weekly Off: {weeklyOff.join(', ')}
                         </Text>
                       </View>
@@ -389,7 +402,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                           size={16}
                           color="#FF5252"
                         />
-                        <Text allowFontScaling={false}style={[styles.infoText, { color: '#FF5252' }]}>
+                        <Text allowFontScaling={false} style={[styles.infoText, { color: '#FF5252' }]}>
                           Holiday: {salonDetails.upcomingHoliday}
                         </Text>
                       </View>
@@ -402,7 +415,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         <Ionicons name="location-outline" size={18} color="#E1B378" />
                       </View>
 
-                      <Text allowFontScaling={false}style={styles.linkText}>
+                      <Text allowFontScaling={false} style={styles.linkText}>
                         {address}
                       </Text>
                     </TouchableOpacity>
@@ -413,7 +426,7 @@ const SalonDetailScreen = ({ route, navigation }) => {
                         <Ionicons name="call-outline" size={18} color="#E1B378" />
                       </View>
 
-                      <Text allowFontScaling={false}style={styles.linkText}>
+                      <Text allowFontScaling={false} style={styles.linkText}>
                         {salonDetails.phoneNumber}
                       </Text>
                     </TouchableOpacity>
@@ -477,13 +490,13 @@ const SalonDetailScreen = ({ route, navigation }) => {
                       ))}
                     </ScrollView> */}
                     <View style={styles.staticInfoBox}>
-                      <Text allowFontScaling={false}style={styles.staticText}>
+                      <Text allowFontScaling={false} style={styles.staticText}>
                         • Please arrive at least 10 minutes before your scheduled time.
                       </Text>
-                      <Text allowFontScaling={false}style={styles.staticText}>
+                      <Text allowFontScaling={false} style={styles.staticText}>
                         • Service duration may vary based on requirements.
                       </Text>
-                      <Text allowFontScaling={false}style={styles.staticText}>
+                      <Text allowFontScaling={false} style={styles.staticText}>
                         • Walk-ins are subject to availability and waiting time.
                       </Text>
                     </View>
@@ -497,9 +510,18 @@ const SalonDetailScreen = ({ route, navigation }) => {
       </ImageBackground>
 
       {/* BOTTOM */}
-      <View style={styles.bottomBar}>
+      <View
+        style={[
+          styles.bottomBar,
+          {
+            paddingBottom: Math.max(insets.bottom, 12),
+            // bottom: Math.max(insets.bottom, 8),
+            bottom: 0,
+          },
+        ]}
+      >
         <TouchableOpacity style={styles.bookBtn} onPress={handleContinue}>
-          <Text allowFontScaling={false}style={styles.bookText}>Continue</Text>
+          <Text allowFontScaling={false} style={styles.bookText}>Continue</Text>
         </TouchableOpacity>
       </View>
 
@@ -544,7 +566,10 @@ const styles = StyleSheet.create({
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700', marginLeft: 16 },
   salonType: { color: '#E1B378', fontSize: 13, marginLeft: 16 },
 
-  sliderImage: { width, height: 280 },
+  sliderImage: {
+    width: wp(100),
+    height: hp(35),
+  },
 
   card: { padding: 18 },
   ratingRow: {
@@ -611,7 +636,17 @@ const styles = StyleSheet.create({
   statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
   statusText: { color: '#AAA', fontSize: 12 },
 
-  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16 },
+  bottomBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    backgroundColor: '#1E1E1E',
+    elevation: 20
+    // borderTopWidth: 1,
+    // borderTopColor: '#2A2A2A',
+  },
   bookBtn: {
     backgroundColor: '#E1B378',
     paddingVertical: 14,

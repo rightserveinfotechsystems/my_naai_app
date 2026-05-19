@@ -20,6 +20,8 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { communication, getServerUrl } from '../services/communication';
 import axios from 'axios';
 import RNBlobUtil from 'react-native-blob-util';
+import { wp, hp } from '../utils/AppScreen';
+
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -266,20 +268,20 @@ const SalonProduct = () => {
                 </View>
             )}
             <View style={styles.cardContent}>
-                <Text allowFontScaling={false}style={styles.productName} numberOfLines={1}>
+                <Text allowFontScaling={false} style={styles.productName} numberOfLines={1}>
                     {item.name}
                 </Text>
 
                 <View style={styles.row}>
-                    <Text allowFontScaling={false}style={styles.price}>₹ {item.price}</Text>
+                    <Text allowFontScaling={false} style={styles.price}>₹ {item.price}</Text>
                     <View style={styles.rating}>
                         <Ionicons name="star" size={14} color="#FFD700" />
-                        <Text allowFontScaling={false}style={styles.ratingText}>{item.rating}</Text>
+                        <Text allowFontScaling={false} style={styles.ratingText}>{item.rating}</Text>
                     </View>
                 </View>
 
                 <View style={styles.row}>
-                    <Text allowFontScaling={false}style={[styles.availability, { color: item.available ? '#4CAF50' : '#F44336' }]}>
+                    <Text allowFontScaling={false} style={[styles.availability, { color: item.available ? '#4CAF50' : '#F44336' }]}>
                         {item.available ? 'In Stock' : 'Out of Stock'}
                     </Text>
                     <Switch
@@ -316,17 +318,19 @@ const SalonProduct = () => {
                         numColumns={2}
                         columnWrapperStyle={{ justifyContent: 'space-between' }}
                         contentContainerStyle={{ paddingBottom: 120 }}
-                        ListEmptyComponent={<Text allowFontScaling={false}style={styles.empty}>No products available</Text>}
+                        ListEmptyComponent={<Text allowFontScaling={false} style={styles.empty}>No products available</Text>}
                     />
 
-                    <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
+                    <TouchableOpacity style={[styles.addBtn, {
+                        bottom: hp(12),
+                    }]} onPress={() => setModalVisible(true)}>
                         <Ionicons name="add" size={28} color="#000" />
                     </TouchableOpacity>
 
                     <Modal visible={modalVisible} transparent animationType="slide">
                         <View style={styles.modalOverlay}>
                             <View style={styles.modal}>
-                                <Text allowFontScaling={false}style={styles.modalTitle}>{editId ? 'Edit Product' : 'Add Product'}</Text>
+                                <Text allowFontScaling={false} style={styles.modalTitle}>{editId ? 'Edit Product' : 'Add Product'}</Text>
                                 <ScrollView>
                                     <TouchableOpacity style={styles.imagePicker} onPress={pickAndUploadImage}>
                                         {productForm.productImage ? (
@@ -369,7 +373,7 @@ const SalonProduct = () => {
                                     />
 
                                     <View style={styles.switchRow}>
-                                        <Text allowFontScaling={false}style={{ color: '#fff' }}>Available</Text>
+                                        <Text allowFontScaling={false} style={{ color: '#fff' }}>Available</Text>
                                         <Switch
                                             value={productForm.isAvailable}
                                             onValueChange={value => setProductForm(prev => ({ ...prev, isAvailable: value }))}
@@ -387,7 +391,7 @@ const SalonProduct = () => {
                                         {isSaving ? (
                                             <ActivityIndicator color="#000" />
                                         ) : (
-                                            <Text allowFontScaling={false}style={styles.saveText}>
+                                            <Text allowFontScaling={false} style={styles.saveText}>
                                                 {editId ? 'UPDATE PRODUCT' : 'ADD PRODUCT'}
                                             </Text>
                                         )}
@@ -395,7 +399,7 @@ const SalonProduct = () => {
 
 
                                     <TouchableOpacity onPress={resetForm}>
-                                        <Text allowFontScaling={false}style={styles.cancelText}>Cancel</Text>
+                                        <Text allowFontScaling={false} style={styles.cancelText}>Cancel</Text>
                                     </TouchableOpacity>
                                 </ScrollView>
                             </View>
@@ -403,7 +407,7 @@ const SalonProduct = () => {
                     </Modal>
                 </View>
             </View>
-        </ImageBackground>
+        </ImageBackground >
     );
 };
 
@@ -466,14 +470,22 @@ const styles = StyleSheet.create({
 
     addBtn: {
         position: 'absolute',
-        bottom: 30,
-        right: 20,
-        height: 56,
-        width: 56,
-        borderRadius: 28,
+        right: wp(5),
+        height: wp(14),
+        width: wp(14),
+        borderRadius: wp(7),
         backgroundColor: '#E0B973',
         justifyContent: 'center',
         alignItems: 'center',
+
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOpacity: 0.25,
+        shadowRadius: 5,
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
     },
 
     modalOverlay: {

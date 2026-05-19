@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { wp, hp } from '../utils/AppScreen';
 
 const { width, height } = Dimensions.get('window');
 
@@ -100,13 +101,13 @@ const SplashScreen = ({ navigation }) => {
       <SafeAreaView style={styles.content}>
         {/* Skip Button */}
         <TouchableOpacity style={styles.skipBtn} onPress={skipIntro}>
-          <Text allowFontScaling={false}style={styles.skipText}>Skip</Text>
+          <Text allowFontScaling={false} style={styles.skipText}>Skip</Text>
         </TouchableOpacity>
 
         {/* Text */}
         <View style={styles.textBox}>
-          <Text allowFontScaling={false}style={styles.title}>{item.title}</Text>
-          <Text allowFontScaling={false}style={styles.desc}>{item.desc}</Text>
+          <Text allowFontScaling={false} style={styles.title}>{item.title}</Text>
+          <Text allowFontScaling={false} style={styles.desc}>{item.desc}</Text>
         </View>
       </SafeAreaView>
     </ImageBackground>
@@ -216,8 +217,8 @@ const styles = StyleSheet.create({
 
   dotsContainer: {
     position: 'absolute',
-    bottom: 90,
-    left: 30,
+    bottom: hp(10),
+    left: wp(6),
     flexDirection: 'row',
   },
 
@@ -231,14 +232,24 @@ const styles = StyleSheet.create({
 
   nextBtn: {
     position: 'absolute',
-    bottom: 40,
-    right: 30,
+    bottom: hp(8),     // was 40
+    right: wp(6),      // was 30
+
+    width: wp(14),
+    height: wp(14),
+    borderRadius: wp(7),
+
     backgroundColor: '#E1B378',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
+
     elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
   },
 });

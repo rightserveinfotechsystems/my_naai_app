@@ -10,25 +10,25 @@ import {
   StyleSheet,
   ImageBackground,
   Pressable,
-  Dimensions,
+  // Dimensions,
   ActivityIndicator,
   RefreshControl,
   Alert,
   Linking,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { communication, getServerUrl } from '../services/communication';
 import { getUserLocation } from '../utilities/getUserLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CITIES from '../utilities/CitiesArray';
-
+import { wp, hp } from '../utils/AppScreen';
 
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const AD_WIDTH = SCREEN_WIDTH - 28;
+// const SCREEN_WIDTH = Dimensions.get('window').width;
+const AD_WIDTH = wp(93);
 
 /* -------------------- ADS -------------------- */
 
@@ -144,11 +144,13 @@ const formatTime12Hour = (time) => {
 };
 
 const NaaiDashboard = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
   const [locationFilter, setLocationFilter] = useState('All');
   const [showCityDropdown, setShowCityDropdown] = useState(false);
 
   const adRef = useRef(null);
+  const latestRequestRef = useRef(0);
   const [adIndex, setAdIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -201,9 +203,10 @@ const NaaiDashboard = ({ navigation }) => {
 
   /* -------- FETCH SALONS -------- */
   const getSalonList = async (pageNo = 1, refresh = false) => {
-    if (loading) return;
-
-    setLoading(true);
+    const requestId = ++latestRequestRef.current;
+    if (refresh) {
+      setLoading(true);
+    }
 
     try {
       const location = await getUserLocation();
@@ -228,6 +231,9 @@ const NaaiDashboard = ({ navigation }) => {
       }
 
       const response = await communication.userSalonList(payload);
+      if (requestId !== latestRequestRef.current) {
+        return;
+      }
       if (response?.status === 'SUCCESS') {
         const convertedData = convertSalonApiData(response?.data || [], location);
 
@@ -275,8 +281,13 @@ const NaaiDashboard = ({ navigation }) => {
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch salons');
     } finally {
-      setLoading(false);
-      if (refresh) setRefreshing(false);
+      if (requestId === latestRequestRef.current) {
+        setLoading(false);
+
+        if (refresh) {
+          setRefreshing(false);
+        }
+      }
     }
   };
 
@@ -434,8 +445,12 @@ const NaaiDashboard = ({ navigation }) => {
 
     return (
       <View style={{ alignItems: 'center', marginTop: 60 }}>
-        <Ionicons name="cut-outline" size={40} color="#777" />
-        <Text allowFontScaling={false}style={{ color: '#aaa', marginTop: 10, fontSize: 14 }}>
+        <Ionicons
+          name="cut-outline"
+          size={wp(10)}
+          color="#777"
+        />
+        <Text allowFontScaling={false} style={{ color: '#aaa', marginTop: 10, fontSize: 14 }}>
           No salons available
         </Text>
       </View>
@@ -487,7 +502,7 @@ const NaaiDashboard = ({ navigation }) => {
 
           {distance !== null && distance !== undefined && (
             <View style={styles.distanceBadge}>
-              <Text allowFontScaling={false}style={styles.distanceBadgeText}>{distance} KM</Text>
+              <Text allowFontScaling={false} style={styles.distanceBadgeText}>{distance} KM</Text>
             </View>
           )}
         </View>
@@ -496,8 +511,8 @@ const NaaiDashboard = ({ navigation }) => {
 
         <View style={styles.cardContent}>
           <View style={{ flex: 1 }}>
-            <Text allowFontScaling={false}style={styles.genderName}>{item?.genderType}</Text>
-            <Text allowFontScaling={false}style={styles.name} numberOfLines={2}
+            <Text allowFontScaling={false} style={styles.genderName}>{item?.genderType}</Text>
+            <Text allowFontScaling={false} style={styles.name} numberOfLines={2}
               ellipsizeMode="tail">{item?.name}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
               {/* <Ionicons
@@ -547,7 +562,7 @@ const NaaiDashboard = ({ navigation }) => {
               }}
             >
               {/* <Ionicons name="location-outline" size={18} color="#E1B378" /> */}
-              <Text allowFontScaling={false}style={styles.linkText} numberOfLines={2}
+              <Text allowFontScaling={false} style={styles.linkText} numberOfLines={2}
                 ellipsizeMode="tail" >{item.address}</Text>
               {/* <Ionicons name="open-outline" size={14} color="#AAA" style={{ marginLeft: 4 }} /> */}
             </TouchableOpacity>
@@ -616,7 +631,7 @@ const NaaiDashboard = ({ navigation }) => {
             onPress={() => navigation.navigate('SalonDetail', { salonId: item.id })}
 
           >
-            <Text allowFontScaling={false}style={styles.bookText}>
+            <Text allowFontScaling={false} style={styles.bookText}>
               {status.isOpen
                 ? 'Book Now'
                 : status.text === 'Closed (Holiday)'
@@ -664,7 +679,13 @@ const NaaiDashboard = ({ navigation }) => {
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView
+          style={[
+            styles.container,
+            { paddingBottom: insets.bottom }
+          ]}
+          edges={['top', 'bottom', 'left', 'right']}
+        >
           <Pressable
             style={{ flex: 1 }}
             onPress={() => showCityDropdown && setShowCityDropdown(false)}
@@ -674,20 +695,21 @@ const NaaiDashboard = ({ navigation }) => {
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <Text allowFontScaling={false}style={styles.greeting}>Hi {firstName} 👋</Text>
+              <Text allowFontScaling={false} style={styles.greeting}>Hi {firstName} 👋</Text>
 
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
 
                 {/* Gender Toggle */}
                 <View style={styles.genderToggle}>
                   <TouchableOpacity
+                    disabled={loading}
                     style={[
                       styles.genderBtn,
                       genderFilter === 'male' && styles.activeGenderBtn
                     ]}
                     onPress={() => setGenderFilter('male')}
                   >
-                    <Text allowFontScaling={false}style={[
+                    <Text allowFontScaling={false} style={[
                       styles.genderText,
                       genderFilter === 'male' && styles.activeGenderText
                     ]}>
@@ -696,13 +718,14 @@ const NaaiDashboard = ({ navigation }) => {
                   </TouchableOpacity>
 
                   <TouchableOpacity
+                    disabled={loading}
                     style={[
                       styles.genderBtn,
                       genderFilter === 'female' && styles.activeGenderBtn
                     ]}
                     onPress={() => setGenderFilter('female')}
                   >
-                    <Text allowFontScaling={false}style={[
+                    <Text allowFontScaling={false} style={[
                       styles.genderText,
                       genderFilter === 'female' && styles.activeGenderText
                     ]}>
@@ -716,7 +739,13 @@ const NaaiDashboard = ({ navigation }) => {
                     navigation.navigate('UserNotifications')
                   }
                 >
-                  <Ionicons name="notifications-outline" size={20} color="#000" />
+                  <Ionicons
+                    name="notifications-outline"
+                    size={wp(5)}
+                    color="#000"
+                  />
+
+
                   {/* {notificationCount > 0 && (
                   <View style={styles.badge}>
                     <Text allowFontScaling={false}style={styles.badgeText}>{notificationCount}</Text>
@@ -817,12 +846,21 @@ const NaaiDashboard = ({ navigation }) => {
               keyExtractor={(item, index) => `${item.id}_${index}`}
               renderItem={renderSalon}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 30 }}
+              contentContainerStyle={{
+                paddingBottom: insets.bottom + 120,
+                flexGrow: 1,
+              }}
 
               ListHeaderComponent={
                 <>
                   <View style={styles.searchBox}>
-                    <Ionicons name="search" size={18} color="#999" />
+                    <Ionicons
+                      name="search"
+                      size={wp(4.5)}
+                      color="#999"
+                    />
+
+
                     <TextInput allowFontScaling={false}
                       placeholder="Find salon, specialists..."
                       placeholderTextColor="#999"
@@ -858,61 +896,56 @@ export default NaaiDashboard;
 const styles = StyleSheet.create({
   bg: { flex: 1 },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)' },
-  container: { flex: 1, paddingHorizontal: 14 },
-
-  greeting: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 10,
+  container: {
+    flex: 1,
+    paddingHorizontal: wp(4),
   },
 
+  greeting: {
+    fontSize: wp(6),
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: hp(1),
+  },
   dropdownBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
     backgroundColor: '#E1B378',
-    paddingHorizontal: 4,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 6,
+    paddingHorizontal: wp(1),
+    paddingVertical: hp(0.8),
+    borderRadius: wp(5),
+    gap: wp(1.5),
   },
 
   dropdownText: {
     color: '#000',
     fontWeight: '700',
-    fontSize: 13,
+    fontSize: wp(3.2),
   },
 
-  // dropdownList: {
-  //   marginTop: 6,
-  //   backgroundColor: '#1E1E1E',
-  //   borderRadius: 14,
-  //   width: 140,
-  //   paddingVertical: 6,
-  // },
   dropdownList: {
     position: 'absolute',
-    top: 42,              // dropdown opens BELOW button
-    right: 0,             // align with button (since it's on right side)
+    top: hp(5),
+    right: 0,
     backgroundColor: '#1E1E1E',
-    borderRadius: 14,
-    width: 140,
-    paddingVertical: 6,
-    elevation: 10,        // Android shadow
-    shadowColor: '#000',  // iOS shadow
+    borderRadius: wp(4),
+    width: wp(35),
+    paddingVertical: hp(1),
+    elevation: 10,
+    shadowColor: '#000',
     shadowOpacity: 0.3,
     shadowRadius: 10,
   },
 
   dropdownItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingVertical: hp(1.2),
+    paddingHorizontal: wp(3.5),
   },
 
   dropdownItemText: {
     color: '#AAA',
-    fontSize: 13,
+    fontSize: wp(3.2),
     fontWeight: '600',
   },
 
@@ -925,25 +958,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#1E1E1E',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    height: 50,
-    marginBottom: 14,
-    marginTop: 8,
+    borderRadius: wp(4),
+    paddingHorizontal: wp(4),
+    height: hp(6),
+    marginBottom: hp(1.5),
+    marginTop: hp(1),
   },
 
   searchInput: {
     flex: 1,
-    marginLeft: 10,
+    marginLeft: wp(3),
     color: '#fff',
-    fontSize: 15,
+    fontSize: wp(3.8),
   },
 
   adSlider: { marginBottom: 6 },
   adImage: {
     width: AD_WIDTH,
-    height: 190,
-    borderRadius: 16,
+    height: hp(23),
+    borderRadius: wp(4),
   },
 
   dotsContainer: {
@@ -953,45 +986,54 @@ const styles = StyleSheet.create({
   },
 
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: wp(2),
+    height: wp(2),
+    borderRadius: wp(1),
     backgroundColor: '#555',
-    marginHorizontal: 4,
+    marginHorizontal: wp(1),
   },
 
   activeDot: {
     backgroundColor: '#E1B378',
-    width: 18,
+    width: wp(5),
   },
+
 
   card: {
     flexDirection: 'row',
     backgroundColor: '#1E1E1E',
-    borderRadius: 16,
-    marginBottom: 16,
+    borderRadius: wp(4),
+    marginBottom: hp(2),
     overflow: 'hidden',
   },
 
-  // image: { width: 100, height: '100%' },
   image: {
-    width: 120,
-    height: '100%',       // ✅ REQUIRED
-    minHeight: 110,       // ✅ SAFETY
-    borderTopLeftRadius: 20,
-    borderBottomLeftRadius: 20,
-    backgroundColor: '#333', // debug helper
+    width: wp(30),
+    height: '100%',
+    minHeight: hp(14),
+    backgroundColor: '#333',
   },
 
   cardContent: {
     flex: 1,
     flexDirection: 'row',
-    padding: 12,
+    padding: wp(3),
     alignItems: 'center',
   },
 
-  name: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  genderName: { color: '#bcb3b3c0', fontSize: 14, fontWeight: '500', letterSpacing: 1, marginBottom: 6 },
+  name: {
+    color: '#fff',
+    fontSize: wp(4),
+    fontWeight: '700',
+  },
+
+  genderName: {
+    color: '#bcb3b3c0',
+    fontSize: wp(3.2),
+    fontWeight: '500',
+    letterSpacing: 1,
+    marginBottom: hp(0.6),
+  },
 
   ratingRow: {
     flexDirection: 'row',
@@ -1001,15 +1043,18 @@ const styles = StyleSheet.create({
 
   ratingText: {
     color: '#E1B378',
-    fontSize: 12,
-    marginLeft: 4,
+    fontSize: wp(3),
+    marginLeft: wp(1),
   },
 
   address: { color: '#AAA', fontSize: 12 },
   row: { flexDirection: 'row', alignItems: 'center', marginVertical: 0 },
 
   linkText: {
-    color: '#E1B378', marginLeft: 2, fontSize: 15, textTransform: "capitalize"
+    color: '#E1B378',
+    fontSize: wp(3.4),
+    textTransform: 'capitalize',
+    marginLeft: wp(2),
   },
   waitRow: {
     marginTop: 6,
@@ -1022,26 +1067,29 @@ const styles = StyleSheet.create({
   //   gap: 8,               
   // },
   waitText: {
-    fontSize: 12,
+    fontSize: wp(3),
     color: '#E1B378',
     fontWeight: '600',
-  },
-  queueText: {
-    fontSize: 12,
-    color: '#E1B378',
-    fontWeight: '600',
-    marginLeft: 5,
   },
 
+  queueText: {
+    fontSize: wp(3),
+    color: '#E1B378',
+    fontWeight: '600',
+    marginLeft: wp(1),
+  },
+
+
+
   bookBtn: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    marginLeft: 10,
+    paddingVertical: hp(0.7),
+    paddingHorizontal: wp(3),
+    borderRadius: wp(6),
+    marginLeft: wp(2),
   },
 
   bookText: {
-    fontSize: 12,
+    fontSize: wp(3),
     fontWeight: '700',
     color: '#000',
   },
@@ -1063,22 +1111,31 @@ const styles = StyleSheet.create({
   genderToggle: {
     flexDirection: 'row',
     backgroundColor: '#1E1E1E',
-    borderRadius: 20,
-    padding: 3,
+    borderRadius: wp(6),
+    padding: wp(1),
   },
-
-  genderBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-  },
-  iconBtn: { backgroundColor: '#E1B378', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginLeft: 8 },
   activeGenderBtn: {
     backgroundColor: '#E1B378',
+    borderRadius: wp(4),
+  },
+  genderBtn: {
+    paddingVertical: hp(0.8),
+    paddingHorizontal: wp(3),
+    borderRadius: wp(4),
+  },
+
+  iconBtn: {
+    backgroundColor: '#E1B378',
+    width: wp(9),
+    height: wp(9),
+    borderRadius: wp(4.5),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: wp(2),
   },
 
   genderText: {
-    fontSize: 12,
+    fontSize: wp(3),
     fontWeight: '700',
     color: '#AAA',
   },
@@ -1089,32 +1146,29 @@ const styles = StyleSheet.create({
 
   distanceText: {
     color: '#E1B378',
-    fontSize: 13,
-    // marginLeft: 4,
+    fontSize: wp(3),
     fontWeight: '600',
   },
 
   imageContainer: {
-    // width: 120,
-    maxHeight: 140,
+    maxHeight: hp(18),
     position: 'relative',
   },
 
   distanceBadge: {
     position: 'absolute',
-    bottom: 8,
+    bottom: hp(1),
     left: 0,
     backgroundColor: '#fff',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-    elevation: 3,
+    paddingHorizontal: wp(2.5),
+    paddingVertical: hp(0.5),
+    borderRadius: wp(2.5),
     borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0
+    borderBottomLeftRadius: 0,
   },
 
   distanceBadgeText: {
-    fontSize: 13,
+    fontSize: wp(3),
     fontWeight: '700',
     color: '#000',
   },

@@ -12,16 +12,17 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication } from '../services/communication';
 import Skeleton from '../utilities/Skeleton';
 import { useFocusEffect } from '@react-navigation/native';
 import moment from 'moment';
-
+import { wp, hp } from '../utils/AppScreen';
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
 const SalonDashboard = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [customers, setCustomers] = useState([]);
   const [todayBookings, setTodayBookings] = useState([]);
   const [tomorrowBookings, setTomorrowBookings] = useState([]);
@@ -178,18 +179,18 @@ const SalonDashboard = ({ navigation }) => {
 
 
   const formatTime = (time) => {
-      if (!time) return '';
+    if (!time) return '';
 
-      const [h, m] = time.split(':');
-      const date = new Date();
-      date.setHours(Number(h), Number(m));
+    const [h, m] = time.split(':');
+    const date = new Date();
+    date.setHours(Number(h), Number(m));
 
-      return date.toLocaleTimeString('en-IN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      });
-    };
+    return date.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
 
   /* ---------------- RENDER SINGLE BOOKING ---------------- */
   const renderSalon = ({ item }) => (
@@ -198,7 +199,7 @@ const SalonDashboard = ({ navigation }) => {
         <View style={styles.infoLeft}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
 
-            <Text allowFontScaling={false}style={styles.name}>
+            <Text allowFontScaling={false} style={styles.name}>
               {item?.userName || 'Guest'}
             </Text>
 
@@ -206,7 +207,7 @@ const SalonDashboard = ({ navigation }) => {
               style={styles.doneBtn}
               onPress={() => handleBookingDone(item.bookingId)}
             >
-              <Text allowFontScaling={false}style={styles.doneText}>Done</Text>
+              <Text allowFontScaling={false} style={styles.doneText}>Done</Text>
             </TouchableOpacity>
 
           </View>
@@ -214,28 +215,44 @@ const SalonDashboard = ({ navigation }) => {
 
           {item?.barberName && (
             <View style={styles.row}>
-              <Ionicons name="person-outline" size={14} color="#E8B97E" />
-              <Text allowFontScaling={false}style={styles.barber}>Barber: {item?.barberName}</Text>
+              <Ionicons
+                name="person-outline"
+                size={wp(3.5)}
+                color="#E8B97E"
+              />
+              <Text allowFontScaling={false} style={styles.barber}>Barber: {item?.barberName}</Text>
             </View>
           )}
 
           {item.userPhone !== "0000000000" && (
             <View style={styles.row}>
-              <Ionicons name="call-outline" size={14} color="#E8B97E" />
+              <Ionicons
+                name="call-outline"
+                size={wp(3.5)}
+                color="#E8B97E"
+              />
               <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.userPhone}`)}>
-                <Text allowFontScaling={false}style={styles.subText}>{item.userPhone}</Text>
+                <Text allowFontScaling={false} style={styles.subText}>{item.userPhone}</Text>
               </TouchableOpacity>
             </View>
           )}
 
           <View style={styles.row}>
-            <Ionicons name="cut-outline" size={14} color="#E8B97E" />
-            <Text allowFontScaling={false}style={styles.subText}>{item?.serviceNames}</Text>
+            <Ionicons
+              name="cut-outline"
+              size={wp(3.5)}
+              color="#E8B97E"
+            />
+            <Text allowFontScaling={false} style={styles.subText}>{item?.serviceNames}</Text>
           </View>
 
           <View style={styles.row}>
-            <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
-            <Text allowFontScaling={false}style={styles.subText}>
+            <Ionicons
+              name="calendar-outline"
+              size={wp(3.5)}
+              color="#E8B97E"
+            />
+            <Text allowFontScaling={false} style={styles.subText}>
               {formatDateReadable(item?.bookingDate)}, token: {item?.queueNumber}
               {/* {formatDateReadable(item?.bookingDate)}, {formatTime(item?.bookingTime)}, token: {item?.queueNumber} */}
             </Text>
@@ -251,8 +268,13 @@ const SalonDashboard = ({ navigation }) => {
 
   const EmptyState = () => (
     <View style={styles.empty}>
-      <Ionicons name="people-outline" size={60} color="#666" />
-      <Text allowFontScaling={false}style={styles.emptyText}>No customers in queue</Text>
+
+      <Ionicons
+        name="people-outline"
+        size={wp(15)}
+        color="#666"
+      />
+      <Text allowFontScaling={false} style={styles.emptyText}>No customers in queue</Text>
     </View>
   );
 
@@ -263,7 +285,7 @@ const SalonDashboard = ({ navigation }) => {
         <SafeAreaView style={styles.container}>
           {/* TOP BAR */}
           <View style={styles.topBar}>
-            <Text allowFontScaling={false}style={styles.title}>Customer Queue</Text>
+            <Text allowFontScaling={false} style={styles.title}>Customer Queue</Text>
             <View style={styles.actions}>
               {/* <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('AddOfflineCustomer', { salonId })}>
                 <Ionicons name="add" size={22} color="#000" />
@@ -275,7 +297,12 @@ const SalonDashboard = ({ navigation }) => {
                   navigation.navigate('SalonNotifications', { salonId, onReadComplete: fetchNotificationCount })
                 }
               >
-                <Ionicons name="notifications-outline" size={20} color="#000" />
+                <Ionicons
+                  name="notifications-outline"
+                  size={wp(5)}
+                  color="#000"
+                />
+
                 {/* {notificationCount > 0 && (
                   <View style={styles.badge}>
                     <Text allowFontScaling={false}style={styles.badgeText}>{notificationCount}</Text>
@@ -297,6 +324,9 @@ const SalonDashboard = ({ navigation }) => {
           ) : (
             <FlatList
               data={[]}
+              contentContainerStyle={{
+                paddingBottom: insets.bottom + 30,
+              }}
               keyExtractor={(_, index) => index.toString()}
               renderItem={null}
               refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E1B378" />}
@@ -304,7 +334,7 @@ const SalonDashboard = ({ navigation }) => {
                 <>
                   {todayBookings.length > 0 && (
                     <>
-                      <Text allowFontScaling={false}style={styles.sectionHeader}>Today</Text>
+                      <Text allowFontScaling={false} style={styles.sectionHeader}>Today</Text>
                       {todayBookings.map(item => (
                         <React.Fragment key={item.bookingId}>{renderSalon({ item })}</React.Fragment>
                       ))}
@@ -312,7 +342,7 @@ const SalonDashboard = ({ navigation }) => {
                   )}
                   {tomorrowBookings.length > 0 && (
                     <>
-                      <Text allowFontScaling={false}style={styles.sectionHeader}>Tomorrow</Text>
+                      <Text allowFontScaling={false} style={styles.sectionHeader}>Tomorrow</Text>
                       {tomorrowBookings.map(item => (
                         <React.Fragment key={item.bookingId}>{renderSalon({ item })}</React.Fragment>
                       ))}
@@ -320,7 +350,7 @@ const SalonDashboard = ({ navigation }) => {
                   )}
                   {dayAfterBookings.length > 0 && (
                     <>
-                      <Text allowFontScaling={false}style={styles.sectionHeader}>Day After Tomorrow</Text>
+                      <Text allowFontScaling={false} style={styles.sectionHeader}>Day After Tomorrow</Text>
                       {dayAfterBookings.map(item => (
                         <React.Fragment key={item.bookingId}>{renderSalon({ item })}</React.Fragment>
                       ))}
@@ -346,33 +376,135 @@ export default SalonDashboard;
 
 /* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
-  bg: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)' },
-  container: { flex: 1, paddingHorizontal: 14 },
+  bg: {
+    flex: 1
+  },
 
-  topBar: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
-  title: { color: '#fff', fontSize: 22, fontWeight: '700' },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)'
+  },
 
-  actions: { flexDirection: 'row' },
-  iconBtn: { backgroundColor: '#E1B378', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginLeft: 10 },
+  container: {
+    flex: 1,
+    paddingHorizontal: wp(3.5),
+  },
 
-  badge: { position: 'absolute', top: -4, right: -4, backgroundColor: 'red', width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: hp(1.8),
+    alignItems: 'center'
+  },
 
-  card: { backgroundColor: '#1E1E1E', borderRadius: 16, marginBottom: 14 },
-  infoRow: { flexDirection: 'row', padding: 12 },
-  infoLeft: { flex: 1 },
-  name: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  subText: { color: '#AAA', fontSize: 13, marginLeft: 8 },
+  title: {
+    color: '#fff',
+    fontSize: wp(5.5),
+    fontWeight: '700'
+  },
 
-  doneBtn: { backgroundColor: '#E1B378', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 16, alignSelf: 'center' },
-  doneText: { color: '#000', fontSize: 12, fontWeight: '600' },
+  actions: {
+    flexDirection: 'row'
+  },
 
-  empty: { alignItems: 'center', marginTop: 80 },
-  emptyText: { color: '#777', marginTop: 10 },
+  iconBtn: {
+    backgroundColor: '#E1B378',
+    width: wp(9),
+    height: wp(9),
+    borderRadius: wp(4.5),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: wp(2.5)
+  },
 
-  row: { flexDirection: 'row', alignItems: 'center' },
-  barber: { color: '#E8B97E', fontSize: 13, fontWeight: '600', textTransform: 'capitalize', marginLeft: 8 },
+  badge: {
+    position: 'absolute',
+    top: -hp(.5),
+    right: -wp(1),
+    backgroundColor: 'red',
+    width: wp(4.5),
+    height: wp(4.5),
+    borderRadius: wp(2.25),
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
 
-  sectionHeader: { color: '#E1B378', fontSize: 18, fontWeight: '700', marginVertical: 8 },
+  badgeText: {
+    color: '#fff',
+    fontSize: wp(2.3),
+    fontWeight: '700'
+  },
+
+  card: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: wp(4),
+    marginBottom: hp(1.8)
+  },
+
+  infoRow: {
+    flexDirection: 'row',
+    padding: wp(3)
+  },
+
+  infoLeft: {
+    flex: 1
+  },
+
+  name: {
+    color: '#fff',
+    fontSize: wp(4),
+    fontWeight: '700'
+  },
+
+  subText: {
+    color: '#AAA',
+    fontSize: wp(3.3),
+    marginLeft: wp(2)
+  },
+
+  doneBtn: {
+    backgroundColor: '#E1B378',
+    borderRadius: wp(5),
+    paddingVertical: hp(.8),
+    paddingHorizontal: wp(4),
+    alignSelf: 'center'
+  },
+
+  doneText: {
+    color: '#000',
+    fontSize: wp(3),
+    fontWeight: '600'
+  },
+
+  empty: {
+    alignItems: 'center',
+    marginTop: hp(10)
+  },
+
+  emptyText: {
+    color: '#777',
+    marginTop: hp(1),
+    fontSize: wp(3.5)
+  },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: hp(.5)
+  },
+
+  barber: {
+    color: '#E8B97E',
+    fontSize: wp(3.3),
+    fontWeight: '600',
+    textTransform: 'capitalize',
+    marginLeft: wp(2)
+  },
+
+  sectionHeader: {
+    color: '#E1B378',
+    fontSize: wp(4.5),
+    fontWeight: '700',
+    marginVertical: hp(1)
+  }
 });
