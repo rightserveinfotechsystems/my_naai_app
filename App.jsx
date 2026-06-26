@@ -169,11 +169,13 @@ const tabOptions = ({ route, insets }) => ({
 
     elevation: 10,
 
-    height: 40 + Math.max(insets.bottom, 10),
+    height: 50 + Math.max(insets.bottom, 5),
 
-    paddingBottom: Math.max(insets.bottom, 10),
+    paddingBottom: Math.max(insets.bottom, 5),
 
     paddingTop: 4,
+    // marginBottom: 10,
+
   },
 
   tabBarLabelStyle: {

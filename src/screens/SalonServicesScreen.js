@@ -214,6 +214,7 @@ const styles = StyleSheet.create({
         paddingVertical: hp(1.8),
         borderRadius: wp(8),
         alignItems: 'center',
+        marginBottom: 10,
     },
 
     bookText: {

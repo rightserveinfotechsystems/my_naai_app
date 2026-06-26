@@ -652,6 +652,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 30,
     alignItems: 'center',
+    marginBottom: 10,
   },
   bookText: { color: '#000', fontWeight: '700', fontSize: 16 },
 
