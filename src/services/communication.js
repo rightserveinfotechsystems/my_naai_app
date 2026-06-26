@@ -4,7 +4,7 @@ import { Alert } from "react-native";
 import { navigationRef } from "../../App.jsx";
 import { CommonActions } from "@react-navigation/native";
 // const serverUrl = "http://192.168.1.18:5003";
-// const serverUrl = "http://192.168.1.6:5001";
+// const serverUrl = "http://192.168.1.8:5001";
 // const serverUrl = "http://localhost:5001";
 const serverUrl = "https://backend.mynaai.in"
 // export const rzp_key = "rzp_test_SRombQCQU03uVL"
@@ -13,13 +13,13 @@ export const rzp_key = "rzp_live_ST8yVm3RaFMiHW"
 
 export function getServerUrl() {
     // return "http://192.168.1.18:5003";
-    // return "http://192.168.1.6:5001";
+    // return "http://192.168.1.8:5001";
     return "https://backend.mynaai.in";
 }
 
 const api = axios.create({
     // baseURL: "http://192.168.1.18:5003",
-    // baseURL: "http://192.168.1.6:5001",
+    // baseURL: "http://192.168.1.8:5001",
     baseURL: "https://backend.mynaai.in",
 });
 // console.log("api", api);
