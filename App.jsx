@@ -274,14 +274,14 @@ function AuthStack({ onLoginSuccess }) {
     }}>
       <Stack.Screen name="SplashLogo" component={SplashLogoScreen} />
       <Stack.Screen name="SplashScreen" component={SplashScreen} />
-      {/* <Stack.Screen name="UserLogin">
+      <Stack.Screen name="UserLogin">
         {props => <UserLogin {...props} onLoginSuccess={onLoginSuccess} />}
-      </Stack.Screen> */}
-      <Stack.Screen name="UserSignup">
-        {props => <UserSignup {...props} onLoginSuccess={onLoginSuccess} />}
       </Stack.Screen>
+      {/* <Stack.Screen name="UserSignup">
+        {props => <UserSignup {...props} onLoginSuccess={onLoginSuccess} />}
+      </Stack.Screen> */}
       {/* <Stack.Screen name="UserSignup" component={UserSignup} /> */}
-      <Stack.Screen name="UserLogin" component={UserLogin} />
+      {/* <Stack.Screen name="UserLogin" component={UserLogin} /> */}
       <Stack.Screen name="OtpScreen">
         {props => <OtpScreen {...props} onLoginSuccess={onLoginSuccess} />}
       </Stack.Screen>
@@ -713,47 +713,6 @@ export default function App() {
 
   }, []);
 
-  // useEffect(() => {
-  //   async function handleInitialNotifee() {
-  //     const initialNotification = await notifee.getInitialNotification();
-
-  //     if (!initialNotification) return;
-
-  //     const { pressAction, notification } = initialNotification;
-  //     const data = notification?.data;
-
-  //     console.log("Initial Action 👉", pressAction?.id);
-
-  //     // ✅ DELAY BUTTON
-  //     if (pressAction?.id === 'DELAY_BOOKING') {
-  //       safeNavigate("BookingRequestScreen", {
-  //         bookingRequestId: data?.bookingRequestId,
-  //         openDelayModal: true,
-  //       });
-  //       return;
-  //     }
-
-  //     // ✅ ACCEPT
-  //     if (pressAction?.id === 'ACCEPT_BOOKING') {
-  //       await communication.bookingRequestOwnerAction(
-  //         data?.bookingRequestId,
-  //         { action: "ACCEPT" }
-  //       );
-  //       return;
-  //     }
-
-  //     // ✅ REJECT
-  //     if (pressAction?.id === 'REJECT_BOOKING') {
-  //       await communication.bookingRequestOwnerAction(
-  //         data?.bookingRequestId,
-  //         { action: "REJECT" }
-  //       );
-  //       return;
-  //     }
-  //   }
-
-  //   handleInitialNotifee();
-  // }, []);
 
 
   useEffect(() => {
@@ -831,35 +790,8 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  //  useEffect(() => {
 
-  //   const unsubscribe = messaging().onMessage(async remoteMessage => {
 
-  //     if (remoteMessage.data?.type === 'BOOKING_DELAY') {
-
-  //       const { bookingId, newTime } = remoteMessage.data;
-
-  //       Alert.alert(
-  //         'Salon Delay',
-  //         `Salon is busy. Can you come at ${formatTime(newTime)} instead?`,
-  //         [
-  //           {
-  //             text: 'Cancel',
-  //             onPress: () => sendDelayResponse(bookingId, false),
-  //             style: 'cancel',
-  //           },
-  //           {
-  //             text: 'Accept',
-  //             onPress: () => sendDelayResponse(bookingId, true),
-  //           },
-  //         ]
-  //       );
-  //     }
-  //   });
-
-  //   return unsubscribe;
-
-  // }, []);
   useEffect(() => {
     const handleInitialNotification = async () => {
       const initial = await notifee.getInitialNotification();

@@ -38,16 +38,16 @@ const SplashLogoScreen = () => {
           }
           else {
             // safety fallback
-            navigation.replace('UserSignup');
+            navigation.replace('UserLogin');
           }
         }
         else {
-          navigation.replace('UserSignup');
+          navigation.replace('UserLogin');
         }
 
       } catch (error) {
         console.log('Splash navigation error:', error);
-        navigation.replace('UserSignup');
+        navigation.replace('UserLogin');
       }
     }, 2500); // 2.5s splash
 

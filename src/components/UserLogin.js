@@ -20,7 +20,7 @@ import { communication } from '../services/communication';
 const BG_IMAGE = require('../assets/salon_page_bg.jpg');
 
 
-const UserLogin = ({ navigation }) => {
+const UserLogin = ({ navigation, onLoginSuccess }) => {
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [deviceToken, setDeviceToken] = useState(null);
@@ -30,6 +30,8 @@ const UserLogin = ({ navigation }) => {
 
   const [secondsLeft, setSecondsLeft] = useState(RESEND_TIME);
   const [canResend, setCanResend] = useState(false);
+  const [isUserAlreadyRegistered, setIsUserAlreadyRegistered] = useState(true);
+  const [name, setName] = useState('');
 
 
   /* ---------------- VALIDATIONS ---------------- */
@@ -63,6 +65,7 @@ const UserLogin = ({ navigation }) => {
         setOtp('');
         setSecondsLeft(RESEND_TIME);
         setCanResend(false);
+        // setIsUserAlreadyRegistered(res?.isUserExist);
         // Alert.alert('OTP Sent Successfully!'); 
       } else {
         Alert.alert('Error', res?.message || 'Failed to send OTP');
@@ -77,6 +80,36 @@ const UserLogin = ({ navigation }) => {
     }
   };
 
+  async function createAccount() {
+    try {
+      const response = await communication.userOnBoard({
+        phoneNumber: mobile,
+        fullName: name,
+        deviceToken: deviceToken,
+      });
+
+      if (response?.status === 'SUCCESS') {
+        await AsyncStorage.setItem('mynaai', response?.data?.token);
+        await AsyncStorage.setItem(
+          'mynaaiUser',
+          JSON.stringify(response?.data)
+        );
+        await AsyncStorage.setItem('userType', 'USER');
+
+        onLoginSuccess('USER');
+        return true;
+      } else {
+        Alert.alert('Error', response?.message || 'Invalid OTP');
+      }
+    } catch (error) {
+      Alert.alert(
+        'Verification Failed',
+        error?.response?.data?.message || error.message
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   /* ---------------- VERIFY OTP ---------------- */
   const verifyOtp = async () => {
@@ -93,8 +126,11 @@ const UserLogin = ({ navigation }) => {
       const res = await communication.verifyLogin(payload);
 
       if (res?.status === 'SUCCESS') {
-        console.log("token", res?.data?.token);
-        console.log("mynaaiUser", res?.data);
+
+        if (res?.isUserExist === false) {
+          setIsUserAlreadyRegistered(false);
+          setOtpSent(false);
+        }
 
         if (res?.data?.token) {
           await AsyncStorage.setItem('mynaai', res?.data?.token);
@@ -106,13 +142,7 @@ const UserLogin = ({ navigation }) => {
           await AsyncStorage.setItem('isLoggedIn', 'true');
           await AsyncStorage.setItem('userType', 'USER');
         }
-        // navigation.replace('Main');
 
-
-        // navigation.reset({
-        //   index: 0,
-        //   routes: [{ name: 'Main' }],
-        // });
         DeviceEventEmitter.emit('AUTH_CHANGED');
 
       } else {
@@ -171,21 +201,21 @@ const UserLogin = ({ navigation }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.container}
           >
-            <Text allowFontScaling={false}style={styles.title}>
+            <Text allowFontScaling={false} style={styles.title}>
               {otpSent ? 'Verify OTP' : 'Welcome Back'}
             </Text>
 
-            <Text allowFontScaling={false}style={styles.subtitle}>
+            <Text allowFontScaling={false} style={styles.subtitle}>
               {otpSent
                 ? `Enter OTP sent to ${mobile}`
                 : 'Login to your account'}
             </Text>
 
             {/* MOBILE INPUT */}
-            {!otpSent && (
+            {(!otpSent && isUserAlreadyRegistered === true) && (
               <View style={styles.inputBox}>
                 <View style={styles.phoneContainer}>
-                  <Text allowFontScaling={false}style={styles.countryCode}>+91</Text>
+                  <Text allowFontScaling={false} style={styles.countryCode}>+91</Text>
 
                   <TextInput allowFontScaling={false}
                     placeholder="Mobile Number"
@@ -222,8 +252,20 @@ const UserLogin = ({ navigation }) => {
               </View>
             )}
 
+            {isUserAlreadyRegistered === false &&
+              <View style={styles.inputBox}>
+                <TextInput allowFontScaling={false}
+                  placeholder="User name"
+                  placeholderTextColor="#999"
+                  value={name}
+                  onChangeText={setName}
+                  style={styles.input}
+                />
+              </View>
+            }
+
             {/* BUTTON */}
-            <TouchableOpacity
+            {isUserAlreadyRegistered === true && (<TouchableOpacity
               style={styles.loginBtn}
               onPress={otpSent ? verifyOtp : sendOtp}
               disabled={loading}
@@ -231,16 +273,32 @@ const UserLogin = ({ navigation }) => {
               {loading ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text allowFontScaling={false}style={styles.loginText}>
+                <Text allowFontScaling={false} style={styles.loginText}>
                   {otpSent ? 'Verify OTP' : 'Login with OTP'}
                 </Text>
               )}
-            </TouchableOpacity>
+            </TouchableOpacity>)}
+
+            {
+              isUserAlreadyRegistered === false && (<TouchableOpacity
+                style={styles.loginBtn}
+                onPress={createAccount}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#000" />
+                ) : (
+                  <Text allowFontScaling={false} style={styles.loginText}>
+                    {'Create Account'}
+                  </Text>
+                )}
+              </TouchableOpacity>)
+            }
 
             {/* RESEND OTP */}
             {otpSent && (
               !canResend ? (
-                <Text allowFontScaling={false}style={styles.timerText}>
+                <Text allowFontScaling={false} style={styles.timerText}>
                   Resend OTP in 00:{secondsLeft < 10 ? `0${secondsLeft}` : secondsLeft}
                 </Text>
               ) : (
@@ -249,7 +307,7 @@ const UserLogin = ({ navigation }) => {
                   style={{ marginTop: 16 }}
                   disabled={loading}
                 >
-                  <Text allowFontScaling={false}style={styles.resend}>Resend OTP</Text>
+                  <Text allowFontScaling={false} style={styles.resend}>Resend OTP</Text>
                 </TouchableOpacity>
               )
             )}
@@ -258,7 +316,7 @@ const UserLogin = ({ navigation }) => {
             {/* FOOTER */}
             {!otpSent && (
               <>
-                <View style={styles.footer}>
+                {/*  <View style={styles.footer}>
                   <Text allowFontScaling={false}style={styles.footerText}>
                     Don’t have an account?{' '}
                     <Text allowFontScaling={false}
@@ -268,7 +326,7 @@ const UserLogin = ({ navigation }) => {
                       Sign Up
                     </Text>
                   </Text>
-                </View>
+                </View> */}
 
                 {/* <View style={styles.naaiFooter}>
                   <Text allowFontScaling={false}style={styles.footerText}>
@@ -288,7 +346,7 @@ const UserLogin = ({ navigation }) => {
                   onPress={() => navigation.navigate('NaaiRequest')}
                   activeOpacity={0.8}
                 >
-                  <Text allowFontScaling={false}style={styles.partnerBtnText}>
+                  <Text allowFontScaling={false} style={styles.partnerBtnText}>
                     Salon Partner Login / Register
                   </Text>
                 </TouchableOpacity>
