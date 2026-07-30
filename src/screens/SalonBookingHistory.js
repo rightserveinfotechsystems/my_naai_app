@@ -17,7 +17,7 @@ import { communication } from '../services/communication';
 import Skeleton from '../utilities/Skeleton';
 
 
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 
 /* -------------------- CUSTOMER BOOKING DATA -------------------- */
 
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: 'rgba(0, 0, 0, 0.50)',
   },
 
   container: {

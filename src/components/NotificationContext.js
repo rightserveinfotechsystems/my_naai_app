@@ -7,7 +7,7 @@ export const NotificationContext = createContext();
 
 let globalSocket = null;
 
-export const NotificationProvider = ({ children, userId }) => {
+export const NotificationProvider = ({ children, userId ,userType}) => {
     const [count, setCount] = useState(0);
     const [list, setList] = useState([]);
 
@@ -48,10 +48,13 @@ export const NotificationProvider = ({ children, userId }) => {
 
     const loadNotifications = async () => {
         console.log('loadNotifications userId:', userId);
-
+        if([null, undefined, ''].includes(userId) || [null, undefined, ''].includes(userType)) {
+            console.log('loadNotifications userId or userType is null or undefined, skipping load');
+            return;
+        }
         try {
-            const cRes = await communication.userNotificationCount({ userId });
-            const lRes = await communication.userNotificationList({ userId });
+            const cRes = await communication.userNotificationCount({ userId ,userType});
+            const lRes = await communication.userNotificationList({ userId ,userType});
             console.log("cRes", cRes?.notification);
             console.log("lRes", lRes?.data?.notifications);
 

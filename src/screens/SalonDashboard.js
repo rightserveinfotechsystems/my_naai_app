@@ -19,7 +19,7 @@ import Skeleton from '../utilities/Skeleton';
 import { useFocusEffect } from '@react-navigation/native';
 import moment from 'moment';
 import { wp, hp } from '../utils/AppScreen';
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 
 const SalonDashboard = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -50,7 +50,7 @@ const SalonDashboard = ({ navigation }) => {
   const fetchNotificationCount = useCallback(async () => {
     if (!salonId) return;
     try {
-      const response = await communication.userNotificationCount({ salonId });
+      const response = await communication.userNotificationCount({ salonId,userType:"SALON" });
       if (response?.status === 'SUCCESS') {
         setNotificationCount(response?.notification || 0);
       }
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)'
+    backgroundColor: 'rgba(0,0,0,0.50)'
   },
 
   container: {
@@ -400,7 +400,8 @@ const styles = StyleSheet.create({
   title: {
     color: '#fff',
     fontSize: wp(5.5),
-    fontWeight: '700'
+    fontWeight: '700',
+    marginTop: 10,
   },
 
   actions: {

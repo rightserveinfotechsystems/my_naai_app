@@ -17,7 +17,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication } from '../services/communication';
 
 
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 
 const NaaiLogin = ({ navigation }) => {
   const [mobile, setMobile] = useState('');
@@ -79,7 +79,7 @@ const NaaiLogin = ({ navigation }) => {
           >
             {/* Title */}
 
-            <Text allowFontScaling={false}style={styles.title}>Welcome Back</Text>
+            <Text allowFontScaling={false}style={styles.title}>Welcome Salon Partner</Text>
             <Text allowFontScaling={false}style={styles.subtitle}>Login as Salon Owner</Text>
 
             {/* Phone Input */}
@@ -107,19 +107,19 @@ const NaaiLogin = ({ navigation }) => {
               {loading ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text allowFontScaling={false}style={styles.loginText}>Login with OTP</Text>
+                <Text allowFontScaling={false}style={styles.loginText}>Continue with OTP</Text>
               )}
             </TouchableOpacity>
 
             {/* Footer */}
             <View style={styles.footer}>
               <Text allowFontScaling={false}style={styles.footerText}>
-                Don’t have an account? {' '}
+               
                 <Text allowFontScaling={false}
                   style={styles.signup}
-                  onPress={() => navigation.navigate('NaaiRequest')}
+                  onPress={() => navigation.navigate('UserLogin')}
                 >
-                  Register as a Salon Owner
+                  Login as a Customer
                 </Text>
               </Text>
             </View>
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.50)',
   },
 
   header: {

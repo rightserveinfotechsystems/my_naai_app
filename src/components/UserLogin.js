@@ -14,10 +14,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import messaging from '@react-native-firebase/messaging';
 import { communication } from '../services/communication';
 
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 
 
 const UserLogin = ({ navigation, onLoginSuccess }) => {
@@ -85,7 +85,7 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
       const response = await communication.userOnBoard({
         phoneNumber: mobile,
         fullName: name,
-        deviceToken: deviceToken,
+        deviceToken: await AsyncStorage.getItem('FCM_TOKEN'),
       });
 
       if (response?.status === 'SUCCESS') {
@@ -120,7 +120,7 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
       const payload = {
         phoneNumber: mobile,
         otp: otp.toString(),
-        deviceToken: await messaging().getToken(),
+        deviceToken: await AsyncStorage.getItem('FCM_TOKEN') ,
       };
 
       const res = await communication.verifyLogin(payload);
@@ -179,19 +179,7 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
     }
   }, [otpSent, secondsLeft, canResend]);
 
-  useEffect(() => {
-    const getDeviceToken = async () => {
-      try {
-        const token = await messaging().getToken();
-        console.log('FCM DEVICE TOKEN userlogin:', token);
-        setDeviceToken(token);
-      } catch (e) {
-        console.log('FCM token error', e);
-      }
-    };
 
-    getDeviceToken();
-  }, []);
 
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
@@ -202,7 +190,7 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
             style={styles.container}
           >
             <Text allowFontScaling={false} style={styles.title}>
-              {otpSent ? 'Verify OTP' : 'Welcome Back'}
+              {otpSent ? 'Verify OTP' : 'Welcome To MyNaai'}
             </Text>
 
             <Text allowFontScaling={false} style={styles.subtitle}>
@@ -274,7 +262,7 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
                 <ActivityIndicator color="#000" />
               ) : (
                 <Text allowFontScaling={false} style={styles.loginText}>
-                  {otpSent ? 'Verify OTP' : 'Login with OTP'}
+                  {otpSent ? 'Verify OTP' : 'Continue with OTP'}
                 </Text>
               )}
             </TouchableOpacity>)}
@@ -343,11 +331,11 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
 
                 <TouchableOpacity
                   style={styles.partnerBtn}
-                  onPress={() => navigation.navigate('NaaiRequest')}
+                  onPress={() => navigation.navigate('NaaiLogin')}
                   activeOpacity={0.8}
                 >
                   <Text allowFontScaling={false} style={styles.partnerBtnText}>
-                    Salon Partner Login / Register
+                    Continue as Salon Partner
                   </Text>
                 </TouchableOpacity>
 
@@ -372,7 +360,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.78)',
+    backgroundColor: 'rgba(0,0,0,0.50)',
   },
 
   container: {

@@ -4,8 +4,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, DeviceEventEmitter, Image, Linking, TouchableOpacity, View } from 'react-native';
 
-import notifee, { AndroidImportance, AndroidStyle, EventType } from '@notifee/react-native';
-import messaging from '@react-native-firebase/messaging';
+import notifee, { AndroidImportance, AndroidStyle, AndroidCategory,EventType } from '@notifee/react-native';
+import { 
+  getMessaging, 
+  requestPermission, 
+  registerDeviceForRemoteMessages, 
+  setAutoInitEnabled, 
+  getToken, 
+  onTokenRefresh, 
+  AuthorizationStatus,
+  onMessage,
+  onNotificationOpenedApp,
+  getInitialNotification
+} from '@react-native-firebase/messaging';
+
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -57,6 +69,7 @@ import SalonNotifications from './src/screens/SalonNotifications';
 import UserNotifications from './src/screens/UserNotifications';
 import BookingRequestScreen from './src/screens/BookingRequestScreen';
 import DelayRequestScreen from './src/screens/DelayRequestScreen';
+import EditSalonProfileScreen from './src/screens/EditSalonProfileScreen';
 import { Text, TextInput } from 'react-native';
 
 /* ---------- NAV REF ---------- */
@@ -242,11 +255,12 @@ function MainTabs() {
 }
 
 /* ---------- SALON TABS ---------- */
-function SalonTabs() {
+function SalonTabs({ isNewSalon=false }) {
   const insets = useSafeAreaInsets();
   return (
     // <Tab.Navigator screenOptions={tabOptions}>
     <Tab.Navigator
+      initialRouteName={isNewSalon ? "Account" : "Queue"}
       screenOptions={({ route }) =>
         tabOptions({
           route,
@@ -268,7 +282,7 @@ function SalonTabs() {
 /* ---------- AUTH STACK ---------- */
 function AuthStack({ onLoginSuccess }) {
   return (
-    <Stack.Navigator screenOptions={{
+    <Stack.Navigator initialRouteName='UserLogin' screenOptions={{
       headerShown: false, animation: 'slide_from_right',
       contentStyle: { backgroundColor: '#0F0F0F' },
     }}>
@@ -300,7 +314,7 @@ function AuthStack({ onLoginSuccess }) {
 }
 
 /* ---------- APP STACK ---------- */
-function AppStack({ userType }) {
+function AppStack({ userType, isNewSalon }) {
   if (!userType) return null;
 
   return (
@@ -308,7 +322,13 @@ function AppStack({ userType }) {
       {userType === 'USER' ? (
         <Stack.Screen name="Main" component={MainTabs} />
       ) : (
-        <Stack.Screen name="Salon" component={SalonTabs} />
+        <Stack.Screen name="Salon">
+          {() => (
+            <SalonTabs
+              isNewSalon={isNewSalon}
+            />
+          )}
+        </Stack.Screen>
       )}
       <Stack.Screen name="SalonDetail" component={SalonDetailScreen} />
       <Stack.Screen name="SalonServicesScreen" component={SalonServicesScreen} />
@@ -323,6 +343,11 @@ function AppStack({ userType }) {
       <Stack.Screen name="UserNotifications" component={UserNotifications} />
       <Stack.Screen name="BookingRequestScreen" component={BookingRequestScreen} />
       <Stack.Screen name="DelayRequestScreen" component={DelayRequestScreen} />
+      <Stack.Screen name="EditSalonProfile" component={EditSalonProfileScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
 
     </Stack.Navigator>
   );
@@ -351,6 +376,7 @@ export default function App() {
   const [checkingUpdate, setCheckingUpdate] = useState(true);
   const [forceUpdate, setForceUpdate] = useState(false);
   const [storeUrl, setStoreUrl] = useState('');
+  const [isNewSalon, setIsNewSalon] = useState(false);
 
 
 
@@ -400,7 +426,9 @@ export default function App() {
       try {
         const data = await AsyncStorage.getItem('mynaaiUser');
         const type = await AsyncStorage.getItem('userType');
+        const newSalon = await AsyncStorage.getItem('isNewSalon');
 
+        setIsNewSalon(newSalon === 'true');
         if (data && type) {
           const parsed = JSON.parse(data);
           if (!isMounted) return;
@@ -437,281 +465,285 @@ export default function App() {
   }, []);
 
   /* ---------- NOTIFICATIONS ---------- */
-  useEffect(() => {
-    notifee.createChannel({
-      id: 'default_channel',
-      name: 'Default Notifications',
-      importance: AndroidImportance.HIGH,
-      sound: 'buzzer',
-    });
 
-    notifee.createChannel({
-      id: 'booking',
-      name: 'Default Notifications',
-      importance: AndroidImportance.HIGH,
-      sound: 'buzzer_old',
-    });
 
-    requestNotificationPermission();
-    initTTS();
+useEffect(() => {
+  // Create notification channels
+  notifee.createChannel({
+    id: 'default_channel',
+    name: 'Default Notifications',
+    importance: AndroidImportance.HIGH,
+    sound: 'buzzer',
+    
+    vibration: true,
+  
+  });
 
-    const unsubscribeMsg = messaging().onMessage(async msg => {
-      console.log("Full message 👉", msg);
-      console.log("Notification data 👉", msg.data);
-      await notifee.displayNotification({
-        title: msg.notification?.title ||
-          msg.data?.title ||
-          'Notification',
-        body: msg.notification?.body ||
-          msg.data?.body ||
-          '',
-        android: {
-          channelId: msg.data?.type === "BOOKING_REQUEST" ? 'booking' : 'default_channel',
-          // color: '#E1B378',
-          // style: {
-          //   type: AndroidStyle.BIGTEXT,
-          //   text: msg.notification?.body
-          // },
-          style: {
-            type: AndroidStyle.BIGTEXT,
-            text: msg.notification?.body || msg.data?.body || ''
-          },
-          smallIcon: 'ic_notification',
+  notifee.createChannel({
+    id: 'booking',
+    name: 'Default Notifications',
+    importance: AndroidImportance.HIGH,
+    sound: 'buzzer_old',
+    vibration: true,
+  });
 
-          // ongoing: false,
-          ongoing: msg.data?.type === "BOOKING_REQUEST" ? true : false,
-          // autoCancel: msg.data?.type === "BOOKING_REQUEST" ? true : false,
-          // autoCancel: true,
-          timeoutAfter: msg.data?.type === "BOOKING_REQUEST" ? 70000 : undefined,
-          actions:
-            msg.data?.type === "BOOKING_REQUEST"
-              ? [
-                {
-                  title: '✅ Accept',
-                  pressAction: {
-                    id: 'ACCEPT_BOOKING',
-                  },
-                },
-                {
-                  title: '⏳ Delay',
-                  pressAction: {
-                    id: 'DELAY_BOOKING',
-                    launchActivity: 'default',
-                  },
-                },
-                {
-                  title: '❌ Reject',
-                  pressAction: {
-                    id: 'REJECT_BOOKING',
-                  },
-                },
+  requestNotificationPermission();
+  initTTS();
 
-              ] : [],
+  // Initialize messaging instance
+  const messaging = getMessaging();
+
+  // Foreground notification handler
+  const unsubscribeMsg = onMessage(messaging, async msg => {
+    console.log("Full message 👉", msg);
+    console.log("Notification data 👉", msg.data);
+
+    const countdownMs = 70000;
+    const timestamp = Date.now() + countdownMs;
+    const DURATION_MS = 60000;
+    const targetTimestamp = Date.now() + DURATION_MS;
+
+    const isBookingRequest = msg.data?.type === "BOOKING_REQUEST";
+
+    await notifee.displayNotification({
+      title: msg.notification?.title || msg.data?.title || 'Notification',
+      body: msg.notification?.body || msg.data?.body || '',
+      android: {
+        channelId: isBookingRequest ? 'booking' : 'default_channel',
+        importance: AndroidImportance.HIGH,
+        style: {
+          type: AndroidStyle.BIGTEXT,
+          text: msg.notification?.body || msg.data?.body || ''
         },
-        data: msg.data,
-      });
+        smallIcon: 'ic_notification',
+        ongoing: isBookingRequest ? true : false,
+        timeoutAfter: isBookingRequest ? 70000 : undefined,
+        category: AndroidCategory.ALARM, // 👈 Directs output through internal speaker stream
+     
+        ...(isBookingRequest && {
+          showChronometer: true,          // Shows the timer in notification header
+          chronometerDirection: 'down',   // Counts down instead of up
+          timestamp: targetTimestamp,     // Tells Android when countdown reaches 00:00
+        }),
+        actions: isBookingRequest
+          ? [
+              {
+                title: '✅ Accept',
+                pressAction: {
+                  id: 'ACCEPT_BOOKING',
+                },
+              },
+              {
+                title: '⏳ Delay',
+                pressAction: {
+                  id: 'DELAY_BOOKING',
+                  launchActivity: 'default',
+                },
+              },
+              {
+                title: '❌ Reject',
+                pressAction: {
+                  id: 'REJECT_BOOKING',
+                },
+              },
+            ]
+          : [],
+      },
+      data: msg.data,
     });
+  });
 
-    const unsubscribeNotifee = notifee.onForegroundEvent(
-      async ({ type, detail }) => {
+  // Notifee foreground interaction listener
+  const unsubscribeNotifee = notifee.onForegroundEvent(
+    async ({ type, detail }) => {
+      const { notification, pressAction } = detail;
+      const data = notification?.data;
 
-        const { notification, pressAction } = detail;
-        const data = notification?.data;
+      console.log("Type 👉", type);
+      console.log("Action 👉", pressAction?.id);
 
-        console.log("Type 👉", type);
-        console.log("Action 👉", pressAction?.id);
+      /* ---------------- ACTION BUTTON CLICK ---------------- */
+      if (type === EventType.ACTION_PRESS) {
+        const bookingRequestId = data?.bookingRequestId;
 
-        /* ---------------- ACTION BUTTON CLICK ---------------- */
-        if (type === EventType.ACTION_PRESS) {
+        // 👉 ACCEPT
+        if (pressAction?.id === 'ACCEPT_BOOKING') {
+          await communication.bookingRequestOwnerAction(
+            bookingRequestId,
+            { action: "ACCEPT" }
+          );
 
-          const bookingRequestId = data?.bookingRequestId;
-
-          // 👉 ACCEPT
-          if (pressAction?.id === 'ACCEPT_BOOKING') {
-            await communication.bookingRequestOwnerAction(
-              bookingRequestId,
-              { action: "ACCEPT" }
-            );
-
-            await notifee.cancelNotification(notification.id);
-            return;
-          }
-
-          // 👉 REJECT
-          if (pressAction?.id === 'REJECT_BOOKING') {
-            await communication.bookingRequestOwnerAction(
-              bookingRequestId,
-              { action: "REJECT" }
-            );
-
-            await notifee.cancelNotification(notification.id);
-            return;
-          }
-
-          // 👉 DELAY
-          if (pressAction?.id === 'DELAY_BOOKING') {
-            safeNavigate("BookingRequestScreen", {
-              bookingRequestId: data?.bookingRequestId,
-              openDelayModal: true,   // 👈 important
-            });
-            return;
-          }
-        }
-
-        /* ---------------- NORMAL NOTIFICATION CLICK ---------------- */
-        if (type !== EventType.PRESS) return;
-
-        console.log("Pressed Data 👉", data);
-        console.log("UserType 👉", userTypeRef.current);
-
-        // 👉 USER - Delay Request
-        if (
-          data?.type === "DELAY_TIME_PROPOSAL" &&
-          userTypeRef.current === "USER"
-        ) {
-          safeNavigate("DelayRequestScreen", {
-            bookingRequestId: data?.bookingRequestId,
-            delayMinutes: data?.delayMinutes,
-            proposedTime: data?.proposedTime,
-          });
+          await notifee.cancelNotification(notification.id);
           return;
         }
 
-        // 👉 USER - Booking Confirmed
-        if (
-          data?.type === "BOOKING_CONFIRMED" &&
-          userTypeRef.current === "USER"
-        ) {
-          safeNavigate("Booked Salon");
+        // 👉 REJECT
+        if (pressAction?.id === 'REJECT_BOOKING') {
+          await communication.bookingRequestOwnerAction(
+            bookingRequestId,
+            { action: "REJECT" }
+          );
+
+          await notifee.cancelNotification(notification.id);
           return;
         }
 
-        // 👉 USER - Booking Rejected
-        if (
-          data?.type === "BOOKING_REJECTED" &&
-          userTypeRef.current === "USER"
-        ) {
-          safeNavigate("Booked Salon");
-          return;
-        }
-
-        // 👉 SALON - Booking Request
-        if (
-          data?.type === "BOOKING_REQUEST" &&
-          userTypeRef.current === "SALON"
-        ) {
+        // 👉 DELAY
+        if (pressAction?.id === 'DELAY_BOOKING') {
           safeNavigate("BookingRequestScreen", {
             bookingRequestId: data?.bookingRequestId,
+            openDelayModal: true,   // 👈 important
           });
-          return;
-        }
-
-        // 👉 DELAY_RESPONSE → DO NOTHING
-        if (data?.type === "DELAY_RESPONSE") {
-          console.log("Delay response received. No navigation.");
           return;
         }
       }
-    );
 
-    // When app is in background & user taps notification
-    const unsubscribeOpened = messaging().onNotificationOpenedApp(
-      remoteMessage => {
+      /* ---------------- NORMAL NOTIFICATION CLICK ---------------- */
+      if (type !== EventType.PRESS) return;
 
-        const data = remoteMessage?.data;
+      console.log("Pressed Data 👉", data);
+      console.log("UserType 👉", userTypeRef.current);
 
-        if (
-          data?.type === "DELAY_TIME_PROPOSAL" &&
-          userTypeRef.current === "USER"
-        ) {
-          safeNavigate("DelayRequestScreen", {
-            bookingRequestId: data?.bookingRequestId,
-            delayMinutes: data?.delayMinutes,
-          });
-        }
-        // 👉 USER - Booking Confirmed
-        if (
-          data?.type === "BOOKING_CONFIRMED" &&
-          userTypeRef.current === "USER"
-        ) {
-          safeNavigate("Booked Salon");
-        }
-
-        // 👉 USER - Booking Rejected
-        if (
-          data?.type === "BOOKING_REJECTED" &&
-          userTypeRef.current === "USER"
-        ) {
-          safeNavigate("Booked Salon");
-        }
-        if (
-          data?.type === "BOOKING_REQUEST" &&
-          userTypeRef.current === "SALON"
-        ) {
-          safeNavigate("BookingRequestScreen", {
-            bookingRequestId: data?.bookingRequestId,
-          });
-        }
-
-        // DELAY_RESPONSE → do nothing
+      // 👉 USER - Delay Request
+      if (
+        data?.type === "DELAY_TIME_PROPOSAL" &&
+        userTypeRef.current === "USER"
+      ) {
+        safeNavigate("DelayRequestScreen", {
+          bookingRequestId: data?.bookingRequestId,
+          delayMinutes: data?.delayMinutes,
+          proposedTime: data?.proposedTime,
+        });
+        return;
       }
-    );
 
+      // 👉 USER - Booking Confirmed
+      if (
+        data?.type === "BOOKING_CONFIRMED" &&
+        userTypeRef.current === "USER"
+      ) {
+        safeNavigate("Booked Salon");
+        return;
+      }
 
-    // When app is completely closed & opened from notification
-    messaging()
-      .getInitialNotification()
-      .then(remoteMessage => {
-        const data = remoteMessage?.data;
+      // 👉 USER - Booking Rejected
+      if (
+        data?.type === "BOOKING_REJECTED" &&
+        userTypeRef.current === "USER"
+      ) {
+        safeNavigate("Booked Salon");
+        return;
+      }
 
-        if (!data) return;
+      // 👉 SALON - Booking Request
+      if (
+        data?.type === "BOOKING_REQUEST" &&
+        userTypeRef.current === "SALON"
+      ) {
+        safeNavigate("BookingRequestScreen", {
+          bookingRequestId: data?.bookingRequestId,
+        });
+        return;
+      }
 
-        if (
-          data?.type === "DELAY_TIME_PROPOSAL" &&
-          userTypeRef.current === "USER"
-        ) {
-          safeNavigate("DelayRequestScreen", {
-            bookingRequestId: data?.bookingRequestId,
-            delayMinutes: data?.delayMinutes,
-          });
-        }
+      // 👉 DELAY_RESPONSE → DO NOTHING
+      if (data?.type === "DELAY_RESPONSE") {
+        console.log("Delay response received. No navigation.");
+        return;
+      }
+    }
+  );
 
+  // Background notification tap handler
+  const unsubscribeOpened = onNotificationOpenedApp(messaging, remoteMessage => {
+    const data = remoteMessage?.data;
 
-        if (
-          data?.type === "BOOKING_CONFIRMED" &&
-          userTypeRef.current === "USER"
-        ) {
-          safeNavigate("Booked Salon");
-        }
-
-        if (
-          data?.type === "BOOKING_REJECTED" &&
-          userTypeRef.current === "USER"
-        ) {
-          safeNavigate("Booked Salon");
-        }
-        if (
-          data?.type === "BOOKING_REQUEST" &&
-          userTypeRef.current === "SALON"
-        ) {
-          safeNavigate("BookingRequestScreen", {
-            bookingRequestId: data?.bookingRequestId,
-          });
-        }
-
-        // DELAY_RESPONSE → no navigation
+    if (
+      data?.type === "DELAY_TIME_PROPOSAL" &&
+      userTypeRef.current === "USER"
+    ) {
+      safeNavigate("DelayRequestScreen", {
+        bookingRequestId: data?.bookingRequestId,
+        delayMinutes: data?.delayMinutes,
       });
+    }
 
+    // 👉 USER - Booking Confirmed
+    if (
+      data?.type === "BOOKING_CONFIRMED" &&
+      userTypeRef.current === "USER"
+    ) {
+      safeNavigate("Booked Salon");
+    }
 
+    // 👉 USER - Booking Rejected
+    if (
+      data?.type === "BOOKING_REJECTED" &&
+      userTypeRef.current === "USER"
+    ) {
+      safeNavigate("Booked Salon");
+    }
 
+    if (
+      data?.type === "BOOKING_REQUEST" &&
+      userTypeRef.current === "SALON"
+    ) {
+      safeNavigate("BookingRequestScreen", {
+        bookingRequestId: data?.bookingRequestId,
+      });
+    }
 
-    return () => {
-      unsubscribeMsg();
-      unsubscribeNotifee();
-      unsubscribeOpened();
-    };
+    // DELAY_RESPONSE → do nothing
+  });
 
-  }, []);
+  // Cold start notification tap handler
+  getInitialNotification(messaging).then(remoteMessage => {
+    const data = remoteMessage?.data;
+
+    if (!data) return;
+
+    if (
+      data?.type === "DELAY_TIME_PROPOSAL" &&
+      userTypeRef.current === "USER"
+    ) {
+      safeNavigate("DelayRequestScreen", {
+        bookingRequestId: data?.bookingRequestId,
+        delayMinutes: data?.delayMinutes,
+      });
+    }
+
+    if (
+      data?.type === "BOOKING_CONFIRMED" &&
+      userTypeRef.current === "USER"
+    ) {
+      safeNavigate("Booked Salon");
+    }
+
+    if (
+      data?.type === "BOOKING_REJECTED" &&
+      userTypeRef.current === "USER"
+    ) {
+      safeNavigate("Booked Salon");
+    }
+
+    if (
+      data?.type === "BOOKING_REQUEST" &&
+      userTypeRef.current === "SALON"
+    ) {
+      safeNavigate("BookingRequestScreen", {
+        bookingRequestId: data?.bookingRequestId,
+      });
+    }
+
+    // DELAY_RESPONSE → no navigation
+  });
+
+  return () => {
+    unsubscribeMsg();
+    unsubscribeNotifee();
+    unsubscribeOpened();
+  };
+}, []);
 
 
 
@@ -741,15 +773,21 @@ export default function App() {
   }, []);
 
   /* ---------- FCM ---------- */
+
+
+
   useEffect(() => {
+    // Initialize messaging instance
+    const messaging = getMessaging();
+
     const initFCM = async () => {
       try {
         // Request notification permission
-        const authStatus = await messaging().requestPermission();
+        const authStatus = await requestPermission(messaging);
 
         const enabled =
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+          authStatus === AuthorizationStatus.AUTHORIZED ||
+          authStatus === AuthorizationStatus.PROVISIONAL;
 
         console.log('Permission Status:', authStatus);
 
@@ -759,13 +797,13 @@ export default function App() {
         }
 
         // Important for Android
-        await messaging().registerDeviceForRemoteMessages();
+        await registerDeviceForRemoteMessages(messaging);
 
         // Enable auto init
-        await messaging().setAutoInitEnabled(true);
+        await setAutoInitEnabled(messaging, true);
 
         // Get FCM token
-        const token = await messaging().getToken();
+        const token = await getToken(messaging);
 
         console.log('🔥 FCM TOKEN:', token);
 
@@ -783,7 +821,9 @@ export default function App() {
     // Initialize FCM
     initFCM();
 
-    const unsubscribe = messaging().onTokenRefresh(async token => {
+    // Handle token refresh
+    const unsubscribe = onTokenRefresh(messaging, async (token) => {
+      console.log('🔄 FCM TOKEN REFRESHED:', token);
       await AsyncStorage.setItem('FCM_TOKEN', token);
     });
 
@@ -931,7 +971,7 @@ export default function App() {
   }
 
   return (
-    <NotificationProvider userId={userId}>
+    <NotificationProvider userId={userId} userType={userType}>
       <SafeAreaProvider>
         <NavigationContainer
           key={isLoggedIn ? 'app' : 'auth'}
@@ -942,7 +982,7 @@ export default function App() {
         >
 
           {isLoggedIn ? (
-            <AppStack userType={userType} />
+            <AppStack userType={userType} isNewSalon={isNewSalon} />
           ) : (
             <AuthStack
               onLoginSuccess={type => {

@@ -20,10 +20,11 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { communication, getServerUrl } from '../services/communication';
 import axios from 'axios';
 import RNBlobUtil from 'react-native-blob-util';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { wp, hp } from '../utils/AppScreen';
 
 
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
 
@@ -309,8 +310,12 @@ const SalonProduct = () => {
 
     return (
         <ImageBackground source={BG_IMAGE} style={{ flex: 1 }}>
+           
             <View style={styles.overlay}>
-                <View style={styles.container}>
+                <SafeAreaView style={styles.container}>
+                    <Text allowFontScaling={false}style={styles.title}>
+                        Product Catalog
+                    </Text>                    
                     <FlatList
                         data={products}
                         renderItem={renderItem}
@@ -405,7 +410,7 @@ const SalonProduct = () => {
                             </View>
                         </View>
                     </Modal>
-                </View>
+                </SafeAreaView>
             </View>
         </ImageBackground >
     );
@@ -415,8 +420,15 @@ export default SalonProduct;
 
 
 const styles = StyleSheet.create({
-    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.80)', paddingTop: 50 },
+    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.50)',  },
     container: { flex: 1, paddingHorizontal: 14, },
+    title: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 16,
+    marginTop: 10,
+    } ,
 
     card: {
         backgroundColor: '#1C1C1C',

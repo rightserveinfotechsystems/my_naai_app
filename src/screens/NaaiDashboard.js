@@ -25,7 +25,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import CITIES from '../utilities/CitiesArray';
 import { wp, hp } from '../utils/AppScreen';
 
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 
 // const SCREEN_WIDTH = Dimensions.get('window').width;
 const AD_WIDTH = wp(93);
@@ -895,7 +895,7 @@ export default NaaiDashboard;
 /* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)' },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.70)' },
   container: {
     flex: 1,
     paddingHorizontal: wp(4),

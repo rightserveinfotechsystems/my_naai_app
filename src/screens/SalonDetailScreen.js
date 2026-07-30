@@ -21,7 +21,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication, getServerUrl } from '../services/communication';
 import { wp, hp } from '../utils/AppScreen';
 
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 // const { width } = Dimensions.get('window');
 
 const GOLD = '#E8B97E';

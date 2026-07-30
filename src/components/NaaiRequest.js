@@ -23,7 +23,7 @@ import Geolocation from 'react-native-geolocation-service';
 
 // Geocoder.init("AIzaSyCz32prVTCy8x0xtd2mB2Q8rTYmvbqi8Tw");
 
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 
 const NaaiRequest = ({ navigation }) => {
   const [naaiName, setNaaiName] = useState('');
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.50)',
   },
 
   container: {

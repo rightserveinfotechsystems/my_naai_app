@@ -174,7 +174,7 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header(insets)}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => ( userData?.isOnboarding=== true ? navigation.navigate('Salon',{screen: 'Queue'}) : navigation.goBack() )}
           style={styles.backBtn}
         >
           <Ionicons name="arrow-back" size={22} color="#fff" />

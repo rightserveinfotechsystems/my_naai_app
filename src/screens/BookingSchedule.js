@@ -273,7 +273,7 @@ const BookingSchedule = ({ route, navigation }) => {
     } catch (error) {
       Alert.alert(
         'Warn',
-        error?.response?.data?.message ||
+        error?.response?.data?.message || error?.message ||
         'Something went wrong'
       );
     } finally {

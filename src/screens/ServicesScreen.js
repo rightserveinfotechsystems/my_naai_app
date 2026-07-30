@@ -17,7 +17,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication } from '../services/communication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 
 const ServicesScreen = () => {
   const [salonList, setSalonList] = useState([]);
@@ -35,7 +35,6 @@ const ServicesScreen = () => {
   const getUserInfo = async () => {
     try {
       const userData = await AsyncStorage.getItem('mynaaiUser');
-      console.log("userData", userData);
 
       const parsed = JSON.parse(userData);
       const id = parsed?.userId;
@@ -60,12 +59,10 @@ const ServicesScreen = () => {
         searchString: '',
       });
 
-      console.log("response bookedSalonList ", response);
 
       if (response?.status === 'SUCCESS') {
         const data = response.data || [];
 
-        console.log("booked response", data);
 
 
 
@@ -175,7 +172,7 @@ const ServicesScreen = () => {
   const STATUS_COLORS = {
     pending: '#E1B378',
     confirmed: '#4CAF50',
-    completed: '#f2ff00',
+    completed: '#E8B97E',
     cancelled: '#E53935',
   };
 
@@ -189,19 +186,11 @@ const ServicesScreen = () => {
 
   /* ---------------- RENDER ITEM ---------------- */
   const renderItem = ({ item }) => {
-    console.log("gghitem", item);
-
-    // const btnColor =
-    //   item.status === 'pending'
-    //     ? '#E1B378'
-    //     : item.status === 'completed'
-    //       ? '#4CAF50'
-    //       : '#E53935';
-    const btnColor = STATUS_COLORS[item.status?.toLowerCase()] || '#9E9E9E';
+    // console.log("gghitem", item);
 
     const formatDateReadable = (dateStr) => {
       if (!dateStr) return '';
-
+      // Safe format for display
       const date = new Date(dateStr);
       return date.toLocaleDateString('en-IN', {
         day: '2-digit',
@@ -210,15 +199,11 @@ const ServicesScreen = () => {
       });
     };
 
-
-
     const formatTime = (time) => {
       if (!time) return '';
-
       const [h, m] = time.split(':');
       const date = new Date();
       date.setHours(Number(h), Number(m));
-
       return date.toLocaleTimeString('en-IN', {
         hour: '2-digit',
         minute: '2-digit',
@@ -226,107 +211,99 @@ const ServicesScreen = () => {
       });
     };
 
+    /* ---------------- ⏱️ UTC-SAFE TIME CHECK ---------------- */
+    const isBookingPassed = () => {
+      if (!item.bookingDate) return false;
 
+      try {
+        // Extract pure YYYY-MM-DD to avoid timezone shifting
+        const rawDateStr = typeof item.bookingDate === 'string'
+          ? item.bookingDate.split('T')[0]
+          : new Date(item.bookingDate).toISOString().split('T')[0];
+
+        const [year, month, day] = rawDateStr.split('-').map(Number);
+        
+        let hours = 0;
+        let minutes = 0;
+
+        if (item.bookingTime) {
+          const timeParts = item.bookingTime.trim().split(':');
+          hours = parseInt(timeParts[0], 10) || 0;
+          minutes = parseInt(timeParts[1], 10) || 0;
+        }
+
+        // Creates date explicitly in local timezone
+        const bookingDateTime = new Date(year, month - 1, day, hours, minutes, 0);
+        return Date.now() >= bookingDateTime.getTime();
+      } catch (e) {
+        return false;
+      }
+    };
+
+    const isExpired = isBookingPassed();
+
+    // Determine final status display label and badge color
+    const statusKey = isExpired ? 'completed' : item.status?.toLowerCase();
+    
+    // Uses your existing maps, falling back to Green/Completed if expired
+    const btnColor = STATUS_COLORS[statusKey] || (isExpired ? '#4CAF50' : '#9E9E9E');
+    const displayStatusLabel = STATUS_LABELS[statusKey] || (isExpired ? 'Completed' : 'Unknown');
 
     return (
       <View style={styles.card}>
-        {/* <Image
-          source={
-            item.imageUrl
-              ? { uri: item.imageUrl }
-              : require('../assets/naai/naai1.jpg')
-          }
-          style={styles.image}
-        /> */}
-
         <View style={styles.infoContainer}>
           <View style={styles.info}>
-            <Text allowFontScaling={false}style={styles.name}>{item.salonName}</Text>
-            <Text allowFontScaling={false}style={styles.address}>{item.salonCity}</Text>
+            <Text allowFontScaling={false} style={styles.name}>{item.salonName}</Text>
+            <Text allowFontScaling={false} style={styles.address}>{item.salonCity}</Text>
 
             <View style={styles.barberRow}>
               <Ionicons name="person-outline" size={14} color="#aaa" />
-              <Text allowFontScaling={false}style={styles.barberText}>
+              <Text allowFontScaling={false} style={styles.barberText}>
                 Barber: {item.barberName || 'N/A'}
               </Text>
             </View>
             <View style={styles.barberRow}>
               <Ionicons name="cut-outline" size={14} color="#aaa" />
-              <Text allowFontScaling={false}style={styles.barberText}>
+              <Text allowFontScaling={false} style={styles.barberText}>
                 Service: {item.serviceName || 'N/A'}
               </Text>
             </View>
 
-            {/* <View style={styles.dateRow}>
-              <Ionicons name="calendar-outline" size={14} color="#E1B378" />
-              <Text allowFontScaling={false}style={styles.dateText}>
-                {item.bookingDate} • {item.bookingTime}
-              </Text>
-            </View> */}
-
             <View style={styles.dateRow}>
               <Ionicons name="calendar-outline" size={14} color="#E1B378" />
-              <Text allowFontScaling={false}style={styles.dateText}>
-                {formatDateReadable(item.bookingDate)}
-                 - {formatTime(item.bookingTime)}
+              <Text allowFontScaling={false} style={styles.dateText}>
+                {formatDateReadable(item.bookingDate)} - {formatTime(item.bookingTime)}
               </Text>
-              {/* {item.queueNumber && (
-                <View style={[styles.dateRow, { marginLeft: 4 }]}>
-                  <Ionicons name="time-outline" size={14} color="#E1B378" />
-                  <Text allowFontScaling={false}style={styles.dateText}>
-                    Queue:{item.queueNumber} People
-                  </Text>
-                </View>
-              )} */}
-              {/* <View style={styles.dateRow}> */}
-              {/* <Text allowFontScaling={false}style={styles.dateText}>
-                ,Token Number: {item.queueNumber}
-              </Text> */}
-              {/* </View> */}
-
-
             </View>
-            {/* {item.status === "pending" &&
-              <View style={styles.dateRow}>
-                <Ionicons name="time-outline" size={14} color="#E1B378" />
-                <Text allowFontScaling={false}style={styles.dateText}>
-                  Waiting Time: {item?.waitingTimeDisplay}
-                </Text>
-              </View>} */}
-
-
           </View>
 
-
           <View style={styles.rightSection}>
-            {/* STATUS BADGE */}
+            {/* STATUS BADGE - Updates automatically if time passed */}
             <View style={[styles.statusBadge, { backgroundColor: btnColor }]}>
-              <Text allowFontScaling={false}style={styles.statusBadgeText}>
-                {STATUS_LABELS[item.status?.toLowerCase()] || "Unknown"}
+              <Text allowFontScaling={false} style={styles.statusBadgeText}>
+                {displayStatusLabel}
               </Text>
             </View>
 
-            {/* CANCEL BUTTON */}
-            {["pending", "confirmed"].includes(
-              item.status?.toLowerCase()
-            ) && (
-                <TouchableOpacity
-                  style={styles.cancelBtn}
-                  onPress={() => handleCancelBooking(item.bookingId)}
-                  disabled={cancellingId === item.bookingId}
-                >
-                  {cancellingId === item.bookingId ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <>
-                      <Ionicons name="close-circle-outline" size={14} color="#fff" />
-                      <Text allowFontScaling={false}style={[styles.cancelBtnText, { marginLeft: 4 }]}>
-                        Cancel
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              )}
+            {/* CANCEL BUTTON - Hides completely if time has passed */}
+            {!isExpired && ["pending", "confirmed"].includes(item.status?.toLowerCase()) && (
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => handleCancelBooking(item.bookingId)}
+                disabled={cancellingId === item.bookingId}
+              >
+                {cancellingId === item.bookingId ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="close-circle-outline" size={14} color="#fff" />
+                    <Text allowFontScaling={false} style={[styles.cancelBtnText, { marginLeft: 4 }]}>
+                      Cancel
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>
@@ -410,7 +387,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.80)',
+    backgroundColor: 'rgba(0,0,0,0.50)',
   },
   container: {
     flex: 1,

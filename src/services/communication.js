@@ -1,12 +1,13 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert } from "react-native";
+import { Alert,DeviceEventEmitter } from "react-native";
 import { navigationRef } from "../../App.jsx";
+
 import { CommonActions } from "@react-navigation/native";
-const serverUrl = "http://192.168.1.6:5000";
+// const serverUrl = "http://192.168.1.6:5000";
 // const serverUrl = "http://192.168.1.8:5001";
 // const serverUrl = "http://localhost:5001";
-// const serverUrl = "https://backend.mynaai.in"
+const serverUrl = "https://backend.mynaai.in"
 // export const rzp_key = "rzp_test_SRombQCQU03uVL"
 export const rzp_key = "rzp_live_ST8yVm3RaFMiHW"
 // 
@@ -19,71 +20,46 @@ export function getServerUrl() {
 
 const api = axios.create({
     // baseURL: "http://192.168.1.18:5003",
-    baseURL: "http://192.168.1.6:5000",
+    baseURL: "https://backend.mynaai.in",
     // baseURL: "https://backend.mynaai.in",
 });
 // console.log("api", api);
 
 
 api.interceptors.response.use(
-    //      response => {
-    //     console.log("SUCCESS RESPONSE");
-    //     return response;
-    //   },
-    //   error => {
-    //     console.log("INTERCEPTOR ERROR HIT");
-    //     console.log("FULL ERROR 👉", error?.response);
-    //     return Promise.reject(error);
-    //   }
-    // );
     response => response,
 
-    error => {
-        const status = error?.response?.data?.status;
-        console.log("status", status);
+    async error => {
+        const httpStatus = error?.response?.status;
+        const responseData = error?.response?.data;
+        const status = responseData?.status;
 
+        console.log("HTTP Status 👉", httpStatus);
+        console.log("Response Status 👉", status);
 
+        /* ---------------- 1. PLAN EXPIRED ---------------- */
         if (status === "PLAN_EXPIRED") {
-            navigationRef.current.navigate("RenewalSubscriptionsPlan", {
-                isUpgrade: true,
-            });
+            if (navigationRef?.current) {
+                navigationRef.current.navigate("RenewalSubscriptionsPlan", {
+                    isUpgrade: true,
+                });
+            }
+            return Promise.reject(error);
+        }
 
-            // Alert.alert(
-            //     "Plan Expired",
-            //     "Your plan is finished, please renew",
-            //     [
-            //         {
-            //             text: "OK",
-            //             onPress: () => {
-            //                 isPlanAlertShown = false;
+        /* ---------------- 2. JWT / AUTH FAILURE ---------------- */
+        if (status === "JWT_FAILED") {
+            console.log("Session expired or invalid token. Redirecting to Login...");
 
-            //                 if (navigationRef?.current) {
-            //                     navigationRef.current.dispatch(
-            //                         CommonActions.reset({
-            //                             routes: [
-            //                                 {
-            //                                     name: "Salon",
-            //                                     state: {
-            //                                         routes: [
-            //                                             {
-            //                                                 name: "Account",
-            //                                             },
-            //                                         ],
-            //                                     },
-            //                                 },
-            //                                 {
-            //                                     name: "SubscriptionsPlan",
-            //                                     params: { isUpgrade: true },
-            //                                 },
-            //                             ]
-            //                         })
-            //                     );
-            //                 }
-            //             },
-            //         },
-            //     ],
-            //     { cancelable: false }
-            // );
+            try {                
+                await AsyncStorage.multiRemove(['mynaai', 'mynaaiUser', 'userType', 'isNewSalon','isLoggedIn']);
+
+                // 2. Notify App.jsx to update `isLoggedIn` state and switch to AuthStack
+                DeviceEventEmitter.emit('AUTH_CHANGED');
+            } catch (err) {
+                console.error("Error clearing AsyncStorage on auth failure:", err);
+            }
+            return new Promise(() => {});
         }
 
         return Promise.reject(error);
@@ -396,7 +372,7 @@ export const communication = {
                 {
                     headers: {
                         "Content-Type": "application/json",
-                        ...config.headers,
+                        "Authorization": `Bearer ${await getCookie()}`
                     },
                 }
             );
@@ -522,6 +498,19 @@ export const communication = {
             });
             console.log("response.data", response.data);
 
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    editSalonProfile: async (payload) => {
+        try {
+            const response = await api.post(`/api/salons/edit-salon-profile`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
             return response.data;
         } catch (error) {
             throw error;
@@ -693,13 +682,24 @@ export const communication = {
     },
     userNotificationList: async (payload) => {
         try {
-            const response = await api.post(`/api/notifications/get-salon-notification-list`, payload, {
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${await getCookie()}`
-                },
-            });
-            return response.data;
+            if(payload.userType === "SALON"){
+                const response = await api.post(`/api/notifications/get-salon-notification-list`, payload, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${await getCookie()}`
+                    },
+                });
+                return response.data;
+            }else{
+                const response = await api.post(`/api/notifications/get-user-notification-list`, payload, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${await getCookie()}`
+                    },
+                });
+                return response.data;
+            }
+            
         } catch (error) {
             throw error;
         }
@@ -719,14 +719,25 @@ export const communication = {
     },
     userNotificationCount: async (payload) => {
         try {
-            const response = await api.get(`/api/notifications/get-notification-count`, {
+            let response;
+            if(payload.userType === "SALON"){
+                response = await api.get(`/api/notifications/get-notification-count`, {
                 params: payload,
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
                 },
-            });
-            return response.data;
+                });
+            }else{
+                 response = await api.get(`/api/notifications/get-user-notification-count`, {
+                params: payload,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+                });
+            }
+            return response?.data;
         } catch (error) {
             throw error;
         }

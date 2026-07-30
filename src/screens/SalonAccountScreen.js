@@ -13,6 +13,7 @@ import {
   RefreshControl,
   DeviceEventEmitter,
   Linking,
+  PermissionsAndroid,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -22,6 +23,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { communication, getServerUrl } from '../services/communication';
 import { DAYS } from '../utilities/DaysArray';
 import RNBlobUtil from 'react-native-blob-util';
+import Geolocation from 'react-native-geolocation-service';
+import Geocoder from 'react-native-geocoding';
+
+Geocoder.init("AIzaSyCz32prVTCy8x0xtd2mB2Q8rTYmvbqi8Tw");
+
 
 const GOLD = '#E8B97E';
 const DARK = '#121212';
@@ -404,6 +410,7 @@ const SalonAccountScreen = ({ navigation }) => {
         setEditVisible(false);
         salonProfile(salonId);
         console.log("response", response);
+        await AsyncStorage.removeItem('isNewSalon');
 
       } else {
         Alert.alert('Error', response?.message || 'Update failed');
@@ -516,6 +523,7 @@ const SalonAccountScreen = ({ navigation }) => {
             await AsyncStorage.removeItem('isLoggedIn');
             await AsyncStorage.removeItem('userType');
             await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem('isNewSalon');
 
             // navigation.reset({
             //   index: 0,
@@ -690,6 +698,19 @@ const SalonAccountScreen = ({ navigation }) => {
     ]);
   };
 
+
+
+  useEffect(() => {
+    async function initialize() {
+      const isNewSalon = await AsyncStorage.getItem('isNewSalon');
+      if (isNewSalon && isNewSalon === 'true') {
+        // setEditVisible(true);
+        navigation.navigate("EditSalonProfile", { profileData,isOnboarding: true });
+      }
+    }
+    initialize();
+  }, []);
+
   if (profileLoading) {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center' }]}>
@@ -732,7 +753,8 @@ const SalonAccountScreen = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.editBtn}
-            onPress={() => setEditVisible(true)}
+            onPress={() => navigation.navigate('EditSalonProfile', { profileData })}
+            // onPress={() => setEditVisible(true)}
           >
             <Text allowFontScaling={false} style={styles.editText}>Edit Salon Profile</Text>
           </TouchableOpacity>
@@ -803,7 +825,7 @@ const SalonAccountScreen = ({ navigation }) => {
       </ScrollView>
 
       {/* EDIT MODAL */}
-      <Modal visible={editVisible} transparent animationType="slide">
+      {/* <Modal visible={editVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <ScrollView style={styles.modalCard}>
 
@@ -854,17 +876,11 @@ const SalonAccountScreen = ({ navigation }) => {
                             style={styles.salonImage}
                           />
 
-                          {/* <View style={styles.removeHintIcon}>
-          <Ionicons name="close" size={12} color="#fff" />
-        </View> */}
+                
                         </View>
 
                         <Text allowFontScaling={false} style={styles.changeImg}>Change Image</Text>
 
-                        {/* 🧠 USER GUIDANCE */}
-                        {/* <Text allowFontScaling={false}style={styles.longPressHint}>
-                          Long press to remove
-                        </Text> */}
                       </>
                     ) : (
                       <>
@@ -901,7 +917,7 @@ const SalonAccountScreen = ({ navigation }) => {
               placeholderTextColor="#999"
             />
 
-            {/* TIME */}
+           
             <View style={styles.timeRow}>
               <TouchableOpacity
                 style={styles.timeBtn}
@@ -922,7 +938,7 @@ const SalonAccountScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            {/* Week Off */}
+            
             <Text allowFontScaling={false} style={styles.sectionTitle}>Week Off</Text>
 
             <TouchableOpacity
@@ -967,7 +983,7 @@ const SalonAccountScreen = ({ navigation }) => {
 
 
 
-            {/* ================= SERVICES ================= */}
+            
             <Text allowFontScaling={false} style={styles.sectionTitle}>Services</Text>
 
             {services.map((service, index) => (
@@ -997,18 +1013,7 @@ const SalonAccountScreen = ({ navigation }) => {
                   }}
                 />
 
-                {/* <TextInput allowFontScaling={false}
-                  style={[styles.input, styles.smallInput]}
-                  placeholder="Time"
-                  keyboardType="numeric"
-                  placeholderTextColor="#999"
-                  value={service.duration}
-                  onChangeText={text => {
-                    const updated = [...services];
-                    updated[index].duration = text;
-                    setServices(updated);
-                  }}
-                /> */}
+           
 
                 <TouchableOpacity
                   onPress={() => handleDeleteService(service.id)}
@@ -1036,12 +1041,12 @@ const SalonAccountScreen = ({ navigation }) => {
             </TouchableOpacity>
 
 
-            {/* BARBERS */}
+            
             <Text allowFontScaling={false} style={styles.sectionTitle}>Barbers</Text>
 
             {barbers.map((b, index) => (
               <View key={b.id} style={styles.barberCard}>
-                {/* TOP ROW */}
+               
                 <View style={styles.barberTopRow}>
                   <TouchableOpacity
                     onPress={() =>
@@ -1082,7 +1087,7 @@ const SalonAccountScreen = ({ navigation }) => {
                   />
                 </View>
 
-                {/* BOTTOM ROW */}
+                
                 <View style={styles.barberBottomRow}>
                   <TextInput allowFontScaling={false}
                     style={styles.ratingInput}
@@ -1186,7 +1191,7 @@ const SalonAccountScreen = ({ navigation }) => {
               <Text allowFontScaling={false} style={styles.addText}>+ Add Barber</Text>
             </TouchableOpacity>
 
-            {/* SAVE */}
+          
             <View style={styles.modalRow}>
               <TouchableOpacity
                 style={styles.cancelBtn}
@@ -1206,7 +1211,7 @@ const SalonAccountScreen = ({ navigation }) => {
 
           </ScrollView>
         </View>
-      </Modal>
+      </Modal> */}
 
       {/* TIME PICKERS */}
       {pickerType && (

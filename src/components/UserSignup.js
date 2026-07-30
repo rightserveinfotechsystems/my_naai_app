@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication } from '../services/communication';
 
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 
 const UserSignup = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -163,7 +163,7 @@ export default UserSignup;
 /* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)' },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.50)' },
   container: {
     flex: 1,
     paddingHorizontal: 24,

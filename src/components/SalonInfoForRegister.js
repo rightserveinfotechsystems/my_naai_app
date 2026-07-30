@@ -24,7 +24,7 @@ import messaging from '@react-native-firebase/messaging';
 
 Geocoder.init("AIzaSyCz32prVTCy8x0xtd2mB2Q8rTYmvbqi8Tw");
 
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 
 const SalonInfoForRegister = ({ navigation, route }) => {
 
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.50)',
   },
 
   container: {

@@ -17,7 +17,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { DEFAULT_SERVICES, SALON_OPTIONS } from '../utilities/citiesRequestArray';
 
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 
 const SalonBusinessInfo = ({ navigation, route }) => {
     const { step1Data } = route.params;
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
 
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.75)',
+        backgroundColor: 'rgba(0,0,0,0.50)',
     },
 
     container: {

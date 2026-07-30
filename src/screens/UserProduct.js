@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication, getServerUrl } from '../services/communication';
 
-const BG_IMAGE = require('../assets/salon_page_bg.jpg');
+const BG_IMAGE = require('../assets/salon_page_bg.png');
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
 
@@ -188,7 +188,7 @@ export default UserProduct;
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.82)',
+    backgroundColor: 'rgba(0,0,0,0.50)',
   },
   container: {
     flex: 1,
