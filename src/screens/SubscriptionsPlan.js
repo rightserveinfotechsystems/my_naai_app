@@ -41,7 +41,7 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
   const { userData, isUpgrade } = route.params || {};
   console.log("Received Data:", userData);
   const insets = useSafeAreaInsets();
-  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState(userData?.isOnboarding=== true ? "Free" : null);
   const [loading, setLoading] = useState(false);
 
   const createPaymentOrder = async (amount) => {
@@ -63,6 +63,12 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
   const handlePayment = async () => {
     if (!selectedPlan) {
       Alert.alert("Select Plan", "Please select a subscription plan");
+      return;
+    }
+    
+    if(selectedPlan === "Free") {
+      // Handle free plan selection
+      navigation.navigate('Salon',{screen: 'Queue'})
       return;
     }
 
@@ -181,7 +187,29 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
         </TouchableOpacity>
       </View>
       <Text allowFontScaling={false}style={styles.title}>Choose Your Plan</Text>
+      {userData?.isOnboarding && (
+        <TouchableOpacity
+         
+          
+          style={[
+            styles.planCard,
+            selectedPlan === "Free" && styles.selectedCard,
+            loading && { opacity: 0.5 }
+          ]}
+          onPress={() => setSelectedPlan("Free")}
+        >
 
+          <View style={styles.bestBadge}>
+              <Text allowFontScaling={false}style={styles.bestText}>Default</Text>
+            </View>
+
+          <Text allowFontScaling={false}style={styles.planTitle}>Free Trial</Text>
+
+          <Text allowFontScaling={false}style={styles.price}>`₹ 00`</Text>
+
+          <Text allowFontScaling={false}style={styles.duration}>{`7 days`}</Text>
+        </TouchableOpacity>
+      )}
       {plans.map(plan => (
         <TouchableOpacity
           key={plan.id}

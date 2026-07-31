@@ -188,7 +188,7 @@ export default UserProduct;
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.50)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
   },
   container: {
     flex: 1,

@@ -14,35 +14,44 @@ import notifee, {
 } from '@notifee/react-native';
 import { communication } from './src/services/communication';
 
-// 1. Handle background action button presses (Killed / Background state)
+/* ---------------- 1. BACKGROUND / KILLED ACTION & TAP HANDLER ---------------- */
 notifee.onBackgroundEvent(async ({ type, detail }) => {
   const { notification, pressAction } = detail;
   const bookingRequestId = notification?.data?.bookingRequestId;
 
+  // 🎯 BANNER BODY CLICK IN BACKGROUND/RECENT APPS
+  if (type === EventType.PRESS || pressAction?.id === 'default') {
+    if (notification?.id) {
+      await notifee.cancelNotification(notification.id);
+    }
+    return;
+  }
+
+  // 🎯 ACTION BUTTON PRESSES
   if (type === EventType.ACTION_PRESS) {
-    if (pressAction.id === 'ACCEPT_BOOKING') {
-      console.log('Background: Accepting', bookingRequestId);
+    if (pressAction?.id === 'ACCEPT_BOOKING') {
+      console.log('Background: Accepting booking', bookingRequestId);
       await communication.bookingRequestOwnerAction(bookingRequestId, { action: "ACCEPT" });
       await notifee.cancelNotification(notification.id);
     }
-    else if (pressAction.id === 'REJECT_BOOKING') {
-      console.log('Background: Rejecting', bookingRequestId);
+    else if (pressAction?.id === 'REJECT_BOOKING') {
+      console.log('Background: Rejecting booking', bookingRequestId);
       await communication.bookingRequestOwnerAction(bookingRequestId, { action: "REJECT" });
       await notifee.cancelNotification(notification.id);
     }
-    else if (pressAction.id === 'DELAY_BOOKING') {
+    else if (pressAction?.id === 'DELAY_BOOKING') {
       await notifee.cancelNotification(notification.id);
     }
   }
 });
 
-// 2. FCM Background handler
+/* ---------------- 2. FCM BACKGROUND HANDLER (APP KILLED / CLOSED / RECENT) ---------------- */
 const messaging = getMessaging();
 
 setBackgroundMessageHandler(messaging, async remoteMessage => {
   const { data, notification } = remoteMessage;
 
-  // Guarantee channels exist even in killed state
+  // Guarantee channels exist in OS even if app was killed
   await notifee.createChannel({
     id: 'booking',
     name: 'Booking Notifications',
@@ -68,7 +77,14 @@ setBackgroundMessageHandler(messaging, async remoteMessage => {
     android: {
       channelId: isBookingRequest ? 'booking' : 'default_channel',
       importance: AndroidImportance.HIGH,
-      category: AndroidCategory.ALARM, // Fixed syntax typo
+      category: AndroidCategory.ALARM,
+      
+      /* 🎯 CRITICAL FIX: Directs Android OS to bring app to front on notification body tap */
+      pressAction: {
+        id: 'default',
+        launchActivity: 'default',
+      },
+
       style: {
         type: AndroidStyle.BIGTEXT,
         text: data?.body || notification?.body || '',

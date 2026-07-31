@@ -938,12 +938,25 @@ const toggleBarber = barberId => {
         {
           text: 'Remove',
           style: 'destructive',
-          onPress: () => {
-            setServices(previous =>
-              previous.filter(
-                service => service.id !== serviceId,
-              ),
-            );
+          onPress: async() => {
+            // ✅ NEW SERVICE (no API call)
+                      if (!isValidGuid(serviceId)) {
+                        setServices(prev => prev.filter(s => s.id !== serviceId));
+                        return;
+                      }
+                      try {
+                        const response = await communication.deleteSalonService(serviceId);
+                        if (response?.status === 'SUCCESS') {
+                          setServices(prev =>
+                            prev.filter(s => s.id !== serviceId)
+                          );
+                          console.log('Deleted', 'Service deleted successfully');
+                        } else {
+                          console.log('Error', response?.message || 'Failed to delete service');
+                        }
+                      } catch (error) {
+                        console.log('Error', error?.response?.data?.message || 'Failed to delete service');
+                      }
           },
         },
       ],
@@ -980,7 +993,13 @@ const toggleBarber = barberId => {
     );
   };
 
+  
+
+  const isValidGuidBarber = (id = '') =>
+    typeof id === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
   const removeBarber = barberId => {
+     console.log('Barber removed from local state:', barberId);
     Alert.alert(
       'Remove Barber',
       'Are you sure you want to remove this barber?',
@@ -992,12 +1011,27 @@ const toggleBarber = barberId => {
         {
           text: 'Remove',
           style: 'destructive',
-          onPress: () => {
-            setBarbers(previous =>
-              previous.filter(
-                barber => barber.id !== barberId,
-              ),
-            );
+          onPress: async () => {
+            if (!isValidGuidBarber(barberId)) {
+              setBarbers(prev => prev.filter(b => b.id !== barberId));
+              return;
+            }
+            console.log('Barber removed from local state after yes:', barberId);
+            try {
+              const response = await communication.deleteSalonBarber(barberId);
+              console.log("barber delete response", response);
+  
+              if (response?.status === 'SUCCESS') {
+                setBarbers(prev =>
+                  prev.filter(b => b.id !== barberId)
+                );
+                console.log('Barber deleted successfully');
+              } else {
+                console.log('Error', response?.message || 'Failed to delete barber');
+              }
+            } catch (error) {
+              console.log('Error', error?.response?.data?.message || 'Failed to delete barber');
+            }
           },
         },
       ],
@@ -1194,6 +1228,8 @@ const toggleBarber = barberId => {
 
     return true;
   };
+
+ 
 
   const handleSaveProfile = async () => {
     if (!validateForm()) {
@@ -2129,25 +2165,28 @@ const toggleBarber = barberId => {
                 </View>
               ))}
 
-              {salonImages.length < MAX_IMAGES ? (
-                <TouchableOpacity
-                  style={styles.addImageCard}
-                  onPress={addSalonImage}
-                >
-                  <Ionicons
-                    name="add-circle-outline"
-                    size={31}
-                    color={GOLD}
-                  />
-
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.addImageText}
+                {salonImages.length < MAX_IMAGES ? (
+                  <TouchableOpacity
+                    style={styles.addImageCard}
+                    onPress={addSalonImage}
+                    activeOpacity={0.7}
                   >
-                    Add Image
-                  </Text>
-                </TouchableOpacity>
-              ) : null}
+                    <View style={styles.addImageContent}>
+                      <Ionicons
+                        name="add-circle-outline"
+                        size={30}
+                        color={GOLD}
+                      />
+
+                      <Text
+                        allowFontScaling={false}
+                        style={styles.addImageText}
+                      >
+                        Add Image
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ) : null}
             </View>
           </View>
         ) : null}
@@ -2995,6 +3034,46 @@ const toggleBarber = barberId => {
         ) : null}
       </View>
 
+
+            {/* Plan Details */}
+     {!isOnboarding && <View style={styles.sectionCard}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={styles.sectionHeader}
+        
+        >
+          <View style={styles.sectionHeaderLeft}>
+            <View style={styles.sectionIconContainer}>
+              <Ionicons
+                name="ribbon-outline"
+                size={22}
+                color="#000"
+              />
+            </View>
+
+            <View style={styles.sectionTitleContent}>
+              <Text
+                allowFontScaling={false}
+                style={styles.sectionTitle}
+              >
+                Active Subscription Plan
+              </Text>
+
+              <Text
+                allowFontScaling={false}
+                style={styles.sectionSubtitle}
+              >
+               {`Expired At`} -{new Date(profileData?.planEndDate).toLocaleDateString()} {'  '}
+               {`Plan Type`} - {profileData?.planType}
+              </Text>
+            </View>
+          </View>
+
+      
+        </TouchableOpacity>
+
+      
+      </View> }
       <View style={styles.bottomSpace} />
     </ScrollView>
 
@@ -3668,13 +3747,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#232323',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 8, /* Equal padding around all sides */
+  },
+
+  /* 🎯 Inner Wrapper ensures 100% vertical & horizontal precision */
+  addImageContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10, /* Adjusts vertical alignment for perfect centering */
   },
 
   addImageText: {
     color: GOLD,
-    fontSize: 11,
-    fontWeight: '800',
-    marginTop: 5,
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 6,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    includeFontPadding: false, /* Fixes Android native font line-height push */
   },
 
   timeButton: {

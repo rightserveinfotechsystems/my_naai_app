@@ -253,8 +253,8 @@ const SalonDashboard = ({ navigation }) => {
               color="#E8B97E"
             />
             <Text allowFontScaling={false} style={styles.subText}>
-              {formatDateReadable(item?.bookingDate)}, token: {item?.queueNumber}
-              {/* {formatDateReadable(item?.bookingDate)}, {formatTime(item?.bookingTime)}, token: {item?.queueNumber} */}
+              {/* {formatDateReadable(item?.bookingDate)}, token: {item?.queueNumber} */}
+              {formatDateReadable(item?.bookingDate)}, {formatTime(item.bookingTime)}, token: {item?.queueNumber}
             </Text>
           </View>
         </View>
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.50)'
+    backgroundColor: 'rgba(0,0,0,0.65)'
   },
 
   container: {

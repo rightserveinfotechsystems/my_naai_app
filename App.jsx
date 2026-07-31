@@ -2,9 +2,9 @@ import 'react-native-gesture-handler'; // MUST be first
 import './src/utilities/notifeeBackgroundHandler';
 import React, { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppState, DeviceEventEmitter, Image, Linking, TouchableOpacity, View } from 'react-native';
+import { AppState, DeviceEventEmitter, Image, Linking, TouchableOpacity, View, Text, TextInput } from 'react-native';
 
-import notifee, { AndroidImportance, AndroidStyle, AndroidCategory,EventType } from '@notifee/react-native';
+import notifee, { AndroidImportance, AndroidStyle, AndroidCategory, EventType } from '@notifee/react-native';
 import { 
   getMessaging, 
   requestPermission, 
@@ -18,25 +18,26 @@ import {
   getInitialNotification
 } from '@react-native-firebase/messaging';
 
-
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { enableScreens } from 'react-native-screens';
 enableScreens();
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import VersionCheck from 'react-native-version-check';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /* ---------- CONTEXT / UTILS ---------- */
 import { NotificationProvider } from './src/components/NotificationContext';
 import { requestNotificationPermission } from './src/utilities/notificationPermission';
 import { initTTS } from './src/utilities/tts';
+import { communication } from './src/services/communication';
 
 /* ---------- AUTH SCREENS ---------- */
 import SplashLogoScreen from './src/screens/SplashLogoScreen';
 import SplashScreen from './src/screens/SplashScreen';
 import UserLogin from './src/components/UserLogin';
-import UserSignup from './src/components/UserSignup';
 import OtpScreen from './src/components/OtpScreen';
 import NaaiLogin from './src/components/NaaiLogin';
 import NaaiRequest from './src/components/NaaiRequest';
@@ -70,86 +71,20 @@ import UserNotifications from './src/screens/UserNotifications';
 import BookingRequestScreen from './src/screens/BookingRequestScreen';
 import DelayRequestScreen from './src/screens/DelayRequestScreen';
 import EditSalonProfileScreen from './src/screens/EditSalonProfileScreen';
-import { Text, TextInput } from 'react-native';
 
-/* ---------- NAV REF ---------- */
-// export const navigationRef = React.createRef();
-// const isNavigationReady = React.createRef();
-import { createNavigationContainerRef } from '@react-navigation/native';
-import { communication } from './src/services/communication';
-import VersionCheck from 'react-native-version-check';
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-
-// if (!Text.defaultProps) Text.defaultProps = {};
-// Text.defaultProps.maxFontSizeMultiplier = 1.2;
-// Text.defaultProps.style = { fontFamily: 'Roboto-Regular' };
-
-// if (!TextInput.defaultProps) TextInput.defaultProps = {};
-// TextInput.defaultProps.maxFontSizeMultiplier = 1.2;
-// TextInput.defaultProps.style = { fontFamily: 'Roboto-Regular' };
-
-
-
-
+export const navigationRef = createNavigationContainerRef();
 
 const TextRender = Text.render;
 Text.render = function (...args) {
   const origin = TextRender.call(this, ...args);
-  return React.cloneElement(origin, {
-    allowFontScaling: false,
-  });
+  return React.cloneElement(origin, { allowFontScaling: false });
 };
 
 const TextInputRender = TextInput.render;
 TextInput.render = function (...args) {
   const origin = TextInputRender.call(this, ...args);
-  return React.cloneElement(origin, {
-    allowFontScaling: false,
-  });
+  return React.cloneElement(origin, { allowFontScaling: false });
 };
-
-
-//  useEffect(() => {
-//     checkForceUpdate();
-//   }, []);
-
-//   const checkForceUpdate = async () => {
-//     try {
-//       const latestVersion = await VersionCheck.getLatestVersion();
-//       const currentVersion = VersionCheck.getCurrentVersion();
-
-//       console.log("Current:", currentVersion);
-//       console.log("Latest:", latestVersion);
-//       if (!latestVersion) {
-//         setForceUpdate(false);
-//         return;
-//       }
-
-//       const isUpdateNeeded =
-//         currentVersion.localeCompare(latestVersion, undefined, { numeric: true }) === -1;
-
-//       if (isUpdateNeeded) {
-//         const url = await VersionCheck.getStoreUrl();
-//         setStoreUrl(url);
-//         setForceUpdate(true);
-//       }
-//     } catch (err) {
-//       console.log("Update check error:", err);
-//       setForceUpdate(false);
-//     } finally {
-//       setCheckingUpdate(false);
-//     }
-//   };
-
-export const navigationRef = createNavigationContainerRef();
-
-/* ---------- Roboto font ---------- */
-
-// Text.defaultProps = Text.defaultProps || {};
-// Text.defaultProps.style = { fontFamily: 'Roboto-Regular' };
-
-// TextInput.defaultProps = TextInput.defaultProps || {};
-// TextInput.defaultProps.style = { fontFamily: 'Roboto-Regular' };
 
 /* ---------- NAV ---------- */
 const Stack = createNativeStackNavigator();
@@ -163,39 +98,24 @@ const COLORS = {
 };
 
 /* ---------- TAB OPTIONS ---------- */
-
 const tabOptions = ({ route, insets }) => ({
   headerShown: false,
-
   tabBarShowLabel: false,
-
   tabBarActiveTintColor: COLORS.accent,
-
   tabBarInactiveTintColor: COLORS.inactive,
-
   tabBarStyle: {
     backgroundColor: COLORS.primary,
-
     borderTopWidth: 0,
-
     position: 'absolute',
-
     elevation: 10,
-
     height: 50 + Math.max(insets.bottom, 5),
-
     paddingBottom: Math.max(insets.bottom, 5),
-
     paddingTop: 4,
-    // marginBottom: 10,
-
   },
-
   tabBarLabelStyle: {
     fontSize: 13,
     marginBottom: 2,
   },
-
   tabBarIcon: ({ color }) => {
     const icons = {
       'Salon Naai': 'list-circle',
@@ -207,72 +127,33 @@ const tabOptions = ({ route, insets }) => ({
       'Account': 'person',
     };
 
-    return (
-      <Ionicons
-        name={icons[route.name]}
-        size={28}
-        color={color}
-      />
-    );
+    return <Ionicons name={icons[route.name]} size={28} color={color} />;
   },
 });
-
 
 /* ---------- USER TABS ---------- */
 function MainTabs() {
   const insets = useSafeAreaInsets();
-
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) =>
-        tabOptions({
-          route,
-          insets,
-        })
-      }
-    >
-      <Tab.Screen
-        name="Salon Naai"
-        component={NaaiDashboard}
-      />
-
-      <Tab.Screen
-        name="Booked Salon"
-        component={ServicesScreen}
-      />
-
-      <Tab.Screen
-        name="Products"
-        component={UserProduct}
-      />
-
-      <Tab.Screen
-        name="Account"
-        component={AccountScreen}
-      />
+    <Tab.Navigator screenOptions={({ route }) => tabOptions({ route, insets })}>
+      <Tab.Screen name="Salon Naai" component={NaaiDashboard} />
+      <Tab.Screen name="Booked Salon" component={ServicesScreen} />
+      <Tab.Screen name="Products" component={UserProduct} />
+      <Tab.Screen name="Account" component={AccountScreen} />
     </Tab.Navigator>
   );
 }
 
 /* ---------- SALON TABS ---------- */
-function SalonTabs({ isNewSalon=false }) {
+function SalonTabs({ isNewSalon = false }) {
   const insets = useSafeAreaInsets();
   return (
-    // <Tab.Navigator screenOptions={tabOptions}>
     <Tab.Navigator
       initialRouteName={isNewSalon ? "Account" : "Queue"}
-      screenOptions={({ route }) =>
-        tabOptions({
-          route,
-          insets,
-        })
-      }
+      screenOptions={({ route }) => tabOptions({ route, insets })}
     >
-      <Tab.Screen name="Queue" component={SalonDashboard}
-
-      />
-      <Tab.Screen name="Queue History" component={SalonBookingHistory}
-      />
+      <Tab.Screen name="Queue" component={SalonDashboard} />
+      <Tab.Screen name="Queue History" component={SalonBookingHistory} />
       <Tab.Screen name="Product" component={SalonProduct} />
       <Tab.Screen name="Account" component={SalonAccountScreen} />
     </Tab.Navigator>
@@ -291,11 +172,6 @@ function AuthStack({ onLoginSuccess }) {
       <Stack.Screen name="UserLogin">
         {props => <UserLogin {...props} onLoginSuccess={onLoginSuccess} />}
       </Stack.Screen>
-      {/* <Stack.Screen name="UserSignup">
-        {props => <UserSignup {...props} onLoginSuccess={onLoginSuccess} />}
-      </Stack.Screen> */}
-      {/* <Stack.Screen name="UserSignup" component={UserSignup} /> */}
-      {/* <Stack.Screen name="UserLogin" component={UserLogin} /> */}
       <Stack.Screen name="OtpScreen">
         {props => <OtpScreen {...props} onLoginSuccess={onLoginSuccess} />}
       </Stack.Screen>
@@ -305,7 +181,6 @@ function AuthStack({ onLoginSuccess }) {
       <Stack.Screen name="SalonInfoForRegister" component={SalonInfoForRegister} />
       <Stack.Screen name="SalonBusinessInfo" component={SalonBusinessInfo} />
       <Stack.Screen name="SalonRegisterOtpScreen" component={SalonRegisterOtpScreen} />
-      {/* <Stack.Screen name="SubscriptionsPlan" component={SubscriptionsPlan} /> */}
       <Stack.Screen name="SubscriptionsPlan">
         {props => <SubscriptionsPlan {...props} onLoginSuccess={onLoginSuccess} />}
       </Stack.Screen>
@@ -323,11 +198,7 @@ function AppStack({ userType, isNewSalon }) {
         <Stack.Screen name="Main" component={MainTabs} />
       ) : (
         <Stack.Screen name="Salon">
-          {() => (
-            <SalonTabs
-              isNewSalon={isNewSalon}
-            />
-          )}
+          {() => <SalonTabs isNewSalon={isNewSalon} />}
         </Stack.Screen>
       )}
       <Stack.Screen name="SalonDetail" component={SalonDetailScreen} />
@@ -343,16 +214,12 @@ function AppStack({ userType, isNewSalon }) {
       <Stack.Screen name="UserNotifications" component={UserNotifications} />
       <Stack.Screen name="BookingRequestScreen" component={BookingRequestScreen} />
       <Stack.Screen name="DelayRequestScreen" component={DelayRequestScreen} />
-      <Stack.Screen name="EditSalonProfile" component={EditSalonProfileScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-
+      <Stack.Screen name="EditSalonProfile" component={EditSalonProfileScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
 
+/* ---------- SAFE NAVIGATION HELPER ---------- */
 const safeNavigate = (name, params) => {
   console.log(`🚀 Navigating to ${name} with params:`, params);
   if (navigationRef.isReady()) {
@@ -366,7 +233,6 @@ const safeNavigate = (name, params) => {
   }
 };
 
-
 /* ---------- ROOT APP ---------- */
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -378,7 +244,10 @@ export default function App() {
   const [storeUrl, setStoreUrl] = useState('');
   const [isNewSalon, setIsNewSalon] = useState(false);
 
-
+  const userTypeRef = useRef(null);
+  useEffect(() => {
+    userTypeRef.current = userType;
+  }, [userType]);
 
   useEffect(() => {
     checkForceUpdate();
@@ -389,8 +258,6 @@ export default function App() {
       const latestVersion = await VersionCheck.getLatestVersion();
       const currentVersion = VersionCheck.getCurrentVersion();
 
-      console.log("Current:", currentVersion);
-      console.log("Latest:", latestVersion);
       if (!latestVersion) {
         setForceUpdate(false);
         return;
@@ -411,12 +278,6 @@ export default function App() {
       setCheckingUpdate(false);
     }
   };
-
-
-  const userTypeRef = useRef(null);
-  useEffect(() => {
-    userTypeRef.current = userType;
-  }, [userType]);
 
   /* ---------- AUTH CHECK ---------- */
   useEffect(() => {
@@ -464,508 +325,282 @@ export default function App() {
     };
   }, []);
 
-  /* ---------- NOTIFICATIONS ---------- */
-
-
-useEffect(() => {
-  // Create notification channels
-  notifee.createChannel({
-    id: 'default_channel',
-    name: 'Default Notifications',
-    importance: AndroidImportance.HIGH,
-    sound: 'buzzer',
-    
-    vibration: true,
-  
-  });
-
-  notifee.createChannel({
-    id: 'booking',
-    name: 'Default Notifications',
-    importance: AndroidImportance.HIGH,
-    sound: 'buzzer_old',
-    vibration: true,
-  });
-
-  requestNotificationPermission();
-  initTTS();
-
-  // Initialize messaging instance
-  const messaging = getMessaging();
-
-  // Foreground notification handler
-  const unsubscribeMsg = onMessage(messaging, async msg => {
-    console.log("Full message 👉", msg);
-    console.log("Notification data 👉", msg.data);
-
-    const countdownMs = 70000;
-    const timestamp = Date.now() + countdownMs;
-    const DURATION_MS = 60000;
-    const targetTimestamp = Date.now() + DURATION_MS;
-
-    const isBookingRequest = msg.data?.type === "BOOKING_REQUEST";
-
-    await notifee.displayNotification({
-      title: msg.notification?.title || msg.data?.title || 'Notification',
-      body: msg.notification?.body || msg.data?.body || '',
-      android: {
-        channelId: isBookingRequest ? 'booking' : 'default_channel',
-        importance: AndroidImportance.HIGH,
-        style: {
-          type: AndroidStyle.BIGTEXT,
-          text: msg.notification?.body || msg.data?.body || ''
-        },
-        smallIcon: 'ic_notification',
-        ongoing: isBookingRequest ? true : false,
-        timeoutAfter: isBookingRequest ? 70000 : undefined,
-        category: AndroidCategory.ALARM, // 👈 Directs output through internal speaker stream
-     
-        ...(isBookingRequest && {
-          showChronometer: true,          // Shows the timer in notification header
-          chronometerDirection: 'down',   // Counts down instead of up
-          timestamp: targetTimestamp,     // Tells Android when countdown reaches 00:00
-        }),
-        actions: isBookingRequest
-          ? [
-              {
-                title: '✅ Accept',
-                pressAction: {
-                  id: 'ACCEPT_BOOKING',
-                },
-              },
-              {
-                title: '⏳ Delay',
-                pressAction: {
-                  id: 'DELAY_BOOKING',
-                  launchActivity: 'default',
-                },
-              },
-              {
-                title: '❌ Reject',
-                pressAction: {
-                  id: 'REJECT_BOOKING',
-                },
-              },
-            ]
-          : [],
-      },
-      data: msg.data,
-    });
-  });
-
-  // Notifee foreground interaction listener
-  const unsubscribeNotifee = notifee.onForegroundEvent(
-    async ({ type, detail }) => {
-      const { notification, pressAction } = detail;
-      const data = notification?.data;
-
-      console.log("Type 👉", type);
-      console.log("Action 👉", pressAction?.id);
-
-      /* ---------------- ACTION BUTTON CLICK ---------------- */
-      if (type === EventType.ACTION_PRESS) {
-        const bookingRequestId = data?.bookingRequestId;
-
-        // 👉 ACCEPT
-        if (pressAction?.id === 'ACCEPT_BOOKING') {
-          await communication.bookingRequestOwnerAction(
-            bookingRequestId,
-            { action: "ACCEPT" }
-          );
-
-          await notifee.cancelNotification(notification.id);
-          return;
-        }
-
-        // 👉 REJECT
-        if (pressAction?.id === 'REJECT_BOOKING') {
-          await communication.bookingRequestOwnerAction(
-            bookingRequestId,
-            { action: "REJECT" }
-          );
-
-          await notifee.cancelNotification(notification.id);
-          return;
-        }
-
-        // 👉 DELAY
-        if (pressAction?.id === 'DELAY_BOOKING') {
-          safeNavigate("BookingRequestScreen", {
-            bookingRequestId: data?.bookingRequestId,
-            openDelayModal: true,   // 👈 important
-          });
-          return;
-        }
-      }
-
-      /* ---------------- NORMAL NOTIFICATION CLICK ---------------- */
-      if (type !== EventType.PRESS) return;
-
-      console.log("Pressed Data 👉", data);
-      console.log("UserType 👉", userTypeRef.current);
-
-      // 👉 USER - Delay Request
-      if (
-        data?.type === "DELAY_TIME_PROPOSAL" &&
-        userTypeRef.current === "USER"
-      ) {
-        safeNavigate("DelayRequestScreen", {
-          bookingRequestId: data?.bookingRequestId,
-          delayMinutes: data?.delayMinutes,
-          proposedTime: data?.proposedTime,
-        });
-        return;
-      }
-
-      // 👉 USER - Booking Confirmed
-      if (
-        data?.type === "BOOKING_CONFIRMED" &&
-        userTypeRef.current === "USER"
-      ) {
-        safeNavigate("Booked Salon");
-        return;
-      }
-
-      // 👉 USER - Booking Rejected
-      if (
-        data?.type === "BOOKING_REJECTED" &&
-        userTypeRef.current === "USER"
-      ) {
-        safeNavigate("Booked Salon");
-        return;
-      }
-
-      // 👉 SALON - Booking Request
-      if (
-        data?.type === "BOOKING_REQUEST" &&
-        userTypeRef.current === "SALON"
-      ) {
-        safeNavigate("BookingRequestScreen", {
-          bookingRequestId: data?.bookingRequestId,
-        });
-        return;
-      }
-
-      // 👉 DELAY_RESPONSE → DO NOTHING
-      if (data?.type === "DELAY_RESPONSE") {
-        console.log("Delay response received. No navigation.");
-        return;
-      }
-    }
-  );
-
-  // Background notification tap handler
-  const unsubscribeOpened = onNotificationOpenedApp(messaging, remoteMessage => {
-    const data = remoteMessage?.data;
-
-    if (
-      data?.type === "DELAY_TIME_PROPOSAL" &&
-      userTypeRef.current === "USER"
-    ) {
-      safeNavigate("DelayRequestScreen", {
-        bookingRequestId: data?.bookingRequestId,
-        delayMinutes: data?.delayMinutes,
-      });
-    }
-
-    // 👉 USER - Booking Confirmed
-    if (
-      data?.type === "BOOKING_CONFIRMED" &&
-      userTypeRef.current === "USER"
-    ) {
-      safeNavigate("Booked Salon");
-    }
-
-    // 👉 USER - Booking Rejected
-    if (
-      data?.type === "BOOKING_REJECTED" &&
-      userTypeRef.current === "USER"
-    ) {
-      safeNavigate("Booked Salon");
-    }
-
-    if (
-      data?.type === "BOOKING_REQUEST" &&
-      userTypeRef.current === "SALON"
-    ) {
-      safeNavigate("BookingRequestScreen", {
-        bookingRequestId: data?.bookingRequestId,
-      });
-    }
-
-    // DELAY_RESPONSE → do nothing
-  });
-
-  // Cold start notification tap handler
-  getInitialNotification(messaging).then(remoteMessage => {
-    const data = remoteMessage?.data;
-
+  /* ---------- ROUTING HELPER FOR NOTIFICATIONS ---------- */
+  const handleNotificationNavigation = (data) => {
     if (!data) return;
 
-    if (
-      data?.type === "DELAY_TIME_PROPOSAL" &&
-      userTypeRef.current === "USER"
-    ) {
+    const type = data.type;
+    const currentUserType = userTypeRef.current;
+
+    console.log("Routing Notification 👉 Type:", type, "| UserType:", currentUserType);
+
+    /* 🎯 1. SPECIFIC SCREEN TARGETS */
+    if (type === "DELAY_TIME_PROPOSAL" && currentUserType === "USER") {
       safeNavigate("DelayRequestScreen", {
-        bookingRequestId: data?.bookingRequestId,
-        delayMinutes: data?.delayMinutes,
+        bookingRequestId: data.bookingRequestId,
+        delayMinutes: data.delayMinutes,
+        proposedTime: data.proposedTime,
       });
+      return;
     }
 
-    if (
-      data?.type === "BOOKING_CONFIRMED" &&
-      userTypeRef.current === "USER"
-    ) {
+    if (type === "BOOKING_CONFIRMED" && currentUserType === "USER") {
       safeNavigate("Booked Salon");
+      return;
     }
 
-    if (
-      data?.type === "BOOKING_REJECTED" &&
-      userTypeRef.current === "USER"
-    ) {
+    if (type === "BOOKING_REJECTED" && currentUserType === "USER") {
       safeNavigate("Booked Salon");
+      return;
     }
 
-    if (
-      data?.type === "BOOKING_REQUEST" &&
-      userTypeRef.current === "SALON"
-    ) {
+    if (type === "BOOKING_REQUEST" && currentUserType === "SALON") {
       safeNavigate("BookingRequestScreen", {
-        bookingRequestId: data?.bookingRequestId,
+        bookingRequestId: data.bookingRequestId,
       });
+      return;
     }
 
-    // DELAY_RESPONSE → no navigation
-  });
+    if (type === "DELAY_RESPONSE") {
+      return;
+    }
 
-  return () => {
-    unsubscribeMsg();
-    unsubscribeNotifee();
-    unsubscribeOpened();
+    /* 🏠 2. GENERAL NOTIFICATIONS FALLBACK TO DASHBOARD */
+    if (currentUserType === "SALON") {
+      safeNavigate("Salon"); // Opens Salon Stack / Dashboard
+    } else if (currentUserType === "USER") {
+      safeNavigate("Main");  // Opens User Stack / Dashboard
+    }
   };
-}, []);
 
-
-
+  /* ---------- NOTIFICATIONS LISTENERS ---------- */
   useEffect(() => {
+    // Create channels
+    notifee.createChannel({
+      id: 'default_channel',
+      name: 'Default Notifications',
+      importance: AndroidImportance.HIGH,
+      sound: 'buzzer',
+      vibration: true,
+    });
 
+    notifee.createChannel({
+      id: 'booking',
+      name: 'Booking Notifications',
+      importance: AndroidImportance.HIGH,
+      sound: 'buzzer_old',
+      vibration: true,
+    });
+
+    requestNotificationPermission();
+    initTTS();
+
+    const messaging = getMessaging();
+
+    // 1. Foreground messaging listener
+    const unsubscribeMsg = onMessage(messaging, async msg => {
+      console.log("Full message 👉", msg);
+      console.log("Notification data 👉", msg.data);
+
+      const DURATION_MS = 60000;
+      const isBookingRequest = msg.data?.type === "BOOKING_REQUEST";
+
+      await notifee.displayNotification({
+        title: msg.notification?.title || msg.data?.title || 'Notification',
+        body: msg.notification?.body || msg.data?.body || '',
+        android: {
+          channelId: isBookingRequest ? 'booking' : 'default_channel',
+          importance: AndroidImportance.HIGH,
+          category: AndroidCategory.ALARM,
+          pressAction: {
+            id: 'default',
+            launchActivity: 'default',
+          },
+          style: {
+            type: AndroidStyle.BIGTEXT,
+            text: msg.notification?.body || msg.data?.body || ''
+          },
+          smallIcon: 'ic_notification',
+          ongoing: isBookingRequest,
+          timeoutAfter: isBookingRequest ? 70000 : undefined,
+          ...(isBookingRequest && {
+            showChronometer: true,
+            chronometerDirection: 'down',
+            timestamp: Date.now() + DURATION_MS,
+          }),
+          actions: isBookingRequest
+            ? [
+                { title: '✅ Accept', pressAction: { id: 'ACCEPT_BOOKING' } },
+                { title: '⏳ Delay', pressAction: { id: 'DELAY_BOOKING', launchActivity: 'default' } },
+                { title: '❌ Reject', pressAction: { id: 'REJECT_BOOKING' } },
+              ]
+            : [],
+        },
+        data: msg.data,
+      });
+    });
+
+    // 2. Notifee interaction listener (Foreground & Background Taps)
+    const unsubscribeNotifee = notifee.onForegroundEvent(
+      async ({ type, detail }) => {
+        const { notification, pressAction } = detail;
+        const data = notification?.data;
+
+        /* 🎯 BANNER BODY TAP OR DEFAULT PRESS */
+        if (type === EventType.PRESS || pressAction?.id === 'default') {
+          handleNotificationNavigation(data);
+          if (notification?.id) {
+            await notifee.cancelNotification(notification.id);
+          }
+          return;
+        }
+
+        /* ACTION BUTTON PRESS */
+        if (type === EventType.ACTION_PRESS) {
+          const bookingRequestId = data?.bookingRequestId;
+
+          if (pressAction?.id === 'ACCEPT_BOOKING') {
+            await communication.bookingRequestOwnerAction(bookingRequestId, { action: "ACCEPT" });
+            await notifee.cancelNotification(notification.id);
+            return;
+          }
+
+          if (pressAction?.id === 'REJECT_BOOKING') {
+            await communication.bookingRequestOwnerAction(bookingRequestId, { action: "REJECT" });
+            await notifee.cancelNotification(notification.id);
+            return;
+          }
+
+          if (pressAction?.id === 'DELAY_BOOKING') {
+            safeNavigate("BookingRequestScreen", {
+              bookingRequestId: data?.bookingRequestId,
+              openDelayModal: true,
+            });
+            return;
+          }
+        }
+      }
+    );
+
+    // 3. Background notification tap (App running in background / recent apps)
+    const unsubscribeOpened = onNotificationOpenedApp(messaging, remoteMessage => {
+      handleNotificationNavigation(remoteMessage?.data);
+    });
+
+    // 4. Cold start notification tap (App completely closed/killed)
+    getInitialNotification(messaging).then(remoteMessage => {
+      if (remoteMessage?.data) {
+        setTimeout(() => {
+          handleNotificationNavigation(remoteMessage.data);
+        }, 800);
+      }
+    });
+
+    return () => {
+      unsubscribeMsg();
+      unsubscribeNotifee();
+      unsubscribeOpened();
+    };
+  }, []);
+
+  /* ---------- PENDING NAVIGATION ---------- */
+  useEffect(() => {
     const handlePendingNavigation = async () => {
-
       const pending = await AsyncStorage.getItem('PENDING_NAVIGATION');
-
       if (!pending) return;
 
       const parsed = JSON.parse(pending);
-
       setTimeout(() => {
-
         if (navigationRef.isReady()) {
           navigationRef.navigate(parsed.screen, parsed.params);
         }
-
       }, 1500);
 
       await AsyncStorage.removeItem('PENDING_NAVIGATION');
     };
 
     handlePendingNavigation();
-
   }, []);
 
-  /* ---------- FCM ---------- */
-
-
-
+  /* ---------- FCM INIT ---------- */
   useEffect(() => {
-    // Initialize messaging instance
-    const messaging = getMessaging();
+    const messagingInstance = getMessaging();
 
     const initFCM = async () => {
       try {
-        // Request notification permission
-        const authStatus = await requestPermission(messaging);
-
+        const authStatus = await requestPermission(messagingInstance);
         const enabled =
           authStatus === AuthorizationStatus.AUTHORIZED ||
           authStatus === AuthorizationStatus.PROVISIONAL;
 
-        console.log('Permission Status:', authStatus);
+        if (!enabled) return;
 
-        if (!enabled) {
-          console.log('❌ Notification permission denied');
-          return;
-        }
+        await registerDeviceForRemoteMessages(messagingInstance);
+        await setAutoInitEnabled(messagingInstance, true);
 
-        // Important for Android
-        await registerDeviceForRemoteMessages(messaging);
-
-        // Enable auto init
-        await setAutoInitEnabled(messaging, true);
-
-        // Get FCM token
-        const token = await getToken(messaging);
-
-        console.log('🔥 FCM TOKEN:', token);
-
+        const token = await getToken(messagingInstance);
         if (token) {
           await AsyncStorage.setItem('FCM_TOKEN', token);
-        } else {
-          console.log('❌ FCM token is empty');
         }
-
       } catch (error) {
         console.log('❌ FCM INIT ERROR:', error);
       }
     };
 
-    // Initialize FCM
     initFCM();
 
-    // Handle token refresh
-    const unsubscribe = onTokenRefresh(messaging, async (token) => {
-      console.log('🔄 FCM TOKEN REFRESHED:', token);
+    const unsubscribe = onTokenRefresh(messagingInstance, async (token) => {
       await AsyncStorage.setItem('FCM_TOKEN', token);
     });
 
     return unsubscribe;
   }, []);
 
-
-
+  /* ---------- INITIAL NOTIFEE CHECK FOR COLD START TAP ---------- */
   useEffect(() => {
     const handleInitialNotification = async () => {
       const initial = await notifee.getInitialNotification();
 
-      // Check if the notification exists and the ID matches
-      if (initial && initial.pressAction?.id === 'DELAY_BOOKING') {
-        const checkNavReady = setInterval(() => {
-          if (navigationRef.isReady()) {
-            // FIX: Pass the specific ID and the flag to open the modal
-            safeNavigate('BookingRequestScreen', {
-              bookingRequestId: initial.notification.data?.bookingRequestId,
-              openDelayModal: true
-            });
-            clearInterval(checkNavReady);
-          }
-        }, 100);
+      if (initial) {
+        const data = initial.notification?.data;
+        const pressId = initial.pressAction?.id;
+
+        if (pressId === 'DELAY_BOOKING') {
+          safeNavigate('BookingRequestScreen', {
+            bookingRequestId: data?.bookingRequestId,
+            openDelayModal: true
+          });
+        } else {
+          handleNotificationNavigation(data);
+        }
       }
     };
 
     handleInitialNotification();
-
-    const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
-      if (type === EventType.ACTION_PRESS && detail.pressAction?.id === 'DELAY_BOOKING') {
-        // FIX: Ensure parameters match what BookingRequestScreen expects
-        safeNavigate('BookingRequestScreen', {
-          bookingRequestId: detail.notification.data?.bookingRequestId,
-          openDelayModal: true
-        });
-      }
-    });
-
-    return () => unsubscribe();
   }, []);
 
-
-  if (loading) return null;
-
-
-  if (checkingUpdate) {
-    return null; // ⏳ wait for version check
-  }
+  if (loading || checkingUpdate) return null;
 
   if (forceUpdate) {
     return (
-
       <SafeAreaView style={{
-        flex: 1,
-        backgroundColor: '#0F0F0F',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 20
+        flex: 1, backgroundColor: '#0F0F0F', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20
       }}>
-
-        {/* App Icon / Illustration */}
         <View style={{
-          width: 100,
-          height: 100,
-          borderRadius: 50,
-          backgroundColor: '#1C1C1C',
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginBottom: 25,
-          shadowColor: '#E8B97E',
-          shadowOpacity: 0.3,
-          shadowRadius: 12,
-          elevation: 6
+          width: 100, height: 100, borderRadius: 50, backgroundColor: '#1C1C1C', justifyContent: 'center', alignItems: 'center', marginBottom: 25
         }}>
-          <Image
-            source={require('./src/assets/my_naai.png')}
-            style={{
-              width: 60,
-              height: 60,
-              resizeMode: 'contain'
-            }}
-          />
+          <Image source={require('./src/assets/my_naai.png')} style={{ width: 60, height: 60, resizeMode: 'contain' }} />
         </View>
-
-        {/* Title */}
-        <Text style={{
-          fontSize: 24,
-          fontWeight: '700',
-          color: '#FFFFFF',
-          marginBottom: 10
-        }}>
-          Update Required
+        <Text style={{ fontSize: 24, fontWeight: '700', color: '#FFFFFF', marginBottom: 10 }}>Update Required</Text>
+        <Text style={{ textAlign: 'center', color: '#B0B0B0', fontSize: 16, lineHeight: 22, marginBottom: 30 }}>
+          A new version of MyNaai is available. Please update the app to continue.
         </Text>
-
-        {/* Subtitle */}
-        <Text style={{
-          textAlign: 'center',
-          color: '#B0B0B0',
-          fontSize: 16,
-          lineHeight: 22,
-          marginBottom: 30
-        }}>
-          A new version of MyNaai is available.
-          Please update the app to continue.
-        </Text>
-
-        {/* Update Button */}
         <TouchableOpacity
           onPress={() => Linking.openURL(storeUrl)}
-          activeOpacity={0.8}
-          style={{
-            width: '100%',
-            backgroundColor: '#E8B97E',
-            paddingVertical: 14,
-            borderRadius: 10,
-            alignItems: 'center',
-            shadowColor: '#E8B97E',
-            shadowOpacity: 0.4,
-            shadowRadius: 10,
-            elevation: 5
-          }}
+          style={{ width: '100%', backgroundColor: '#E8B97E', paddingVertical: 14, borderRadius: 10, alignItems: 'center' }}
         >
-          <Text style={{
-            color: '#000',
-            fontSize: 16,
-            fontWeight: '600'
-          }}>
-            Update Now
-          </Text>
+          <Text style={{ color: '#000', fontSize: 16, fontWeight: '600' }}>Update Now</Text>
         </TouchableOpacity>
-
-        {/* Optional note */}
-        <Text style={{
-          marginTop: 20,
-          fontSize: 13,
-          color: '#666',
-          textAlign: 'center'
-        }}>
-          This update is mandatory to continue using the app.
-        </Text>
-
       </SafeAreaView>
     );
   }
@@ -973,23 +608,11 @@ useEffect(() => {
   return (
     <NotificationProvider userId={userId} userType={userType}>
       <SafeAreaProvider>
-        <NavigationContainer
-          key={isLoggedIn ? 'app' : 'auth'}
-          ref={navigationRef}
-        // onReady={() => {
-        //   isNavigationReady.current = true;
-        // }}
-        >
-
+        <NavigationContainer key={isLoggedIn ? 'app' : 'auth'} ref={navigationRef}>
           {isLoggedIn ? (
             <AppStack userType={userType} isNewSalon={isNewSalon} />
           ) : (
-            <AuthStack
-              onLoginSuccess={type => {
-                setUserType(type);
-                setIsLoggedIn(true);
-              }}
-            />
+            <AuthStack onLoginSuccess={type => { setUserType(type); setIsLoggedIn(true); }} />
           )}
         </NavigationContainer>
       </SafeAreaProvider>

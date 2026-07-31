@@ -1,5 +1,4 @@
-import { useFocusEffect } from '@react-navigation/native';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,32 +9,106 @@ import {
   StyleSheet,
   ImageBackground,
   Pressable,
-  // Dimensions,
   ActivityIndicator,
   RefreshControl,
   Alert,
   Linking,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { communication, getServerUrl } from '../services/communication';
 import { getUserLocation } from '../utilities/getUserLocation';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import CITIES from '../utilities/CitiesArray';
 import { wp, hp } from '../utils/AppScreen';
 
 const BG_IMAGE = require('../assets/salon_page_bg.png');
-
-// const SCREEN_WIDTH = Dimensions.get('window').width;
 const AD_WIDTH = wp(93);
 
-/* -------------------- ADS -------------------- */
+const CACHE_KEYS = {
+  SALONS: 'CACHE_USER_SALONS',
+  ADS: 'CACHE_USER_ADS',
+  USER_INFO: 'CACHE_USER_INFO',
+};
 
+/* -------------------- IST TIMEZONE OPEN/CLOSED CALCULATOR -------------------- */
+const getSalonStatus = (businessHours = []) => {
+  if (!businessHours || !businessHours.length) {
+    return { isOpen: false, text: 'CLOSED', color: '#F44336' };
+  }
 
-// const CITIES = ['All', 'Katol', 'Warud'];
+  const schedule = businessHours[0];
+  if (!schedule) {
+    return { isOpen: false, text: 'CLOSED', color: '#F44336' };
+  }
 
-/* -------------------- API DATA CONVERTER -------------------- */
+  /* 🎯 Calculate Indian Standard Time (IST = UTC + 5:30) */
+  const utcNow = Date.now();
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
+  
+  // Create IST Date object independent of device timezone
+  const systemOffsetMs = new Date().getTimezoneOffset() * 60000;
+  const istDate = new Date(utcNow + systemOffsetMs + istOffsetMs);
+
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const currentDay = daysOfWeek[istDate.getDay()];
+
+  // 1. Check Holiday Days
+  if (schedule.holidayDays && Array.isArray(schedule.holidayDays) && schedule.holidayDays.includes(currentDay)) {
+    return { isOpen: false, text: 'CLOSED (HOLIDAY)', color: '#F44336' };
+  }
+
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr || typeof timeStr !== 'string') return 0;
+    const parts = timeStr.split(':');
+    if (parts.length < 2) return 0;
+    const h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    return h * 60 + m;
+  };
+
+  const currentMinutes = istDate.getHours() * 60 + istDate.getMinutes();
+  const openMinutes = parseTimeToMinutes(schedule.openingTime);
+  const closeMinutes = parseTimeToMinutes(schedule.closingTime);
+
+  let isOpen = false;
+
+  if (closeMinutes > openMinutes) {
+    // Normal operating hours (e.g. 09:00 to 21:00)
+    isOpen = currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+  } else if (closeMinutes < openMinutes) {
+    // Overnight operating hours (e.g. 20:00 to 02:00)
+    isOpen = currentMinutes >= openMinutes || currentMinutes < closeMinutes;
+  }
+
+  return {
+    isOpen,
+    text: isOpen ? 'OPEN NOW' : 'CLOSED',
+    color: isOpen ? '#4CAF50' : '#F44336',
+  };
+};
+
+/* -------------------- DISTANCE UTILITY -------------------- */
+const getDistanceInKm = (lat1, lon1, lat2, lon2) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+
+  const R = 6371; // Earth radius in KM
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Number((R * c).toFixed(1));
+};
+
+/* -------------------- API CONVERTER -------------------- */
 const convertSalonApiData = (apiData = [], userLocation = null) => {
   return apiData.map(item => {
     const distance =
@@ -47,107 +120,143 @@ const convertSalonApiData = (apiData = [], userLocation = null) => {
         Number(item.longitude)
       );
 
+    // Calculate IST open status dynamically
+    const status = getSalonStatus(item.businessHours);
+
     return {
       id: item.salonId,
-      name: item.salonName,
-      genderType: item.genderType,
-      // address: `${item.addressLine1}, ${item.city}`,
-      address: `${item.addressLine1}`,
-      location: item.city,
-      rating: Number(item.ratingAverage),
-      reviews: item.totalReviews,
-      phoneNumber: item.phoneNumber,
-      open: item.isOpen,
-      waitNumber: item.queues?.[0]?.queueNumber ?? '_',
-      waitTime: item.isOpen ? item.totalWaitTime?.display : 'Closed',
+      name: item.salonName || '',
+      genderType: item.genderType || '',
+      address: item.addressLine1 || '',
+      location: item.city || '',
+      rating: Number(item.ratingAverage || 0),
+      reviews: item.totalReviews || 0,
+      phoneNumber: item.phoneNumber || '',
+      isOpen: status.isOpen,
+      statusText: status.text,
+      statusColor: status.color,
+      waitTime: status.isOpen ? item.totalWaitTime?.display : 'Closed',
       imageUrl: item.imageUrl,
       imagesArray: item.imagesArray || [],
       latitude: Number(item.latitude),
       longitude: Number(item.longitude),
-
-      distance: distance !== null && distance !== undefined
-        ? Number(distance)
-        : null,
+      distance: distance !== null && distance !== undefined ? Number(distance) : null,
       raw: item,
     };
   });
 };
 
-const getDistanceInKm = (lat1, lon1, lat2, lon2) => {
-  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+/* -------------------- MEMOIZED SALON CARD -------------------- */
+const SalonCard = React.memo(
+  ({ item, isSaved, isSaving, userLocation, onSelect, onBookmark }) => {
+    const distance = useMemo(() => {
+      if (!userLocation) return item.distance;
+      return getDistanceInKm(
+        userLocation.latitude,
+        userLocation.longitude,
+        item.latitude,
+        item.longitude
+      );
+    }, [userLocation, item.latitude, item.longitude, item.distance]);
 
-  const R = 6371; // Earth radius in KM
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const handleLocationPress = useCallback(() => {
+      if (!item.latitude || !item.longitude) {
+        Alert.alert('Location unavailable', 'Coordinates for this salon are missing.');
+        return;
+      }
+      Linking.openURL(
+        `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`
+      );
+    }, [item.latitude, item.longitude]);
 
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const imageSource = useMemo(() => {
+      if (item.imagesArray && item.imagesArray.length > 0) {
+        return { uri: `${getServerUrl()}/getfiles/${item.imagesArray[0]}` };
+      }
+      if (item.imageUrl) {
+        return { uri: `${getServerUrl()}/getfiles/${item.imageUrl}` };
+      }
+      return require('../assets/myNaai.jpeg');
+    }, [item.imagesArray, item.imageUrl]);
 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return (
+      <TouchableOpacity style={styles.card} onPress={() => onSelect(item.id)}>
+        <View style={styles.imageContainer}>
+          <Image source={imageSource} style={styles.image} />
+          {distance !== null && distance !== undefined && (
+            <View style={styles.distanceBadge}>
+              <Text allowFontScaling={false} style={styles.distanceBadgeText}>
+                {distance} KM
+              </Text>
+            </View>
+          )}
+        </View>
 
-  return Number((R * c).toFixed(1)); // 1 decimal like 2.4 km
-};
+        <View style={styles.cardContent}>
+          <View style={{ flex: 1 }}>
+            <Text allowFontScaling={false} style={styles.genderName}>
+              {item.genderType}
+            </Text>
+            <Text
+              allowFontScaling={false}
+              style={styles.name}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {item.name}
+            </Text>
 
-const getSalonStatus = (businessHours = []) => {
-  if (!businessHours.length) {
-    return { isOpen: false, text: 'Closed', color: '#F44336' };
+            <TouchableOpacity style={styles.row} onPress={handleLocationPress}>
+              <Text
+                allowFontScaling={false}
+                style={styles.linkText}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {item.address}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            onPress={() => onBookmark(item.id)}
+            style={styles.bookmarkBtn}
+            disabled={isSaving}
+          >
+            <Ionicons
+              name={isSaved ? 'bookmark' : 'bookmark-outline'}
+              size={22}
+              color={isSaved ? '#E1B378' : '#AAA'}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.bookBtn,
+              { backgroundColor: item.isOpen ? '#E1B378' : '#555' },
+            ]}
+            disabled={!item.isOpen}
+            onPress={() => onSelect(item.id)}
+          >
+            <Text allowFontScaling={false} style={styles.bookText}>
+              {item.isOpen
+                ? 'Book Now'
+                : item.statusText === 'CLOSED (HOLIDAY)'
+                ? 'Holiday'
+                : 'Closed'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
   }
+);
 
-  const schedule = businessHours[0];
-
-  const now = new Date();
-
-  const currentDay = now.toLocaleDateString('en-US', {
-    weekday: 'long',
-  });
-
-  // ✅ Holiday check
-  if (schedule.holidayDays?.includes(currentDay)) {
-    return { isOpen: false, text: 'Closed (Holiday)', color: '#F44336' };
-  }
-
-  const convertToMinutes = (time) => {
-    const [h, m] = time.split(':').map(Number);
-    return h * 60 + m;
-  };
-
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-  const openingMinutes = convertToMinutes(schedule.openingTime);
-  const closingMinutes = convertToMinutes(schedule.closingTime);
-
-  const isOpen = currentMinutes >= openingMinutes && currentMinutes < closingMinutes;
-
-  return {
-    isOpen,
-    text: isOpen ? 'OPEN NOW' : 'CLOSED',
-    color: isOpen ? '#4CAF50' : '#F44336',
-    openingTime: schedule.openingTime,
-    closingTime: schedule.closingTime,
-  };
-};
-
-
-const formatTime12Hour = (time) => {
-  if (!time) return '';
-
-  const [h, m] = time.split(':');
-  let hour = parseInt(h);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-
-  hour = hour % 12 || 12;
-
-  return `${hour}:${m} ${ampm}`;
-};
-
+/* -------------------- MAIN DASHBOARD COMPONENT -------------------- */
 const NaaiDashboard = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
-  const [locationFilter, setLocationFilter] = useState('All');
-  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [locationFilter] = useState('All');
 
   const adRef = useRef(null);
   const latestRequestRef = useRef(0);
@@ -168,29 +277,48 @@ const NaaiDashboard = ({ navigation }) => {
   const [savingSalonId, setSavingSalonId] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
 
+  /* -------- RECURRING VISIT CACHE LOADER -------- */
+  useEffect(() => {
+    const loadCachedData = async () => {
+      try {
+        const [cachedSalons, cachedAds, cachedUser] = await Promise.all([
+          AsyncStorage.getItem(CACHE_KEYS.SALONS),
+          AsyncStorage.getItem(CACHE_KEYS.ADS),
+          AsyncStorage.getItem(CACHE_KEYS.USER_INFO),
+        ]);
 
+        if (cachedSalons) setPlans(JSON.parse(cachedSalons));
+        if (cachedAds) setAds(JSON.parse(cachedAds));
+        if (cachedUser) {
+          const parsed = JSON.parse(cachedUser);
+          setUserName(parsed?.fullName || 'User');
+        }
+      } catch (err) {
+        // Silent error catching for caching failures
+      }
+    };
+
+    loadCachedData();
+    userByIdInfo();
+    userAds();
+  }, []);
 
   const userByIdInfo = async () => {
     try {
-      // setIsLoading(true);
       const userData = await AsyncStorage.getItem('mynaaiUser');
-      const parsedUser = JSON.parse(userData);
-      console.log("parsedUser", parsedUser);
-      setUserName(parsedUser?.fullName || 'User');
-
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        setUserName(parsedUser?.fullName || 'User');
+        await AsyncStorage.setItem(CACHE_KEYS.USER_INFO, userData);
+      }
     } catch (error) {
-      console.error("User fetch failed:", error);
-      Alert.alert(
-        'Error',
-        error?.response?.data?.message || error.message || 'Something went wrong.'
-      );
+      // Handle user info fetch silently
     }
   };
 
-
-  /* -------- AUTO SLIDE -------- */
+  /* -------- AUTO SLIDE ADS -------- */
   useEffect(() => {
-    if (paused || ads.length === 0) return;
+    if (paused || ads.length <= 1) return;
 
     const timer = setInterval(() => {
       const next = (adIndex + 1) % ads.length;
@@ -202,517 +330,272 @@ const NaaiDashboard = ({ navigation }) => {
   }, [adIndex, paused, ads]);
 
   /* -------- FETCH SALONS -------- */
-  const getSalonList = async (pageNo = 1, refresh = false) => {
-    const requestId = ++latestRequestRef.current;
-    if (refresh) {
-      setLoading(true);
-    }
+  const getSalonList = useCallback(
+    async (pageNo = 1, refresh = false) => {
+      const requestId = ++latestRequestRef.current;
 
-    try {
-      const location = await getUserLocation();
+      if (refresh) setLoading(true);
 
-      if (location) {
-        setUserLocation(location);
-      }
+      try {
+        const location = await getUserLocation();
+        if (location) setUserLocation(location);
 
-      const payload = {
-        page: pageNo,
-        searchString: search,
-        genderType: genderFilter,
-      };
+        const payload = {
+          page: pageNo,
+          searchString: search,
+          genderType: genderFilter,
+        };
 
-      if (location) {
-        payload.latitude = location.latitude;
-        payload.longitude = location.longitude;
-      }
+        if (location) {
+          payload.latitude = location.latitude;
+          payload.longitude = location.longitude;
+        }
 
-      if (locationFilter !== 'All') {
-        payload.cityFilter = locationFilter;
-      }
+        if (locationFilter !== 'All') {
+          payload.cityFilter = locationFilter;
+        }
 
-      const response = await communication.userSalonList(payload);
-      if (requestId !== latestRequestRef.current) {
-        return;
-      }
-      if (response?.status === 'SUCCESS') {
-        const convertedData = convertSalonApiData(response?.data || [], location);
+        const response = await communication.userSalonList(payload);
 
-        const sortedData = convertedData.sort((a, b) => {
-          // ⭐ 1. Bookmarked salon first
-          if (a.id === savedSalonId) return -1;
-          if (b.id === savedSalonId) return 1;
+        if (requestId !== latestRequestRef.current) return;
 
-          // 📍 2. Then sort by distance
-          if (a.distance === null) return 1;
-          if (b.distance === null) return -1;
+        if (response?.status === 'SUCCESS') {
+          const convertedData = convertSalonApiData(response?.data || [], location);
 
-          return a.distance - b.distance;
-        });
-
-        if (refresh) {
-          setPlans(sortedData);
-        } else {
-          setPlans(prev => {
-            const merged = [...prev, ...sortedData];
-
-            return merged.sort((a, b) => {
-              // ⭐ Bookmarked first
-              if (a.id === savedSalonId) return -1;
-              if (b.id === savedSalonId) return 1;
-
-              // 📍 Distance next
-              if (a.distance === null) return 1;
-              if (b.distance === null) return -1;
-
-              return a.distance - b.distance;
-            });
+          const sortedData = convertedData.sort((a, b) => {
+            if (a.id === savedSalonId) return -1;
+            if (b.id === savedSalonId) return 1;
+            if (a.distance === null) return 1;
+            if (b.distance === null) return -1;
+            return a.distance - b.distance;
           });
+
+          if (refresh) {
+            setPlans(sortedData);
+            AsyncStorage.setItem(CACHE_KEYS.SALONS, JSON.stringify(sortedData)).catch(() => {});
+          } else {
+            setPlans(prev => {
+              const merged = [...prev, ...sortedData];
+              return merged.sort((a, b) => {
+                if (a.id === savedSalonId) return -1;
+                if (b.id === savedSalonId) return 1;
+                if (a.distance === null) return 1;
+                if (b.distance === null) return -1;
+                return a.distance - b.distance;
+              });
+            });
+          }
+
+          const pages = response?.pagination?.totalPages || 1;
+          setTotalPages(pages);
+          setHasMore(pageNo < pages);
+        } else {
+          if (refresh) setPlans([]);
+          setHasMore(false);
         }
-
-        const totalPages = response?.pagination?.totalPages || 1;
-
-        setTotalPages(totalPages);
-        setHasMore(pageNo < totalPages);
-      } else {
-        if (refresh) setPlans([]);
-        setHasMore(false);
-      }
-
-    } catch (error) {
-      Alert.alert('Error', 'Failed to fetch salons');
-    } finally {
-      if (requestId === latestRequestRef.current) {
-        setLoading(false);
-
-        if (refresh) {
-          setRefreshing(false);
+      } catch (error) {
+        if (requestId === latestRequestRef.current && refresh) {
+          Alert.alert('Notice', 'Unable to refresh salons. Showing offline data.');
+        }
+      } finally {
+        if (requestId === latestRequestRef.current) {
+          setLoading(false);
+          if (refresh) setRefreshing(false);
         }
       }
-    }
-  };
+    },
+    [search, genderFilter, locationFilter, savedSalonId]
+  );
 
-  // ads
   const userAds = async () => {
     try {
       const response = await communication.userAds();
-
       if (response?.status === 'SUCCESS') {
-        setAds(response.data?.images || []); // 👈 IMPORTANT
+        const adImages = response.data?.images || [];
+        setAds(adImages);
+        AsyncStorage.setItem(CACHE_KEYS.ADS, JSON.stringify(adImages)).catch(() => {});
       } else {
         setAds([]);
       }
     } catch (error) {
-      Alert.alert('Error', error?.message || 'Failed to fetch Ads');
       setAds([]);
     }
   };
 
+  const toggleSaveSalon = useCallback(
+    async salonId => {
+      if (savingSalonId) return;
 
-  const toggleSaveSalon = async (salonId) => {
-    console.log("salonId", salonId);
-
-    if (savingSalonId) return;
-
-    try {
-      setSavingSalonId(salonId);
-      if (savedSalonId && savedSalonId !== salonId) {
-        Alert.alert(
-          "Bookmark Exists",
-          "Please remove previous bookmarked salon first."
-        );
-        return;
-      }
-
-      const response = await communication.toggleSaveSalon({ salonId });
-
-      if (response?.status === "SUCCESS") {
-
-        const msg = response?.message?.toLowerCase();
-
-        const isNowBookmarked = msg?.includes("save") && !msg?.includes("unsave");
-
-        if (isNowBookmarked) {
-          setSavedSalonId(salonId);
-          // Alert.alert("Salon bookmarked successfully");
-        } else {
-          setSavedSalonId(null);
-          // Alert.alert("Bookmark removed successfully");
+      try {
+        setSavingSalonId(salonId);
+        if (savedSalonId && savedSalonId !== salonId) {
+          Alert.alert('Bookmark Exists', 'Please remove previous bookmarked salon first.');
+          return;
         }
 
-        // ✅ Refresh list properly
-        setPlans([]);
-        setPage(1);
-        setHasMore(true);
-        getSalonList(1, true);
+        const response = await communication.toggleSaveSalon({ salonId });
 
-      } else {
-        Alert.alert("Error", "Failed to update bookmark");
+        if (response?.status === 'SUCCESS') {
+          const msg = response?.message?.toLowerCase() || '';
+          const isNowBookmarked = msg.includes('save') && !msg.includes('unsave');
+
+          setSavedSalonId(isNowBookmarked ? salonId : null);
+          setPlans([]);
+          setPage(1);
+          setHasMore(true);
+          getSalonList(1, true);
+        } else {
+          Alert.alert('Bookmark', 'Failed to update bookmark.');
+        }
+      } catch (error) {
+        Alert.alert('Bookmark', 'Network error while bookmarking.');
+      } finally {
+        setSavingSalonId(null);
       }
+    },
+    [savingSalonId, savedSalonId, getSalonList]
+  );
 
-    } catch (error) {
-      // Alert.alert("Error", "Something went wrong");
-      console.log("Error", error);
-    } finally {
-      setSavingSalonId(null);
-    }
-  };
-
-
-
-
-  useEffect(() => {
-    userByIdInfo()
-    userAds()
-  }, []);
-
+  /* -------- SEARCH & FILTER TRIGGERS -------- */
   useEffect(() => {
     setPage(1);
     setHasMore(true);
     getSalonList(1, true);
-  }, [locationFilter]);
-
-
-  useEffect(() => {
-    setPlans([]);
-    setPage(1);
-    setHasMore(true);
-
-    getSalonList(1, true);
-  }, [genderFilter]);
+  }, [genderFilter, locationFilter]);
 
   useEffect(() => {
     const delay = setTimeout(() => {
       setPage(1);
       setHasMore(true);
       getSalonList(1, true);
-    }, 500);
+    }, 400);
 
     return () => clearTimeout(delay);
   }, [search]);
 
+  const firstName = useMemo(() => {
+    if (!userName?.trim()) return 'User';
+    const name = userName.trim().split(' ')[0];
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  }, [userName]);
 
-  const firstName =
-    userName?.trim()
-      ? userName.trim().split(' ')[0].charAt(0).toUpperCase() +
-      userName.trim().split(' ')[0].slice(1).toLowerCase()
-      : '';
-
-
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     if (loading || refreshing || !hasMore) return;
-
     const nextPage = page + 1;
-
     if (nextPage <= totalPages) {
       setPage(nextPage);
       getSalonList(nextPage);
     }
-  };
+  }, [loading, refreshing, hasMore, page, totalPages, getSalonList]);
 
-  const onRefresh = () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
     setHasMore(true);
     setPage(1);
     getSalonList(1, true);
-  };
+  }, [getSalonList]);
 
+  const handleSalonSelect = useCallback(
+    salonId => {
+      navigation.navigate('SalonDetail', { salonId });
+    },
+    [navigation]
+  );
 
-  const renderFooter = () => {
-    if (!loading || refreshing || !hasMore) return null;
-
-    return (
-      <ActivityIndicator
-        size="large"
-        color="#E1B378"
-        style={{ marginVertical: 20 }}
+  const renderSalon = useCallback(
+    ({ item }) => (
+      <SalonCard
+        item={item}
+        isSaved={savedSalonId === item.id}
+        isSaving={savingSalonId === item.id}
+        userLocation={userLocation}
+        onSelect={handleSalonSelect}
+        onBookmark={toggleSaveSalon}
       />
-    );
-  };
+    ),
+    [savedSalonId, savingSalonId, userLocation, handleSalonSelect, toggleSaveSalon]
+  );
 
-  // const openMap = () => {
-  //     if (!convertedData.latitude || !convertedData.longitude) {
-  //       Alert.alert('Location not available');
-  //       return;
-  //     }
+  const renderFooter = useCallback(() => {
+    if (!loading || refreshing || !hasMore) return null;
+    return <ActivityIndicator size="large" color="#E1B378" style={{ marginVertical: 20 }} />;
+  }, [loading, refreshing, hasMore]);
 
-  //     Linking.openURL(
-  //       `https://www.google.com/maps/search/?api=1&query=${convertedData.latitude},${convertedData.longitude}`
-  //     );
-  //   };
-
-  const renderEmpty = () => {
+  const renderEmpty = useCallback(() => {
     if (loading) return null;
-
     return (
       <View style={{ alignItems: 'center', marginTop: 60 }}>
-        <Ionicons
-          name="cut-outline"
-          size={wp(10)}
-          color="#777"
-        />
+        <Ionicons name="cut-outline" size={wp(10)} color="#777" />
         <Text allowFontScaling={false} style={{ color: '#aaa', marginTop: 10, fontSize: 14 }}>
           No salons available
         </Text>
       </View>
     );
-  };
+  }, [loading]);
 
-
-  useFocusEffect(
-    React.useCallback(() => {
-      return () => {
-        setShowCityDropdown(false);
-      };
-    }, [])
-  );
-
-  /* -------- SALON CARD -------- */
-  const renderSalon = ({ item }) => {
-
-    const distance =
-      userLocation &&
-      getDistanceInKm(
-        userLocation.latitude,
-        userLocation.longitude,
-        item.latitude,
-        item.longitude
-      );
-
-    const status = getSalonStatus(item.raw?.businessHours);
-
-    return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() =>
-          navigation.navigate('SalonDetail', { salonId: item.id })
-        }
-      >
-
-        <View style={styles.imageContainer}>
-          <Image
-            source={
-              item.imagesArray?.length
-                ? { uri: `${getServerUrl()}/getfiles/${item.imagesArray[0]}` }
-                : item.imageUrl
-                  ? { uri: `${getServerUrl()}/getfiles/${item.imageUrl}` }
-                  : require('../assets/myNaai.jpeg')
-            }
-            style={styles.image}
-          />
-
-          {distance !== null && distance !== undefined && (
-            <View style={styles.distanceBadge}>
-              <Text allowFontScaling={false} style={styles.distanceBadgeText}>{distance} KM</Text>
-            </View>
-          )}
-        </View>
-
-
-
-        <View style={styles.cardContent}>
-          <View style={{ flex: 1 }}>
-            <Text allowFontScaling={false} style={styles.genderName}>{item?.genderType}</Text>
-            <Text allowFontScaling={false} style={styles.name} numberOfLines={2}
-              ellipsizeMode="tail">{item?.name}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-              {/* <Ionicons
-    name="time-outline"
-    size={14}
-    color={status.color}
-  /> */}
-
-              {/* <Text allowFontScaling={false}style={{ color: status.color, marginLeft: 4, fontSize: 12, fontWeight: '700' }}>
-    {status.text}
-  </Text> */}
-
-              {/* {status.openingTime && (
-                <Text allowFontScaling={false}style={{ color: '#aaa', fontSize: 12 }}>
-                  (
-                  {formatTime12Hour(status.openingTime)} - {formatTime12Hour(status.closingTime)}
-                  )
-                </Text>
-              )} */}
-            </View>
-            {/* {distance !== null && (
-              <View style={styles.row}>
-                <Ionicons name="location-outline" size={14} color="#E1B378" />
-                <Text allowFontScaling={false}style={styles.distanceText}>
-                  {distance} KM
-                </Text>
-              </View>
-            )} */}
-            {/* <View style={styles.ratingRow}>
-            <Ionicons name="star" size={14} color="#E1B378" />
-            <Text allowFontScaling={false}style={styles.ratingText}>
-              {item.rating} ({item.reviews})
-            </Text>
-          </View> */}
-            {/* LOCATION */}
-            <TouchableOpacity
-              style={styles.row}
-              onPress={() => {
-                if (!item.latitude || !item.longitude) {
-                  Alert.alert('Location not available');
-                  return;
-                }
-
-                Linking.openURL(
-                  `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`
-                );
-              }}
-            >
-              {/* <Ionicons name="location-outline" size={18} color="#E1B378" /> */}
-              <Text allowFontScaling={false} style={styles.linkText} numberOfLines={2}
-                ellipsizeMode="tail" >{item.address}</Text>
-              {/* <Ionicons name="open-outline" size={14} color="#AAA" style={{ marginLeft: 4 }} /> */}
-            </TouchableOpacity>
-            {/* <Text allowFontScaling={false}style={styles.address}>{item.address}</Text> */}
-            {/* <TouchableOpacity style={styles.row}
-              onPress={() => Linking.openURL(`tel:${item?.phoneNumber}`)}
-            >
-              <Ionicons name="call-outline" size={18} color="#E1B378" />
-              <Text allowFontScaling={false}style={styles.linkText}>{item?.phoneNumber}</Text>
-            </TouchableOpacity> */}
-
-
-
-
-            {/* <View style={styles.waitRow}>
-              {item?.open &&
-
-                <View style={styles.waitTime}>
-
-                  <Ionicons name="time-outline" size={14} color="#E1B378" />
-                  <Text allowFontScaling={false}style={styles.waitText}>{item?.waitTime}</Text>
-                  <Text allowFontScaling={false}style={styles.queueText}>
-                    Queue: {item?.raw?.queueLength} people
-                  </Text>
-
-                </View>
-              }
-
-            </View> */}
-
-          </View>
-          <TouchableOpacity
-            onPress={() => toggleSaveSalon(item.id)}
-            style={{ position: 'absolute', top: 8, right: 8 }}
-            disabled={savingSalonId === item.id}
-          >
-            {/* {savingSalonId === item.id ? (
-            <ActivityIndicator size="small" color="#E1B378" />
-          ) 
-          :
-          ( */}
-            <Ionicons
-              name={
-                savedSalonId === item.id
-                  ? 'bookmark'
-                  : 'bookmark-outline'
-              }
-              size={22}
-              color={
-                savedSalonId === item.id
-                  ? '#E1B378'
-                  : '#AAA'
-              }
+  const renderAdsSlider = useMemo(
+    () => (
+      <Pressable onPressIn={() => setPaused(true)} onPressOut={() => setPaused(false)}>
+        <FlatList
+          ref={adRef}
+          data={ads}
+          horizontal
+          pagingEnabled
+          snapToInterval={AD_WIDTH}
+          decelerationRate="fast"
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item, index) => index.toString()}
+          style={styles.adSlider}
+          renderItem={({ item }) => (
+            <Image
+              source={{ uri: `${getServerUrl()}/getfiles/${item}` }}
+              style={styles.adImage}
             />
-            {/* )
-          } */}
-          </TouchableOpacity>
-
-
-          <TouchableOpacity
-            style={[
-              styles.bookBtn,
-              { backgroundColor: status.isOpen ? '#E1B378' : '#555' },
-            ]}
-            disabled={!status.isOpen}
-            onPress={() => navigation.navigate('SalonDetail', { salonId: item.id })}
-
-          >
-            <Text allowFontScaling={false} style={styles.bookText}>
-              {status.isOpen
-                ? 'Book Now'
-                : status.text === 'Closed (Holiday)'
-                  ? 'Holiday'
-                  : 'Closed'}
-            </Text>
-          </TouchableOpacity>
+          )}
+        />
+        <View style={styles.dotsContainer}>
+          {ads.map((_, i) => (
+            <View key={i} style={[styles.dot, adIndex === i && styles.activeDot]} />
+          ))}
         </View>
-      </TouchableOpacity>
-    )
-  };
-  const renderAdsSlider = () => (
-    <Pressable
-      onPressIn={() => setPaused(true)}
-      onPressOut={() => setPaused(false)}
-    >
-      <FlatList
-        ref={adRef}
-        data={ads}
-        horizontal
-        pagingEnabled
-        snapToInterval={AD_WIDTH}
-        decelerationRate="fast"
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(item, index) => index.toString()}
-        style={styles.adSlider}
-        renderItem={({ item }) => (
-          <Image
-            source={{ uri: `${getServerUrl()}/getfiles/${item}` }}
-            style={styles.adImage}
-          />
-        )}
-      />
-
-      <View style={styles.dotsContainer}>
-        {ads.map((_, i) => (
-          <View
-            key={i}
-            style={[styles.dot, adIndex === i && styles.activeDot]}
-          />
-        ))}
-      </View>
-    </Pressable>
+      </Pressable>
+    ),
+    [ads, adIndex]
   );
+
   return (
     <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
         <SafeAreaView
-          style={[
-            styles.container,
-            { paddingBottom: insets.bottom }
-          ]}
+          style={[styles.container, { paddingBottom: insets.bottom }]}
           edges={['top', 'bottom', 'left', 'right']}
         >
-          <Pressable
-            style={{ flex: 1 }}
-            onPress={() => showCityDropdown && setShowCityDropdown(false)}
-          >
-            <View style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <Text allowFontScaling={false} style={styles.greeting}>Hi {firstName} 👋</Text>
+          <View style={{ flex: 1 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Text allowFontScaling={false} style={styles.greeting}>
+                Hi {firstName} 👋
+              </Text>
 
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-
-                {/* Gender Toggle */}
                 <View style={styles.genderToggle}>
                   <TouchableOpacity
                     disabled={loading}
-                    style={[
-                      styles.genderBtn,
-                      genderFilter === 'male' && styles.activeGenderBtn
-                    ]}
+                    style={[styles.genderBtn, genderFilter === 'male' && styles.activeGenderBtn]}
                     onPress={() => setGenderFilter('male')}
                   >
-                    <Text allowFontScaling={false} style={[
-                      styles.genderText,
-                      genderFilter === 'male' && styles.activeGenderText
-                    ]}>
+                    <Text
+                      allowFontScaling={false}
+                      style={[
+                        styles.genderText,
+                        genderFilter === 'male' && styles.activeGenderText,
+                      ]}
+                    >
                       Male
                     </Text>
                   </TouchableOpacity>
@@ -721,147 +604,46 @@ const NaaiDashboard = ({ navigation }) => {
                     disabled={loading}
                     style={[
                       styles.genderBtn,
-                      genderFilter === 'female' && styles.activeGenderBtn
+                      genderFilter === 'female' && styles.activeGenderBtn,
                     ]}
                     onPress={() => setGenderFilter('female')}
                   >
-                    <Text allowFontScaling={false} style={[
-                      styles.genderText,
-                      genderFilter === 'female' && styles.activeGenderText
-                    ]}>
+                    <Text
+                      allowFontScaling={false}
+                      style={[
+                        styles.genderText,
+                        genderFilter === 'female' && styles.activeGenderText,
+                      ]}
+                    >
                       Female
                     </Text>
                   </TouchableOpacity>
                 </View>
+
                 <TouchableOpacity
                   style={styles.iconBtn}
-                  onPress={() =>
-                    navigation.navigate('UserNotifications')
-                  }
+                  onPress={() => navigation.navigate('UserNotifications')}
                 >
-                  <Ionicons
-                    name="notifications-outline"
-                    size={wp(5)}
-                    color="#000"
-                  />
-
-
-                  {/* {notificationCount > 0 && (
-                  <View style={styles.badge}>
-                    <Text allowFontScaling={false}style={styles.badgeText}>{notificationCount}</Text>
-                  </View>
-                )} */}
+                  <Ionicons name="notifications-outline" size={wp(5)} color="#000" />
                 </TouchableOpacity>
-                {/* City Dropdown */}
-                {/* <View style={{ position: 'relative', zIndex: 20 }}>
-                  <TouchableOpacity
-                    style={styles.dropdownBtn}
-                    onPress={() => setShowCityDropdown(!showCityDropdown)}
-                  >
-                    <Ionicons name="location-outline" size={16} color="#000" />
-                    <Text allowFontScaling={false}style={styles.dropdownText}>{locationFilter}</Text>
-                    <Ionicons
-                      name={showCityDropdown ? 'chevron-up' : 'chevron-down'}
-                      size={16}
-                      color="#000"
-                    />
-                  </TouchableOpacity>
-
-                  {showCityDropdown && (
-                    <View style={styles.dropdownList}>
-                      {CITIES.map(city => (
-                        <TouchableOpacity
-                          key={city}
-                          style={styles.dropdownItem}
-                          onPress={() => {
-                            setLocationFilter(city);
-                            setShowCityDropdown(false);
-                          }}
-                        >
-                          <Text allowFontScaling={false}
-                            style={[
-                              styles.dropdownItemText,
-                              locationFilter === city &&
-                              styles.activeDropdownText,
-                            ]}
-                          >
-                            {city}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
-                </View> */}
-
               </View>
             </View>
 
-            {/* <View style={styles.searchBox}>
-              <Ionicons name="search" size={18} color="#999" />
-              <TextInput allowFontScaling={false}
-                placeholder="Find salon, specialists..."
-                placeholderTextColor="#999"
-                style={styles.searchInput}
-                value={search}
-                onChangeText={setSearch}
-              />
-            </View> */}
-
-            {/* <Pressable
-              onPressIn={() => setPaused(true)}
-              onPressOut={() => setPaused(false)}
-            >
-              <FlatList
-                ref={adRef}
-                data={ads}
-                horizontal
-                pagingEnabled
-                snapToInterval={AD_WIDTH}
-                decelerationRate="fast"
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item, index) => index.toString()}
-                style={styles.adSlider}
-                renderItem={({ item }) => (
-                  <Image
-                    source={{ uri: `${getServerUrl()}/getfiles/${item}` }}
-                    style={styles.adImage}
-                  />
-                )}
-              />
-
-
-              <View style={styles.dotsContainer}>
-                {ads.map((_, i) => (
-                  <View
-                    key={i}
-                    style={[styles.dot, adIndex === i && styles.activeDot]}
-                  />
-                ))}
-              </View>
-
-            </Pressable> */}
-
             <FlatList
               data={plans}
-              keyExtractor={(item, index) => `${item.id}_${index}`}
+              keyExtractor={item => String(item.id)}
               renderItem={renderSalon}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{
                 paddingBottom: insets.bottom + 120,
                 flexGrow: 1,
               }}
-
               ListHeaderComponent={
                 <>
                   <View style={styles.searchBox}>
-                    <Ionicons
-                      name="search"
-                      size={wp(4.5)}
-                      color="#999"
-                    />
-
-
-                    <TextInput allowFontScaling={false}
+                    <Ionicons name="search" size={wp(4.5)} color="#999" />
+                    <TextInput
+                      allowFontScaling={false}
                       placeholder="Find salon, specialists..."
                       placeholderTextColor="#999"
                       style={styles.searchInput}
@@ -869,20 +651,21 @@ const NaaiDashboard = ({ navigation }) => {
                       onChangeText={setSearch}
                     />
                   </View>
-
-                  {renderAdsSlider()}
+                  {renderAdsSlider}
                 </>
               }
-
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.5}
               ListFooterComponent={renderFooter}
               ListEmptyComponent={renderEmpty}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+              /* ⚡ Optimized Scroll Configuration */
+              initialNumToRender={6}
+              maxToRenderPerBatch={8}
+              windowSize={5}
+              removeClippedSubviews={true}
             />
-          </Pressable>
+          </View>
         </SafeAreaView>
       </View>
     </ImageBackground>
@@ -890,7 +673,6 @@ const NaaiDashboard = ({ navigation }) => {
 };
 
 export default NaaiDashboard;
-
 
 /* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
@@ -900,60 +682,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: wp(4),
   },
-
   greeting: {
     fontSize: wp(6),
     fontWeight: '700',
     color: '#fff',
     marginBottom: hp(1),
   },
-  dropdownBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: '#E1B378',
-    paddingHorizontal: wp(1),
-    paddingVertical: hp(0.8),
-    borderRadius: wp(5),
-    gap: wp(1.5),
-  },
-
-  dropdownText: {
-    color: '#000',
-    fontWeight: '700',
-    fontSize: wp(3.2),
-  },
-
-  dropdownList: {
-    position: 'absolute',
-    top: hp(5),
-    right: 0,
-    backgroundColor: '#1E1E1E',
-    borderRadius: wp(4),
-    width: wp(35),
-    paddingVertical: hp(1),
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-  },
-
-  dropdownItem: {
-    paddingVertical: hp(1.2),
-    paddingHorizontal: wp(3.5),
-  },
-
-  dropdownItemText: {
-    color: '#AAA',
-    fontSize: wp(3.2),
-    fontWeight: '600',
-  },
-
-  activeDropdownText: {
-    color: '#E1B378',
-    fontWeight: '800',
-  },
-
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -964,27 +698,23 @@ const styles = StyleSheet.create({
     marginBottom: hp(1.5),
     marginTop: hp(1),
   },
-
   searchInput: {
     flex: 1,
     marginLeft: wp(3),
     color: '#fff',
     fontSize: wp(3.8),
   },
-
   adSlider: { marginBottom: 6 },
   adImage: {
     width: AD_WIDTH,
     height: hp(23),
     borderRadius: wp(4),
   },
-
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: 12,
   },
-
   dot: {
     width: wp(2),
     height: wp(2),
@@ -992,13 +722,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#555',
     marginHorizontal: wp(1),
   },
-
   activeDot: {
     backgroundColor: '#E1B378',
     width: wp(5),
   },
-
-
   card: {
     flexDirection: 'row',
     backgroundColor: '#1E1E1E',
@@ -1006,27 +733,27 @@ const styles = StyleSheet.create({
     marginBottom: hp(2),
     overflow: 'hidden',
   },
-
+  imageContainer: {
+    maxHeight: hp(18),
+    position: 'relative',
+  },
   image: {
     width: wp(30),
     height: '100%',
     minHeight: hp(14),
     backgroundColor: '#333',
   },
-
   cardContent: {
     flex: 1,
     flexDirection: 'row',
     padding: wp(3),
     alignItems: 'center',
   },
-
   name: {
     color: '#fff',
     fontSize: wp(4),
     fontWeight: '700',
   },
-
   genderName: {
     color: '#bcb3b3c0',
     fontSize: wp(3.2),
@@ -1034,80 +761,24 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: hp(0.6),
   },
-
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 2,
-  },
-
-  ratingText: {
-    color: '#E1B378',
-    fontSize: wp(3),
-    marginLeft: wp(1),
-  },
-
-  address: { color: '#AAA', fontSize: 12 },
   row: { flexDirection: 'row', alignItems: 'center', marginVertical: 0 },
-
   linkText: {
     color: '#E1B378',
     fontSize: wp(3.4),
     textTransform: 'capitalize',
     marginLeft: wp(2),
   },
-  waitRow: {
-    marginTop: 6,
-  },
-
-  // waitTime: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   flexWrap: 'wrap',      
-  //   gap: 8,               
-  // },
-  waitText: {
-    fontSize: wp(3),
-    color: '#E1B378',
-    fontWeight: '600',
-  },
-
-  queueText: {
-    fontSize: wp(3),
-    color: '#E1B378',
-    fontWeight: '600',
-    marginLeft: wp(1),
-  },
-
-
-
   bookBtn: {
     paddingVertical: hp(0.7),
     paddingHorizontal: wp(3),
     borderRadius: wp(6),
     marginLeft: wp(2),
   },
-
   bookText: {
     fontSize: wp(3),
     fontWeight: '700',
     color: '#000',
   },
-  waitTime: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  queueBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  // queueText: {
-  //   color: '#dfdbdbff',
-  //   fontSize: 12,
-  //   fontWeight: '700',
-  // },
-
   genderToggle: {
     flexDirection: 'row',
     backgroundColor: '#1E1E1E',
@@ -1123,7 +794,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(3),
     borderRadius: wp(4),
   },
-
   iconBtn: {
     backgroundColor: '#E1B378',
     width: wp(9),
@@ -1133,28 +803,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: wp(2),
   },
-
   genderText: {
     fontSize: wp(3),
     fontWeight: '700',
     color: '#AAA',
   },
-
   activeGenderText: {
     color: '#000',
   },
-
-  distanceText: {
-    color: '#E1B378',
-    fontSize: wp(3),
-    fontWeight: '600',
-  },
-
-  imageContainer: {
-    maxHeight: hp(18),
-    position: 'relative',
-  },
-
   distanceBadge: {
     position: 'absolute',
     bottom: hp(1),
@@ -1166,11 +822,15 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
   },
-
   distanceBadgeText: {
     fontSize: wp(3),
     fontWeight: '700',
     color: '#000',
   },
-
+  bookmarkBtn: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
 });
+

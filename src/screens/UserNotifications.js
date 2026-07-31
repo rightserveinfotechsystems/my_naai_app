@@ -88,7 +88,7 @@ const UserNotifications = ({ route, navigation }) => {
 
     /* ---------------- RENDER ITEM ---------------- */
     const renderItem = ({ item }) => (
-        <View style={styles.card}>
+        <View style={styles.card} key={item.createdAt}>
             <View style={styles.textWrap}>
                 <Text allowFontScaling={false}style={styles.title}>{item.title}</Text>
                 <Text allowFontScaling={false}style={styles.message}>{item.body}</Text>

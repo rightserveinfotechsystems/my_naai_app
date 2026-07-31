@@ -19,9 +19,9 @@ export function getServerUrl() {
 }
 
 const api = axios.create({
-    // baseURL: "http://192.168.1.18:5003",
-    baseURL: "https://backend.mynaai.in",
+    // baseURL: "http://192.168.1.6:5000",
     // baseURL: "https://backend.mynaai.in",
+    baseURL: "https://backend.mynaai.in",
 });
 // console.log("api", api);
 
@@ -34,8 +34,14 @@ api.interceptors.response.use(
         const responseData = error?.response?.data;
         const status = responseData?.status;
 
+        // 🎯 Extract URL and HTTP Method from Axios Config
+        const requestUrl = error?.config?.url || 'Unknown URL';
+        const fullUrl = (error?.config?.baseURL || '') + requestUrl;
+        const method = error?.config?.method?.toUpperCase() || 'HTTP';
+
+        console.log(`🌐 [${method}] Failed API URL 👉`, fullUrl);
         console.log("HTTP Status 👉", httpStatus);
-        console.log("Response Status 👉", status);
+        console.log("Response Status 👉", status, error);
 
         /* ---------------- 1. PLAN EXPIRED ---------------- */
         if (status === "PLAN_EXPIRED") {
@@ -54,7 +60,7 @@ api.interceptors.response.use(
             try {                
                 await AsyncStorage.multiRemove(['mynaai', 'mynaaiUser', 'userType', 'isNewSalon','isLoggedIn']);
 
-                // 2. Notify App.jsx to update `isLoggedIn` state and switch to AuthStack
+                // Notify App.jsx to update `isLoggedIn` state and switch to AuthStack
                 DeviceEventEmitter.emit('AUTH_CHANGED');
             } catch (err) {
                 console.error("Error clearing AsyncStorage on auth failure:", err);
@@ -682,7 +688,8 @@ export const communication = {
     },
     userNotificationList: async (payload) => {
         try {
-            if(payload.userType === "SALON"){
+            const userType = await AsyncStorage.getItem('userType');
+            if(userType?.toUpperCase() === "SALON"){
                 const response = await api.post(`/api/notifications/get-salon-notification-list`, payload, {
                     headers: {
                         "Content-Type": "application/json",
@@ -690,7 +697,7 @@ export const communication = {
                     },
                 });
                 return response.data;
-            }else{
+            }else if(userType?.toUpperCase() === "USER"){
                 const response = await api.post(`/api/notifications/get-user-notification-list`, payload, {
                     headers: {
                         "Content-Type": "application/json",
@@ -698,6 +705,8 @@ export const communication = {
                     },
                 });
                 return response.data;
+            }else{
+                console.log("Invalid userType:", userType);
             }
             
         } catch (error) {
@@ -719,25 +728,29 @@ export const communication = {
     },
     userNotificationCount: async (payload) => {
         try {
-            let response;
-            if(payload.userType === "SALON"){
-                response = await api.get(`/api/notifications/get-notification-count`, {
+            const userType = await AsyncStorage.getItem('userType');
+            if(userType?.toUpperCase() === "SALON"){
+               const response = await api.get(`/api/notifications/get-notification-count`, {
                 params: payload,
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${await getCookie()}`
                 },
                 });
+                return response?.data;
+            }else if(userType?.toUpperCase() === "USER"){
+                console.log("User Notification Count:", await getCookie());
+                const response = await api.get(`/api/notifications/get-user-notification-count`, {
+                params: payload,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+                });
+                return response?.data;
             }else{
-                 response = await api.get(`/api/notifications/get-user-notification-count`, {
-                params: payload,
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${await getCookie()}`
-                },
-                });
+                console.log("Invalid userType:", userType);
             }
-            return response?.data;
         } catch (error) {
             throw error;
         }

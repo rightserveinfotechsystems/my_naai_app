@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getMessaging, getToken } from '@react-native-firebase/messaging'; 
 import { communication } from '../services/communication';
 
 
@@ -80,12 +81,34 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
     }
   };
 
+    /* ---------- 🚀 RELIABLE DEVICE TOKEN FETCH ---------- */
+  const getDeviceToken = async () => {
+    try {
+      // 1. First check AsyncStorage
+      let token = await AsyncStorage.getItem('FCM_TOKEN');
+      if (token) return token;
+
+      // 2. Direct FCM call if missing from storage
+      const messaging = getMessaging();
+      token = await getToken(messaging);
+      
+      if (token) {
+        await AsyncStorage.setItem('FCM_TOKEN', token);
+        return token;
+      }
+    } catch (err) {
+      console.log("FCM Token fetch error inside screen:", err);
+    }
+    return '';
+  };
+
   async function createAccount() {
     try {
+      const deviceToken = await getDeviceToken();
       const response = await communication.userOnBoard({
         phoneNumber: mobile,
         fullName: name,
-        deviceToken: await AsyncStorage.getItem('FCM_TOKEN'),
+        deviceToken: deviceToken,
       });
 
       if (response?.status === 'SUCCESS') {
@@ -117,10 +140,11 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
 
     setLoading(true);
     try {
+      const deviceToken = await getDeviceToken();
       const payload = {
         phoneNumber: mobile,
         otp: otp.toString(),
-        deviceToken: await AsyncStorage.getItem('FCM_TOKEN') ,
+        deviceToken: deviceToken,
       };
 
       const res = await communication.verifyLogin(payload);
@@ -360,7 +384,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.50)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
   },
 
   container: {
