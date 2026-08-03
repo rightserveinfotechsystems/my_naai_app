@@ -14,12 +14,14 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { communication } from '../services/communication';
+import { communication,getServerUrl } from '../services/communication';
 import Skeleton from '../utilities/Skeleton';
 import { useFocusEffect } from '@react-navigation/native';
 import moment from 'moment';
 import { wp, hp } from '../utils/AppScreen';
 const BG_IMAGE = require('../assets/salon_page_bg.png');
+import io from 'socket.io-client'; // 👈 Import Socket.io Client
+
 
 const SalonDashboard = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -191,6 +193,46 @@ const SalonDashboard = ({ navigation }) => {
       hour12: true,
     });
   };
+
+  /* ---------------- 🎯 DIRECT USER SOCKET CONNECTION ---------------- */
+  useEffect(() => {
+    if (!salonId) return;
+
+    let socket = null;
+
+    try {
+      socket = io(getServerUrl(), {
+        transports: ['websocket'],
+      });
+
+      socket.on('connect', () => {
+        console.log('🟢 Socket connected in ServicesScreen:', socket.id);
+        
+        // 🎯 EMIT join_salon so server puts this client into `salon_${salonId}` room
+        socket.emit('join_salon', String(salonId));
+      });
+
+      // Targeted callback to handle booking updates
+      const handleUserBookingUpdate = (data) => {
+        console.log('⚡ Received personal booking update on socket:', data);
+        getCustomerList(1, false); // Refresh the list to reflect changes
+      };
+
+      // Listen for updates targeted at this user
+      socket.on('queue_updated', handleUserBookingUpdate);
+      
+
+    } catch (err) {
+      console.log('Socket connection error in SalonDashboard:', err);
+    }
+
+    return () => {
+      if (socket) {
+        console.log('🔴 Disconnecting socket from SalonDashboard');
+        socket.disconnect();
+      }
+    };
+  }, [salonId]);
 
   /* ---------------- RENDER SINGLE BOOKING ---------------- */
   const renderSalon = ({ item }) => (

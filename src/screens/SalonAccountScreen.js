@@ -38,9 +38,9 @@ const MAX_IMAGES = 4;
 
 
 const MENUS = [
-  { label: 'About', screen: 'AboutScreen', icon: 'information-circle-outline' },
-  { label: 'FAQ', screen: 'FAQScreen', icon: 'help-circle-outline' },
-  { label: 'Terms & Conditions', screen: 'TermsScreen', icon: 'document-text-outline' },
+  { label: 'About', screen: 'SalonAboutScreen', icon: 'information-circle-outline' },
+  { label: 'FAQ', screen: 'SalonFAQScreen', icon: 'help-circle-outline' },
+  { label: 'Terms & Conditions', screen: 'SalonTermsScreen', icon: 'document-text-outline' },
   { label: 'Subscription Plans', screen: 'SubscriptionsPlan', icon: 'card-outline' },
   { label: 'Want Help ? Call on : 8380017393', action: 'CALL', phone: '8380017393', icon: 'call-outline' },
 

@@ -88,7 +88,7 @@ const SalonNotifications = ({ route, navigation }) => {
 
     /* ---------------- RENDER ITEM ---------------- */
     const renderItem = ({ item }) => (
-        <View style={styles.card} key={item.createdAt}>
+        <View style={styles.card} >
             <View style={styles.textWrap}>
                 <Text allowFontScaling={false}style={styles.title}>{item.title}</Text>
                 <Text allowFontScaling={false}style={styles.message}>{item.body}</Text>
@@ -125,7 +125,7 @@ const SalonNotifications = ({ route, navigation }) => {
             ) : (
                 <FlatList
                     data={notifications}
-                    keyExtractor={item => item.notificationId}
+                    keyExtractor={item => item.id}
                     renderItem={renderItem}
                     contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
                     refreshControl={

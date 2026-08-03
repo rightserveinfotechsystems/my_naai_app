@@ -70,6 +70,9 @@ import UserNotifications from './src/screens/UserNotifications';
 import BookingRequestScreen from './src/screens/BookingRequestScreen';
 import DelayRequestScreen from './src/screens/DelayRequestScreen';
 import EditSalonProfileScreen from './src/screens/EditSalonProfileScreen';
+import SalonAboutScreen from './src/screens/SalonAboutScreen';
+import SalonTermsScreen from './src/screens/SalonTermsScreen';
+import SalonFAQScreen from './src/screens/SalonFAQScreen';
 
 export const navigationRef = createNavigationContainerRef();
 
@@ -204,6 +207,9 @@ function AppStack({ userType, isNewSalon }) {
       <Stack.Screen name="FAQScreen" component={FAQScreen} />
       <Stack.Screen name="TermsScreen" component={TermsScreen} />
       <Stack.Screen name="AboutScreen" component={AboutScreen} />
+      <Stack.Screen name="SalonAboutScreen" component={SalonAboutScreen} />
+      <Stack.Screen name="SalonTermsScreen" component={SalonTermsScreen} />
+      <Stack.Screen name="SalonFAQScreen" component={SalonFAQScreen} />
       <Stack.Screen name="SubscriptionsPlan" component={SubscriptionsPlan} />
       <Stack.Screen name="RenewalSubscriptionsPlan" component={RenewalSubscriptionsPlan} />
       <Stack.Screen name="AddOfflineCustomer" component={AddOfflineCustomer} />

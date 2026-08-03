@@ -17,7 +17,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication } from '../services/communication';
 
 
-const BG_IMAGE = require('../assets/salon_page_bg.png');
+const BG_IMAGE = require('../assets/new_background.jpeg');
 
 const NaaiLogin = ({ navigation }) => {
   const [mobile, setMobile] = useState('');
@@ -64,7 +64,7 @@ const NaaiLogin = ({ navigation }) => {
 
 
   return (
-   // <ImageBackground source={BG_IMAGE} style={styles.bg}>
+   <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
 
         <SafeAreaView style={{ flex: 1 }}>
@@ -127,7 +127,7 @@ const NaaiLogin = ({ navigation }) => {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </View>
-    // </ImageBackground>
+    </ImageBackground>
   );
 };
 
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.99)',
+    backgroundColor: 'rgba(0,0,0,0.75)',
   },
 
   header: {
