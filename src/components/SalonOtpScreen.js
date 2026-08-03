@@ -21,7 +21,7 @@ import {
 
 import {SafeAreaView} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getMessaging, getToken } from '@react-native-firebase/messaging'; // 👈 Direct Firebase fallback
+import { getMessaging, getToken } from '@react-native-firebase/messaging';
 import {communication} from '../services/communication';
 
 const RESEND_TIME = 30;
@@ -45,7 +45,7 @@ const SalonOtpScreen = ({route}) => {
 
   const inputRef = useRef(null);
   const verificationStartedRef = useRef(false);
-  const isFailedRef = useRef(false); // 👈 Prevents auto-retry infinite loop on failure
+  const isFailedRef = useRef(false);
 
   const extractOtp = useCallback(message => {
     if (!message) return '';
@@ -131,25 +131,28 @@ const SalonOtpScreen = ({route}) => {
     return () => clearTimeout(timer);
   }, [secondsLeft, canResend]);
 
-  /* ---------- 🚀 RELIABLE DEVICE TOKEN FETCH ---------- */
+  /* ---------- 🚀 SAFE DEVICE TOKEN FETCH (NON-BLOCKING) ---------- */
   const getDeviceToken = async () => {
     try {
-      // 1. First check AsyncStorage
+      // 1. Check cached storage token first
       let token = await AsyncStorage.getItem('FCM_TOKEN');
       if (token) return token;
 
-      // 2. Direct FCM call if missing from storage
-      const messaging = getMessaging();
-      token = await getToken(messaging);
-      
-      if (token) {
-        await AsyncStorage.setItem('FCM_TOKEN', token);
-        return token;
+      // 2. Direct FCM call wrapped in defensive try-catch to prevent SERVICE_NOT_AVAILABLE crashes
+      try {
+        const messaging = getMessaging();
+        token = await getToken(messaging);
+        if (token) {
+          await AsyncStorage.setItem('FCM_TOKEN', token);
+          return token;
+        }
+      } catch (fcmError) {
+        console.log("FCM Play Services background connection offline, skipping token:", fcmError?.message);
       }
     } catch (err) {
-      console.log("FCM Token fetch error inside screen:", err);
+      console.log("Storage token fetch error:", err);
     }
-    return '';
+    return ''; // Return empty string so verification still succeeds!
   };
 
   /* ---------- VERIFY OTP ---------- */
@@ -170,7 +173,7 @@ const SalonOtpScreen = ({route}) => {
       setVerifyLoading(true);
 
       try {
-        const deviceToken = await getDeviceToken(); // 👈 Guaranteed token attempt
+        const deviceToken = await getDeviceToken(); // 👈 Safe non-blocking token fetch
 
         const payload = {
           phoneNumber: mobile,
@@ -197,13 +200,11 @@ const SalonOtpScreen = ({route}) => {
           return;
         }
 
-        // Mark failed so auto-verify useEffect won't trigger continuously
         isFailedRef.current = true;
         verificationStartedRef.current = false;
 
         Alert.alert('Invalid OTP', res?.message || 'OTP verification failed.');
       } catch (error) {
-        // Mark failed so auto-verify useEffect won't trigger continuously
         isFailedRef.current = true;
         verificationStartedRef.current = false;
 
@@ -226,7 +227,7 @@ const SalonOtpScreen = ({route}) => {
       otp.length === OTP_LENGTH &&
       !verifyLoading &&
       !verificationStartedRef.current &&
-      !isFailedRef.current // 👈 STOP REPEATED API LOOPS ON ERROR
+      !isFailedRef.current
     ) {
       verifyOtp(otp);
     }
@@ -241,7 +242,7 @@ const SalonOtpScreen = ({route}) => {
     try {
       setOtp('');
       verificationStartedRef.current = false;
-      isFailedRef.current = false; // Reset failure flag for new attempt
+      isFailedRef.current = false;
 
       if (Platform.OS === 'android') {
         await stopSmsConsentListener();
@@ -294,7 +295,7 @@ const SalonOtpScreen = ({route}) => {
             onChangeText={text => {
               const cleanedOtp = text.replace(/\D/g, '').slice(0, OTP_LENGTH);
               verificationStartedRef.current = false;
-              isFailedRef.current = false; // Reset failure on user text change
+              isFailedRef.current = false;
               setOtp(cleanedOtp);
             }}
             keyboardType="number-pad"
@@ -312,7 +313,7 @@ const SalonOtpScreen = ({route}) => {
           activeOpacity={0.85}
           style={[styles.btn, verifyLoading && styles.disabledButton]}
           onPress={() => {
-            isFailedRef.current = false; // Reset failure flag on manual button tap
+            isFailedRef.current = false;
             verifyOtp(otp);
           }}
           disabled={verifyLoading}>

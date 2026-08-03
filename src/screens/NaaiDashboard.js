@@ -564,7 +564,7 @@ const NaaiDashboard = ({ navigation }) => {
   );
 
   return (
-    <ImageBackground source={BG_IMAGE} style={styles.bg}>
+   // <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
         <SafeAreaView
           style={[styles.container, { paddingBottom: insets.bottom }]}
@@ -668,7 +668,7 @@ const NaaiDashboard = ({ navigation }) => {
           </View>
         </SafeAreaView>
       </View>
-    </ImageBackground>
+    // </ImageBackground>
   );
 };
 
@@ -677,7 +677,7 @@ export default NaaiDashboard;
 /* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.70)' },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.99)' },
   container: {
     flex: 1,
     paddingHorizontal: wp(4),

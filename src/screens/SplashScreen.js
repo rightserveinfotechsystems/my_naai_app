@@ -95,7 +95,7 @@ const SplashScreen = ({ navigation }) => {
 
 
   const renderItem = ({ item }) => (
-    <ImageBackground source={item.image} style={styles.slide}>
+    <ImageBackground source={item.image} style={styles.slide}>ß
       <View style={styles.overlay} />
 
       <SafeAreaView style={styles.content}>

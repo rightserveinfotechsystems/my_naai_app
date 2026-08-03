@@ -205,7 +205,7 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
 
           <Text allowFontScaling={false}style={styles.planTitle}>Free Trial</Text>
 
-          <Text allowFontScaling={false}style={styles.price}>`₹ 00`</Text>
+          <Text allowFontScaling={false}style={styles.price}>₹ 00</Text>
 
           <Text allowFontScaling={false}style={styles.duration}>{`7 days`}</Text>
         </TouchableOpacity>

@@ -171,7 +171,7 @@ const CustomerBookingHistory = () => {
               <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
               <Text allowFontScaling={false}style={styles.subText}>
                 {formatDateReadable(item.bookingDate)}
-                {/* {item.bookingTime ? ` • ${formatTime(item.bookingTime)}` : ''} */}
+                {item?.bookingTime ? ` • ${formatTime(item.bookingTime)}` : ''}
               </Text>
             </View>
           </View>
@@ -201,11 +201,11 @@ const CustomerBookingHistory = () => {
   // );
 
   return (
-    <ImageBackground source={BG_IMAGE} style={styles.bg} resizeMode="cover">
+    // <ImageBackground source={BG_IMAGE} style={styles.bg} resizeMode="cover">
       <View style={styles.overlay}>
         <SafeAreaView style={styles.container}>
           <Text allowFontScaling={false}style={styles.title}>
-            Customer history
+            Customer History
           </Text>
 
           {/* {WEEKLY_CUSTOMERS.length === 0 ? (
@@ -266,7 +266,7 @@ const CustomerBookingHistory = () => {
           )}
         </SafeAreaView>
       </View>
-    </ImageBackground>
+    // </ImageBackground>
   );
 };
 
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.50)',
+    backgroundColor: 'rgba(0, 0, 0, 0.99)',
   },
 
   container: {

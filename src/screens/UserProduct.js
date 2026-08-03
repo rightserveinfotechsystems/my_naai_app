@@ -135,7 +135,7 @@ const UserProduct = () => {
   );
 
   return (
-    <ImageBackground source={BG_IMAGE} style={{ flex: 1 }}>
+    // <ImageBackground source={BG_IMAGE} style={{ flex: 1 }}>
       <View style={styles.overlay}>
         <SafeAreaView style={styles.container}>
           {/* SEARCH BAR */}
@@ -179,7 +179,7 @@ const UserProduct = () => {
           />
         </SafeAreaView>
       </View>
-    </ImageBackground>
+    // </ImageBackground>
   );
 };
 
@@ -188,7 +188,7 @@ export default UserProduct;
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
+    backgroundColor: 'rgba(0,0,0,0.99)',
   },
   container: {
     flex: 1,

@@ -19,39 +19,39 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
   const { notification, pressAction } = detail;
   const bookingRequestId = notification?.data?.bookingRequestId;
 
-  // 🎯 BANNER BODY CLICK IN BACKGROUND/RECENT APPS
+  // Banner body click in background / killed state -> OS launches main activity
   if (type === EventType.PRESS || pressAction?.id === 'default') {
-    if (notification?.id) {
-      await notifee.cancelNotification(notification.id);
-    }
     return;
   }
 
-  // 🎯 ACTION BUTTON PRESSES
+  // Action button clicks in background / killed state
   if (type === EventType.ACTION_PRESS) {
     if (pressAction?.id === 'ACCEPT_BOOKING') {
       console.log('Background: Accepting booking', bookingRequestId);
       await communication.bookingRequestOwnerAction(bookingRequestId, { action: "ACCEPT" });
-      await notifee.cancelNotification(notification.id);
+      if (notification?.id) {
+        await notifee.cancelNotification(notification.id);
+      }
     }
     else if (pressAction?.id === 'REJECT_BOOKING') {
       console.log('Background: Rejecting booking', bookingRequestId);
       await communication.bookingRequestOwnerAction(bookingRequestId, { action: "REJECT" });
-      await notifee.cancelNotification(notification.id);
+      if (notification?.id) {
+        await notifee.cancelNotification(notification.id);
+      }
     }
     else if (pressAction?.id === 'DELAY_BOOKING') {
-      await notifee.cancelNotification(notification.id);
+      // Do NOT cancel here. Let app open BookingRequestScreen with delay modal.
     }
   }
 });
 
-/* ---------------- 2. FCM BACKGROUND HANDLER (APP KILLED / CLOSED / RECENT) ---------------- */
-const messaging = getMessaging();
+/* ---------------- 2. MODULAR FCM BACKGROUND HANDLER ---------------- */
+const messagingInstance = getMessaging();
 
-setBackgroundMessageHandler(messaging, async remoteMessage => {
+setBackgroundMessageHandler(messagingInstance, async remoteMessage => {
   const { data, notification } = remoteMessage;
 
-  // Guarantee channels exist in OS even if app was killed
   await notifee.createChannel({
     id: 'booking',
     name: 'Booking Notifications',
@@ -70,8 +70,10 @@ setBackgroundMessageHandler(messaging, async remoteMessage => {
 
   const isBookingRequest = data?.type === "BOOKING_REQUEST";
   const DURATION_MS = 60000;
+  const notificationId = data?.bookingRequestId || notification?.id || `booking_${Date.now()}`;
 
   await notifee.displayNotification({
+    id: notificationId,
     title: data?.title || notification?.title || 'Notification',
     body: data?.body || notification?.body || '',
     android: {
@@ -79,7 +81,6 @@ setBackgroundMessageHandler(messaging, async remoteMessage => {
       importance: AndroidImportance.HIGH,
       category: AndroidCategory.ALARM,
       
-      /* 🎯 CRITICAL FIX: Directs Android OS to bring app to front on notification body tap */
       pressAction: {
         id: 'default',
         launchActivity: 'default',
@@ -91,7 +92,7 @@ setBackgroundMessageHandler(messaging, async remoteMessage => {
       },
       smallIcon: 'ic_notification',
       ongoing: isBookingRequest,
-      timeoutAfter: isBookingRequest ? 70000 : undefined,
+      autoCancel: false,
 
       ...(isBookingRequest && {
         showChronometer: true,
@@ -118,6 +119,16 @@ setBackgroundMessageHandler(messaging, async remoteMessage => {
     },
     data: data,
   });
+
+  if (isBookingRequest) {
+    setTimeout(async () => {
+      try {
+        await notifee.cancelNotification(notificationId);
+      } catch (err) {
+        console.log('Timed out notification cleanup error:', err);
+      }
+    }, 70000);
+  }
 });
 
 AppRegistry.registerComponent(appName, () => App);

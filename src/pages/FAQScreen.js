@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -14,16 +15,45 @@ const DARK = '#121212';
 const CARD = '#1E1E1E';
 
 const FAQScreen = ({ navigation }) => {
+  const faqs = [
+    {
+      q: 'Q1. What is MyNaai?',
+      a: 'Ans: MyNaai is a smart salon booking app that allows you to book hair, beauty, and grooming services online so you can skip the waiting line at the salon.',
+    },
+    {
+      q: 'Q2. How do I book an appointment?',
+      a: 'Ans: Simply open the app, choose a salon near you, select your desired services, pick a time slot, and confirm your booking. It’s that easy!',
+    },
+    {
+      q: 'Q3. Can I cancel or reschedule my booking?',
+      a: 'Ans: Yes, you can cancel your booking directly from the app. However, we request you to cancel well in advance so the salon can offer that time slot to another customer.',
+    },
+    {
+      q: 'Q4. Do I pay on the app or at the salon?',
+      a: 'Ans: You can pay directly at the salon after your service is completed.',
+    },
+    {
+      q: 'Q5. What if the salon is running late?',
+      a: 'Ans: Our app provides real-time updates. If a salon is running behind schedule, you will be able to track your queue status so you don\'t have to wait unnecessarily.',
+    },
+    {
+      q: 'Q6. How can I contact customer support?',
+      a: 'Ans: If you face any issues with your booking, you can reach out to our support team at 8380017393.',
+      isSupport: true,
+    },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
-
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
 
-        <Text allowFontScaling={false}style={styles.headerTitle}>FAQ</Text>
+        <Text allowFontScaling={false} style={styles.headerTitle}>
+          FAQ
+        </Text>
 
         <View style={{ width: 24 }} />
       </View>
@@ -34,57 +64,35 @@ const FAQScreen = ({ navigation }) => {
         contentContainerStyle={{ paddingBottom: 30 }}
       >
         <View style={styles.card}>
-          <Text allowFontScaling={false}style={styles.title}>Frequently Asked Questions</Text>
-
-          {/* CUSTOMER FAQs */}
-          <Text allowFontScaling={false}style={styles.q}>How does MYNAAI work for customers?</Text>
-          <Text allowFontScaling={false}style={styles.a}>
-            Customers can browse nearby salons, select services, book appointments,
-            and join a live queue to reduce waiting time at the salon.
+          <Text allowFontScaling={false} style={styles.title}>
+            Frequently Asked Questions
           </Text>
 
-          <Text allowFontScaling={false}style={styles.q}>Can I book an appointment in advance?</Text>
-          <Text allowFontScaling={false}style={styles.a}>
-            Yes. You can book an appointment or join the live queue based on salon availability.
-          </Text>
+          {faqs.map((item, index) => (
+            <View key={index} style={styles.faqBlock}>
+              <Text allowFontScaling={false} style={styles.q}>
+                {item.q}
+              </Text>
 
-          <Text allowFontScaling={false}style={styles.q}>How do I know my queue position?</Text>
-          <Text allowFontScaling={false}style={styles.a}>
-            Once booked, the app shows your live queue number and estimated waiting time.
-          </Text>
-
-          {/* SALON FAQs */}
-          <Text allowFontScaling={false}style={styles.q}>How can a salon join MYNAAI?</Text>
-          <Text allowFontScaling={false}style={styles.a}>
-            Salon owners can request account creation. After admin approval,
-            the salon account is activated for login.
-          </Text>
-
-          <Text allowFontScaling={false}style={styles.q}>What can salon owners manage?</Text>
-          <Text allowFontScaling={false}style={styles.a}>
-            Salon owners can update salon profile, add barbers and services,
-            manage customer queue, and mark barbers as available or on leave.
-          </Text>
-
-          <Text allowFontScaling={false}style={styles.q}>Can salons add walk-in customers?</Text>
-          <Text allowFontScaling={false}style={styles.a}>
-            Yes. Salon owners can add walk-in customers directly to the queue
-            with service duration.
-          </Text>
-
-          {/* PAYMENTS */}
-          <Text allowFontScaling={false}style={styles.q}>Is online payment supported?</Text>
-          <Text allowFontScaling={false}style={styles.a}>
-            Currently, payments are handled directly at the salon.
-            Online payment support may be added in future updates.
-          </Text>
-
-          {/* SUPPORT */}
-          <Text allowFontScaling={false}style={styles.q}>Who do I contact for support?</Text>
-          <Text allowFontScaling={false}style={styles.a}>
-            You can contact support through the app or reach out to the MYNAAI admin team
-            for any account or booking issues.
-          </Text>
+              {item.isSupport ? (
+                <Text allowFontScaling={false} style={styles.a}>
+                  Ans: If you face any issues with your booking, you can reach
+                  out to our support team at{' '}
+                  <Text
+                    style={styles.linkText}
+                    onPress={() => Linking.openURL('tel:8380017393')}
+                  >
+                    8380017393
+                  </Text>
+                  .
+                </Text>
+              ) : (
+                <Text allowFontScaling={false} style={styles.a}>
+                  {item.a}
+                </Text>
+              )}
+            </View>
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -131,10 +139,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
+  faqBlock: {
+    marginTop: 14,
+  },
+
   q: {
     color: GOLD,
+    fontSize: 14,
     fontWeight: '600',
-    marginTop: 14,
   },
 
   a: {
@@ -142,5 +154,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
     marginTop: 4,
+  },
+
+  linkText: {
+    color: GOLD,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
 });

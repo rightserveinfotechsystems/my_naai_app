@@ -13,9 +13,7 @@ import {
   getToken, 
   onTokenRefresh, 
   AuthorizationStatus,
-  onMessage,
-  onNotificationOpenedApp,
-  getInitialNotification
+  onMessage
 } from '@react-native-firebase/messaging';
 
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
@@ -38,6 +36,7 @@ import { communication } from './src/services/communication';
 import SplashLogoScreen from './src/screens/SplashLogoScreen';
 import SplashScreen from './src/screens/SplashScreen';
 import UserLogin from './src/components/UserLogin';
+import UserSignup from './src/components/UserSignup';
 import OtpScreen from './src/components/OtpScreen';
 import NaaiLogin from './src/components/NaaiLogin';
 import NaaiRequest from './src/components/NaaiRequest';
@@ -90,14 +89,12 @@ TextInput.render = function (...args) {
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-/* ---------- THEME ---------- */
 const COLORS = {
   primary: '#0F0F0F',
   accent: '#E1B378',
   inactive: '#9E9E9E',
 };
 
-/* ---------- TAB OPTIONS ---------- */
 const tabOptions = ({ route, insets }) => ({
   headerShown: false,
   tabBarShowLabel: false,
@@ -131,7 +128,6 @@ const tabOptions = ({ route, insets }) => ({
   },
 });
 
-/* ---------- USER TABS ---------- */
 function MainTabs() {
   const insets = useSafeAreaInsets();
   return (
@@ -144,7 +140,6 @@ function MainTabs() {
   );
 }
 
-/* ---------- SALON TABS ---------- */
 function SalonTabs({ isNewSalon = false }) {
   const insets = useSafeAreaInsets();
   return (
@@ -160,15 +155,18 @@ function SalonTabs({ isNewSalon = false }) {
   );
 }
 
-/* ---------- AUTH STACK ---------- */
+/* 🎯 UPDATED AUTH STACK (Set initialRouteName to SplashLogo) */
 function AuthStack({ onLoginSuccess }) {
   return (
-    <Stack.Navigator initialRouteName='UserLogin' screenOptions={{
+    <Stack.Navigator initialRouteName="SplashLogo" screenOptions={{
       headerShown: false, animation: 'slide_from_right',
       contentStyle: { backgroundColor: '#0F0F0F' },
     }}>
       <Stack.Screen name="SplashLogo" component={SplashLogoScreen} />
       <Stack.Screen name="SplashScreen" component={SplashScreen} />
+      <Stack.Screen name="UserSignup">
+        {props => <UserSignup {...props} onLoginSuccess={onLoginSuccess} />}
+      </Stack.Screen>
       <Stack.Screen name="UserLogin">
         {props => <UserLogin {...props} onLoginSuccess={onLoginSuccess} />}
       </Stack.Screen>
@@ -188,7 +186,6 @@ function AuthStack({ onLoginSuccess }) {
   );
 }
 
-/* ---------- APP STACK ---------- */
 function AppStack({ userType, isNewSalon }) {
   if (!userType) return null;
 
@@ -219,21 +216,30 @@ function AppStack({ userType, isNewSalon }) {
   );
 }
 
-/* ---------- SAFE NAVIGATION HELPER ---------- */
-const safeNavigate = (name, params) => {
-  console.log(`🚀 Navigating to ${name} with params:`, params);
-  if (navigationRef.isReady()) {
-    navigationRef.navigate(name, params);
-  } else {
-    setTimeout(() => {
-      if (navigationRef.isReady()) {
-        navigationRef.navigate(name, params);
+/* 🎯 STRICT ROUTE NAVIGATOR WITH IMMEDIATE NOTIFICATION CONSUMPTION */
+const executeRouteNavigation = (screenName, params, notificationIdToCancel = null) => {
+  let attempts = 0;
+  const pollInterval = setInterval(async () => {
+    attempts++;
+    if (navigationRef.isReady()) {
+      clearInterval(pollInterval);
+      console.log(`🚀 Navigating to: ${screenName}`);
+      navigationRef.navigate(screenName, params);
+
+      if (notificationIdToCancel) {
+        try {
+          await notifee.cancelNotification(notificationIdToCancel);
+          await notifee.cancelDisplayedNotification(notificationIdToCancel);
+        } catch (e) {
+          console.log('Error canceling notification:', e);
+        }
       }
-    }, 500);
-  }
+    } else if (attempts > 50) {
+      clearInterval(pollInterval);
+    }
+  }, 100);
 };
 
-/* ---------- ROOT APP ---------- */
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -293,18 +299,23 @@ export default function App() {
         if (data && type) {
           const parsed = JSON.parse(data);
           if (!isMounted) return;
-          setUserId(parsed?.userId || parsed?.salon?.salonId || '');
+          const activeUserId = parsed?.userId || parsed?.salon?.salonId || parsed?.id || '';
+          
+          userTypeRef.current = type;
+          setUserId(activeUserId);
           setUserType(type);
           setIsLoggedIn(true);
         } else {
           setIsLoggedIn(false);
           setUserType(null);
           setUserId('');
+          userTypeRef.current = null;
         }
       } catch {
         setIsLoggedIn(false);
         setUserType(null);
         setUserId('');
+        userTypeRef.current = null;
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -325,39 +336,42 @@ export default function App() {
     };
   }, []);
 
-  /* ---------- ROUTING HELPER FOR NOTIFICATIONS ---------- */
-  const handleNotificationNavigation = (data) => {
+  /* ---------- ROUTER RESOLVER ---------- */
+  const processNotificationRoute = async (data, notificationId = null) => {
     if (!data) return;
 
     const type = data.type;
-    const currentUserType = userTypeRef.current;
+    let currentUserType = userTypeRef.current;
 
-    console.log("Routing Notification 👉 Type:", type, "| UserType:", currentUserType);
+    if (!currentUserType) {
+      currentUserType = await AsyncStorage.getItem('userType');
+    }
 
-    /* 🎯 1. SPECIFIC SCREEN TARGETS */
+    console.log("Processing Notification Route 👉 Type:", type, "| UserType:", currentUserType);
+
     if (type === "DELAY_TIME_PROPOSAL" && currentUserType === "USER") {
-      safeNavigate("DelayRequestScreen", {
+      executeRouteNavigation("DelayRequestScreen", {
         bookingRequestId: data.bookingRequestId,
         delayMinutes: data.delayMinutes,
         proposedTime: data.proposedTime,
-      });
+      }, notificationId);
       return;
     }
 
     if (type === "BOOKING_CONFIRMED" && currentUserType === "USER") {
-      safeNavigate("Booked Salon");
+      executeRouteNavigation("Booked Salon", {}, notificationId);
       return;
     }
 
     if (type === "BOOKING_REJECTED" && currentUserType === "USER") {
-      safeNavigate("Booked Salon");
+      executeRouteNavigation("Booked Salon", {}, notificationId);
       return;
     }
 
     if (type === "BOOKING_REQUEST" && currentUserType === "SALON") {
-      safeNavigate("BookingRequestScreen", {
+      executeRouteNavigation("BookingRequestScreen", {
         bookingRequestId: data.bookingRequestId,
-      });
+      }, notificationId);
       return;
     }
 
@@ -365,17 +379,15 @@ export default function App() {
       return;
     }
 
-    /* 🏠 2. GENERAL NOTIFICATIONS FALLBACK TO DASHBOARD */
     if (currentUserType === "SALON") {
-      safeNavigate("Salon"); // Opens Salon Stack / Dashboard
+      executeRouteNavigation("Salon", {}, notificationId); 
     } else if (currentUserType === "USER") {
-      safeNavigate("Main");  // Opens User Stack / Dashboard
+      executeRouteNavigation("Main", {}, notificationId);  
     }
   };
 
   /* ---------- NOTIFICATIONS LISTENERS ---------- */
   useEffect(() => {
-    // Create channels
     notifee.createChannel({
       id: 'default_channel',
       name: 'Default Notifications',
@@ -399,9 +411,6 @@ export default function App() {
 
     // 1. Foreground messaging listener
     const unsubscribeMsg = onMessage(messaging, async msg => {
-      console.log("Full message 👉", msg);
-      console.log("Notification data 👉", msg.data);
-
       const DURATION_MS = 60000;
       const isBookingRequest = msg.data?.type === "BOOKING_REQUEST";
 
@@ -422,6 +431,7 @@ export default function App() {
           },
           smallIcon: 'ic_notification',
           ongoing: isBookingRequest,
+          autoCancel: false,
           timeoutAfter: isBookingRequest ? 70000 : undefined,
           ...(isBookingRequest && {
             showChronometer: true,
@@ -440,86 +450,49 @@ export default function App() {
       });
     });
 
-    // 2. Notifee interaction listener (Foreground & Background Taps)
+    // 2. Notifee interaction listener (Foreground & Recent App Taps)
     const unsubscribeNotifee = notifee.onForegroundEvent(
       async ({ type, detail }) => {
         const { notification, pressAction } = detail;
         const data = notification?.data;
 
-        /* 🎯 BANNER BODY TAP OR DEFAULT PRESS */
+        /* 🎯 BANNER BODY TAP */
         if (type === EventType.PRESS || pressAction?.id === 'default') {
-          handleNotificationNavigation(data);
-          if (notification?.id) {
-            await notifee.cancelNotification(notification.id);
-          }
+          await processNotificationRoute(data, notification?.id);
           return;
         }
 
-        /* ACTION BUTTON PRESS */
+        /* 🎯 ACTION BUTTON PRESS */
         if (type === EventType.ACTION_PRESS) {
           const bookingRequestId = data?.bookingRequestId;
 
           if (pressAction?.id === 'ACCEPT_BOOKING') {
             await communication.bookingRequestOwnerAction(bookingRequestId, { action: "ACCEPT" });
-            await notifee.cancelNotification(notification.id);
+            if (notification?.id) await notifee.cancelNotification(notification.id);
             return;
           }
 
           if (pressAction?.id === 'REJECT_BOOKING') {
             await communication.bookingRequestOwnerAction(bookingRequestId, { action: "REJECT" });
-            await notifee.cancelNotification(notification.id);
+            if (notification?.id) await notifee.cancelNotification(notification.id);
             return;
           }
 
           if (pressAction?.id === 'DELAY_BOOKING') {
-            safeNavigate("BookingRequestScreen", {
+            executeRouteNavigation("BookingRequestScreen", {
               bookingRequestId: data?.bookingRequestId,
               openDelayModal: true,
-            });
+            }, notification?.id);
             return;
           }
         }
       }
     );
 
-    // 3. Background notification tap (App running in background / recent apps)
-    const unsubscribeOpened = onNotificationOpenedApp(messaging, remoteMessage => {
-      handleNotificationNavigation(remoteMessage?.data);
-    });
-
-    // 4. Cold start notification tap (App completely closed/killed)
-    getInitialNotification(messaging).then(remoteMessage => {
-      if (remoteMessage?.data) {
-        setTimeout(() => {
-          handleNotificationNavigation(remoteMessage.data);
-        }, 800);
-      }
-    });
-
     return () => {
       unsubscribeMsg();
       unsubscribeNotifee();
-      unsubscribeOpened();
     };
-  }, []);
-
-  /* ---------- PENDING NAVIGATION ---------- */
-  useEffect(() => {
-    const handlePendingNavigation = async () => {
-      const pending = await AsyncStorage.getItem('PENDING_NAVIGATION');
-      if (!pending) return;
-
-      const parsed = JSON.parse(pending);
-      setTimeout(() => {
-        if (navigationRef.isReady()) {
-          navigationRef.navigate(parsed.screen, parsed.params);
-        }
-      }, 1500);
-
-      await AsyncStorage.removeItem('PENDING_NAVIGATION');
-    };
-
-    handlePendingNavigation();
   }, []);
 
   /* ---------- FCM INIT ---------- */
@@ -538,46 +511,75 @@ export default function App() {
         await registerDeviceForRemoteMessages(messagingInstance);
         await setAutoInitEnabled(messagingInstance, true);
 
-        const token = await getToken(messagingInstance);
+        let token = null;
+        for (let i = 0; i < 3; i++) {
+          try {
+            token = await getToken(messagingInstance);
+            if (token) break;
+          } catch (e) {
+            await new Promise(res => setTimeout(res, 2000));
+          }
+        }
+
         if (token) {
           await AsyncStorage.setItem('FCM_TOKEN', token);
         }
       } catch (error) {
-        console.log('❌ FCM INIT ERROR:', error);
+        console.log('❌ FCM INIT ERROR:', error?.message);
       }
     };
 
     initFCM();
 
     const unsubscribe = onTokenRefresh(messagingInstance, async (token) => {
-      await AsyncStorage.setItem('FCM_TOKEN', token);
+      if (token) {
+        await AsyncStorage.setItem('FCM_TOKEN', token);
+      }
     });
 
     return unsubscribe;
   }, []);
 
-  /* ---------- INITIAL NOTIFEE CHECK FOR COLD START TAP ---------- */
-  useEffect(() => {
-    const handleInitialNotification = async () => {
+  /* 🎯 ROUTE READY HOOK ---------- */
+  const onNavigationReady = async () => {
+    try {
       const initial = await notifee.getInitialNotification();
 
-      if (initial) {
-        const data = initial.notification?.data;
+      if (initial && initial.notification) {
+        const data = initial.notification.data;
         const pressId = initial.pressAction?.id;
+        const notifId = initial.notification.id || data?.bookingRequestId;
+
+        const storageKey = `PROCESSED_INITIAL_NOTIF_${notifId}`;
+        const isProcessed = await AsyncStorage.getItem(storageKey);
+
+        if (isProcessed === 'true') {
+          console.log('⚡ Cold-start notification already consumed. Skipping re-route on reload.');
+          return;
+        }
+
+        await AsyncStorage.setItem(storageKey, 'true');
+
+        if (notifId) {
+          await notifee.cancelNotification(notifId);
+          await notifee.cancelDisplayedNotification(notifId);
+        }
+
+        console.log('🔥 Cold Start Notification Consumed & Intent Cleared!');
 
         if (pressId === 'DELAY_BOOKING') {
-          safeNavigate('BookingRequestScreen', {
+          executeRouteNavigation('BookingRequestScreen', {
             bookingRequestId: data?.bookingRequestId,
             openDelayModal: true
-          });
+          }, notifId);
         } else {
-          handleNotificationNavigation(data);
+          await processNotificationRoute(data, notifId);
         }
       }
-    };
-
-    handleInitialNotification();
-  }, []);
+    } catch (err) {
+      console.log("Cold start route check error:", err);
+    }
+  };
 
   if (loading || checkingUpdate) return null;
 
@@ -608,7 +610,11 @@ export default function App() {
   return (
     <NotificationProvider userId={userId} userType={userType}>
       <SafeAreaProvider>
-        <NavigationContainer key={isLoggedIn ? 'app' : 'auth'} ref={navigationRef}>
+        <NavigationContainer 
+          key={isLoggedIn ? 'app' : 'auth'} 
+          ref={navigationRef}
+          onReady={onNavigationReady}
+        >
           {isLoggedIn ? (
             <AppStack userType={userType} isNewSalon={isNewSalon} />
           ) : (

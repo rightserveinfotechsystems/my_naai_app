@@ -1,14 +1,15 @@
 package com.mynaai
 
 import android.content.Context
+import android.content.Intent // 👈 Required for onNewIntent
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.os.Bundle
+import androidx.core.view.WindowCompat
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
-import android.os.Bundle
-import androidx.core.view.WindowCompat
 
 class MainActivity : ReactActivity() {
 
@@ -17,14 +18,20 @@ class MainActivity : ReactActivity() {
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 
-       // ✅ FIX FOR VIVO / OPPO SYSTEM NAVIGATION OVERLAP
-  override fun onCreate(savedInstanceState: Bundle?) {
-      super.onCreate(null)
+  // 🎯 CRITICAL FIX FOR NOTIFICATION TAPS IN RECENT APPS / BACKGROUND
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+  }
 
-      WindowCompat.setDecorFitsSystemWindows(
-          window,
-          true
-      )
+  // ✅ FIX FOR VIVO / OPPO SYSTEM NAVIGATION OVERLAP
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(null)
+
+    WindowCompat.setDecorFitsSystemWindows(
+        window,
+        true
+    )
   }
 
   // 🔥 BLOCK FONT SCALING

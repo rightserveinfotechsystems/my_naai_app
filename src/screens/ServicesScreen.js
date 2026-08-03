@@ -1,12 +1,9 @@
-import { useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   FlatList,
-  Image,
   StyleSheet,
-  ImageBackground,
   TouchableOpacity,
   Alert,
   RefreshControl,
@@ -14,10 +11,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { communication } from '../services/communication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const BG_IMAGE = require('../assets/salon_page_bg.png');
+import io from 'socket.io-client'; // 👈 Import Socket.io Client
+import { communication, getServerUrl } from '../services/communication'; // 👈 Import getServerUrl
 
 const ServicesScreen = () => {
   const [salonList, setSalonList] = useState([]);
@@ -29,24 +25,59 @@ const ServicesScreen = () => {
   const [userId, setUserId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
 
-  const isFocused = useIsFocused();
-
   /* ---------------- USER INFO ---------------- */
   const getUserInfo = async () => {
     try {
       const userData = await AsyncStorage.getItem('mynaaiUser');
-
       const parsed = JSON.parse(userData);
       const id = parsed?.userId;
 
-      if (!id) return;
-
-      setUserId(id);
-
+      if (id) setUserId(id);
     } catch {
       Alert.alert('Error', 'Unable to load user');
     }
   };
+
+
+/* ---------------- 🎯 DIRECT USER SOCKET CONNECTION ---------------- */
+  useEffect(() => {
+    if (!userId) return;
+
+    let socket = null;
+
+    try {
+      socket = io(getServerUrl(), {
+        transports: ['websocket'],
+      });
+
+      socket.on('connect', () => {
+        console.log('🟢 Socket connected in ServicesScreen:', socket.id);
+        
+        // 🎯 EMIT join_user so server puts this client into `user_${userId}` room
+        socket.emit('join_user', String(userId));
+      });
+
+      // Targeted callback to handle booking updates
+      const handleUserBookingUpdate = (data) => {
+        console.log('⚡ Received personal booking update on socket:', data);
+        fetchBookings(userId, 1);
+      };
+
+      // Listen for updates targeted at this user
+      socket.on('booking_status_updated', handleUserBookingUpdate);
+      
+
+    } catch (err) {
+      console.log('Socket connection error in ServicesScreen:', err);
+    }
+
+    return () => {
+      if (socket) {
+        console.log('🔴 Disconnecting socket from ServicesScreen');
+        socket.disconnect();
+      }
+    };
+  }, [userId]);
 
   /* ---------------- API CALL ---------------- */
   const fetchBookings = async (id, pageNo = 1, loadMore = false) => {
@@ -59,24 +90,16 @@ const ServicesScreen = () => {
         searchString: '',
       });
 
-
       if (response?.status === 'SUCCESS') {
         const data = response.data || [];
 
-
-
-
-        setSalonList(prev =>
-          loadMore ? [...prev, ...data] : data
-        );
-
+        setSalonList(prev => (loadMore ? [...prev, ...data] : data));
         setHasMore(data.length >= 10);
         setPage(pageNo);
       } else {
         if (!loadMore) setSalonList([]);
         setHasMore(false);
       }
-
     } catch (e) {
       Alert.alert('Error', e.message);
     } finally {
@@ -85,7 +108,6 @@ const ServicesScreen = () => {
       setLoadingMore(false);
     }
   };
-
 
   const handleCancelBooking = (bookingRequestId) => {
     Alert.alert(
@@ -100,28 +122,19 @@ const ServicesScreen = () => {
             try {
               setCancellingId(bookingRequestId);
 
-              // ✅ Optimistic remove
+              // Optimistic remove
               setSalonList(prev =>
                 prev.filter(item => item.bookingId !== bookingRequestId)
               );
 
               const response = await communication.bookingRequestCancel(bookingRequestId);
 
-              if (response?.status === "SUCCESS") {
-                console.log("Success", "Booking cancelled");
-
-              } else {
-                console.log("Error", "Unable to cancel booking");
-
+              if (response?.status !== "SUCCESS") {
                 fetchBookings(userId, 1);
               }
-
             } catch (e) {
               Alert.alert("Error", e.message);
-
-              // ❗ rollback on error
               fetchBookings(userId, 1);
-
             } finally {
               setCancellingId(null);
             }
@@ -141,34 +154,22 @@ const ServicesScreen = () => {
     }
   }, [userId]);
 
-
-  /* ---------------- LOAD MORE ---------------- */
+  /* ---------------- LOAD MORE & REFRESH ---------------- */
   const handleLoadMore = () => {
-    if (
-      loading ||
-      loadingMore ||
-      !hasMore ||
-      !userId ||
-      salonList.length === 0
-    ) {
-      return;
-    }
-
+    if (loading || loadingMore || !hasMore || !userId || salonList.length === 0) return;
     fetchBookings(userId, page + 1, true);
   };
 
-
-  /* ---------------- REFRESH ---------------- */
   const onRefresh = () => {
     if (!userId) {
       setRefreshing(false);
       return;
     }
-
     setRefreshing(true);
     setPage(1);
     fetchBookings(userId, 1);
   };
+
   const STATUS_COLORS = {
     pending: '#E1B378',
     confirmed: '#4CAF50',
@@ -183,14 +184,10 @@ const ServicesScreen = () => {
     cancelled: "Cancelled",
   };
 
-
   /* ---------------- RENDER ITEM ---------------- */
   const renderItem = ({ item }) => {
-    // console.log("gghitem", item);
-
     const formatDateReadable = (dateStr) => {
       if (!dateStr) return '';
-      // Safe format for display
       const date = new Date(dateStr);
       return date.toLocaleDateString('en-IN', {
         day: '2-digit',
@@ -211,12 +208,10 @@ const ServicesScreen = () => {
       });
     };
 
-    /* ---------------- ⏱️ UTC-SAFE TIME CHECK ---------------- */
     const isBookingPassed = () => {
       if (!item.bookingDate) return false;
 
       try {
-        // Extract pure YYYY-MM-DD to avoid timezone shifting
         const rawDateStr = typeof item.bookingDate === 'string'
           ? item.bookingDate.split('T')[0]
           : new Date(item.bookingDate).toISOString().split('T')[0];
@@ -232,7 +227,6 @@ const ServicesScreen = () => {
           minutes = parseInt(timeParts[1], 10) || 0;
         }
 
-        // Creates date explicitly in local timezone
         const bookingDateTime = new Date(year, month - 1, day, hours, minutes, 0);
         return Date.now() >= bookingDateTime.getTime();
       } catch (e) {
@@ -241,11 +235,8 @@ const ServicesScreen = () => {
     };
 
     const isExpired = isBookingPassed();
-
-    // Determine final status display label and badge color
     const statusKey = isExpired ? 'completed' : item.status?.toLowerCase();
     
-    // Uses your existing maps, falling back to Green/Completed if expired
     const btnColor = STATUS_COLORS[statusKey] || (isExpired ? '#4CAF50' : '#9E9E9E');
     const displayStatusLabel = STATUS_LABELS[statusKey] || (isExpired ? 'Completed' : 'Unknown');
 
@@ -278,14 +269,12 @@ const ServicesScreen = () => {
           </View>
 
           <View style={styles.rightSection}>
-            {/* STATUS BADGE - Updates automatically if time passed */}
             <View style={[styles.statusBadge, { backgroundColor: btnColor }]}>
               <Text allowFontScaling={false} style={styles.statusBadgeText}>
                 {displayStatusLabel}
               </Text>
             </View>
 
-            {/* CANCEL BUTTON - Hides completely if time has passed */}
             {!isExpired && ["pending", "confirmed"].includes(item.status?.toLowerCase()) && (
               <TouchableOpacity
                 style={styles.cancelBtn}
@@ -310,84 +299,67 @@ const ServicesScreen = () => {
     );
   };
 
-  /* ---------------- EMPTY STATE ---------------- */
   const EmptyState = () => (
     <View style={styles.empty}>
       <Ionicons name="calendar-outline" size={60} color="#555" />
-      <Text allowFontScaling={false}style={styles.emptyText}>No bookings found</Text>
+      <Text allowFontScaling={false} style={styles.emptyText}>No bookings found</Text>
     </View>
   );
 
-  /* ---------------- SKELETON ---------------- */
-  const Skeleton = () => (
-    <View style={styles.skeletonCard} />
-  );
+  const Skeleton = () => <View style={styles.skeletonCard} />;
 
   return (
-    <ImageBackground source={BG_IMAGE} style={styles.bg}>
-      <View style={styles.overlay}>
-        <SafeAreaView style={styles.container}>
-          <Text allowFontScaling={false}style={styles.title}>My Bookings</Text>
+    <View style={styles.overlay}>
+      <SafeAreaView style={styles.container}>
+        <Text allowFontScaling={false} style={styles.title}>My Bookings</Text>
 
-          {loading ? (
-            <>
-              <Skeleton />
-              <Skeleton />
-              <Skeleton />
-              <Skeleton />
-              <Skeleton />
-              <Skeleton />
-            </>
-          ) : (
-            <FlatList
-              data={salonList}
-              keyExtractor={(item, index) =>
-                `${item.bookingId || item.id}-${index}`
-              }
-
-              // keyExtractor={(item, index) =>
-              //   item.bookingId?.toString() || index.toString()
-              // }
-              renderItem={renderItem}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                  tintColor="#E1B378"
+        {loading ? (
+          <>
+            <Skeleton />
+            <Skeleton />
+            <Skeleton />
+            <Skeleton />
+            <Skeleton />
+            <Skeleton />
+          </>
+        ) : (
+          <FlatList
+            data={salonList}
+            keyExtractor={(item, index) => `${item.bookingId || item.id}-${index}`}
+            renderItem={renderItem}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor="#E1B378"
+              />
+            }
+            ListEmptyComponent={<EmptyState />}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              loadingMore && (
+                <ActivityIndicator
+                  size="small"
+                  color="#E1B378"
+                  style={{ marginVertical: 20 }}
                 />
-              }
-              ListEmptyComponent={<EmptyState />}
-              onEndReached={handleLoadMore}
-              onEndReachedThreshold={0.5}
-              ListFooterComponent={
-                loadingMore && (
-                  <ActivityIndicator
-                    size="small"
-                    color="#E1B378"
-                    style={{ marginVertical: 20 }}
-                  />
-                )
-              }
-              showsVerticalScrollIndicator={false}
-            />
-          )}
-        </SafeAreaView>
-      </View>
-    </ImageBackground>
+              )
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </SafeAreaView>
+    </View>
   );
 };
 
 export default ServicesScreen;
 
-
-
 const styles = StyleSheet.create({
-  bg: {
-    flex: 1,
-  },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
+    backgroundColor: 'rgba(0,0,0,0.99)',
   },
   container: {
     flex: 1,
@@ -407,12 +379,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     overflow: 'hidden',
     elevation: 2,
-  },
-  image: {
-    width: 100,
-    height: '100%',
-    borderTopLeftRadius: 20,
-    borderBottomLeftRadius: 20,
   },
   infoContainer: {
     flex: 1,
@@ -447,22 +413,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 4,
   },
-  statusBtn: {
-    paddingHorizontal: 4,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  statusBtnText: {
-    color: '#000',
-    fontSize: 11,
-    fontWeight: '700',
-  },
   barberRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 1,
   },
-
   barberText: {
     color: '#bbb',
     fontSize: 12,
@@ -478,7 +433,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 10,
   },
-
   skeletonCard: {
     height: 110,
     backgroundColor: '#2A2A2A',
@@ -486,13 +440,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     opacity: 0.6,
   },
-
   rightSection: {
     width: 110,
     justifyContent: 'space-between',
     alignItems: 'flex-end',
   },
-
   statusBadge: {
     width: 90,
     paddingVertical: 7,
@@ -500,7 +452,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   statusBadgeText: {
     color: '#000000',
     fontSize: 12,
@@ -508,7 +459,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     textAlign: 'center',
   },
-
   cancelBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -525,6 +475,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-
-
 });

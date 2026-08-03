@@ -280,7 +280,7 @@ const SalonDashboard = ({ navigation }) => {
 
   /* ---------------- RENDER ---------------- */
   return (
-    <ImageBackground source={BG_IMAGE} style={styles.bg}>
+   // <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
         <SafeAreaView style={styles.container}>
           {/* TOP BAR */}
@@ -368,7 +368,7 @@ const SalonDashboard = ({ navigation }) => {
           )}
         </SafeAreaView>
       </View>
-    </ImageBackground>
+    // </ImageBackground>
   );
 };
 
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)'
+    backgroundColor: 'rgba(0,0,0,0.99)'
   },
 
   container: {
@@ -399,7 +399,8 @@ const styles = StyleSheet.create({
 
   title: {
     color: '#fff',
-    fontSize: wp(5.5),
+    // fontSize: wp(5.5),
+    fontSize: 22,
     fontWeight: '700',
     marginTop: 10,
   },

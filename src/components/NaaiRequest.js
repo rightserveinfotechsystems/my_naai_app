@@ -153,7 +153,7 @@ const NaaiRequest = ({ navigation }) => {
   /* ---------------- UI ---------------- */
 
   return (
-    <ImageBackground source={BG_IMAGE} style={styles.bg}>
+   // <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
         <SafeAreaView style={{ flex: 1 }}>
           {/* 🔙 Back */}
@@ -289,7 +289,7 @@ const NaaiRequest = ({ navigation }) => {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </View>
-    </ImageBackground>
+    // </ImageBackground>
   );
 };
 
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
+    backgroundColor: 'rgba(0,0,0,0.99)',
   },
 
   container: {

@@ -309,7 +309,7 @@ const SalonProduct = () => {
     );
 
     return (
-        <ImageBackground source={BG_IMAGE} style={{ flex: 1 }}>
+        // <ImageBackground source={BG_IMAGE} style={{ flex: 1 }}>
            
             <View style={styles.overlay}>
                 <SafeAreaView style={styles.container}>
@@ -412,7 +412,7 @@ const SalonProduct = () => {
                     </Modal>
                 </SafeAreaView>
             </View>
-        </ImageBackground >
+        // </ImageBackground >
     );
 };
 
@@ -420,7 +420,7 @@ export default SalonProduct;
 
 
 const styles = StyleSheet.create({
-    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)',  },
+    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.99)',  },
     container: { flex: 1, paddingHorizontal: 14, },
     title: {
     color: '#fff',

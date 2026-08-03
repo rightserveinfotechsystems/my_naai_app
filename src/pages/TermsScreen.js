@@ -16,14 +16,15 @@ const CARD = '#1E1E1E';
 const TermsScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
-
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
 
-        <Text allowFontScaling={false}style={styles.headerTitle}>Terms & Conditions</Text>
+        <Text allowFontScaling={false} style={styles.headerTitle}>
+          Terms & Conditions
+        </Text>
 
         <View style={{ width: 24 }} />
       </View>
@@ -34,70 +35,72 @@ const TermsScreen = ({ navigation }) => {
         contentContainerStyle={{ paddingBottom: 30 }}
       >
         <View style={styles.card}>
-          <Text allowFontScaling={false}style={styles.title}>Terms & Conditions</Text>
-
-          <Text allowFontScaling={false}style={styles.text}>
-            By accessing or using the MyNaai Salon Booking Application, you agree to
-            comply with and be bound by the following Terms & Conditions. If you do not
-            agree, please do not use the app.
+          <Text allowFontScaling={false} style={styles.title}>
+            Terms & Conditions
           </Text>
 
-          <Text allowFontScaling={false}style={styles.subTitle}>1. About the Naai App</Text>
-          <Text allowFontScaling={false}style={styles.text}>
-            MyNaai is a salon booking platform that allows customers to discover salons,
-            book services, and join a live service queue. Salon owners can request
-            account creation through the admin, manage salon profiles, add barbers,
-            and handle customer queues.
+          <Text allowFontScaling={false} style={styles.introText}>
+            Welcome to MyNaai! By using our customer application, you agree to
+            the following terms:
           </Text>
 
-          <Text allowFontScaling={false}style={styles.subTitle}>2. Appointment & Queue System</Text>
-          <Text allowFontScaling={false}style={styles.text}>
-            Appointments are managed through a queue-based system. Booking confirmation
-            indicates your position in the queue and does not guarantee immediate
-            service. Actual service time may vary based on workload and availability.
+          <Text allowFontScaling={false} style={styles.subTitle}>
+            1. Account Registration
+          </Text>
+          <Text allowFontScaling={false} style={styles.text}>
+            Users must provide accurate details (name and phone number) to
+            ensure smooth booking and communication. Your data is kept secure
+            and confidential.
           </Text>
 
-          {/* <Text allowFontScaling={false}style={styles.subTitle}>3. Cancellation Policy</Text>
-  <Text allowFontScaling={false}style={styles.text}>
-    Customers may cancel appointments before their service time. Failure to
-    arrive on time may result in removal from the queue at the salon’s
-    discretion.
-  </Text> */}
-
-          <Text allowFontScaling={false}style={styles.subTitle}>4. Payments</Text>
-          <Text allowFontScaling={false}style={styles.text}>
-            All payments are currently handled directly at the salon. MyNaai does not
-            process or store payment information unless explicitly stated in future
-            updates.
+          <Text allowFontScaling={false} style={styles.subTitle}>
+            2. Booking and Cancellations
+          </Text>
+          <Text allowFontScaling={false} style={styles.text}>
+            When you book an appointment, the salon reserves a specific time
+            slot for you. If you are unable to visit, please cancel your booking
+            through the app as early as possible. Frequent "No-Shows" without
+            cancellation may result in temporary suspension of booking
+            privileges.
           </Text>
 
-          <Text allowFontScaling={false}style={styles.subTitle}>5. Salon Owner Responsibilities</Text>
-          <Text allowFontScaling={false}style={styles.text}>
-            Salon owners are responsible for maintaining accurate salon details,
-            barber availability, service pricing, and queue updates. Any misuse may
-            result in account suspension.
+          <Text allowFontScaling={false} style={styles.subTitle}>
+            3. Service Quality & Liability
+          </Text>
+          <Text allowFontScaling={false} style={styles.text}>
+            MyNaai is a digital booking platform that connects you with
+            independent salons. While we strive to partner with the best, the
+            respective salon is solely responsible for the quality, safety, and
+            pricing of the actual services provided.
           </Text>
 
-          <Text allowFontScaling={false}style={styles.subTitle}>6. User Responsibilities</Text>
-          <Text allowFontScaling={false}style={styles.text}>
-            Users must provide accurate information during registration and booking.
-            Misuse of the platform, false bookings, or abuse may lead to account
-            termination.
+          <Text allowFontScaling={false} style={styles.subTitle}>
+            4. Pricing and Payments
+          </Text>
+          <Text allowFontScaling={false} style={styles.text}>
+            Service prices listed on the app are provided by the salon partners
+            and may be subject to change. Final billing and payments are
+            settled directly between the customer and the salon.
           </Text>
 
-          <Text allowFontScaling={false}style={styles.subTitle}>7. Admin Rights</Text>
-          <Text allowFontScaling={false}style={styles.text}>
-            The admin reserves the right to approve or reject salon account requests,
-            monitor activity, and suspend accounts that violate platform policies.
+          <Text allowFontScaling={false} style={styles.subTitle}>
+            5. Privacy Policy
+          </Text>
+          <Text allowFontScaling={false} style={styles.text}>
+            We value your privacy. Your personal information is used exclusively
+            to facilitate your bookings, improve app performance, and communicate
+            important updates. We do not sell your data to third parties.
           </Text>
 
-          <Text allowFontScaling={false}style={styles.subTitle}>8. Changes to Terms</Text>
-          <Text allowFontScaling={false}style={styles.text}>
-            MyNaai reserves the right to update these Terms & Conditions at any time.
-            Continued use of the app implies acceptance of the revised terms.
+          <Text allowFontScaling={false} style={styles.subTitle}>
+            6. App Usage
+          </Text>
+          <Text allowFontScaling={false} style={styles.text}>
+            MyNaai reserves the right to modify or terminate user access if the
+            platform is used for fraudulent bookings, spam, or any activity that
+            disrupts the service for salons and other users.
           </Text>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -136,11 +139,19 @@ const styles = StyleSheet.create({
     color: GOLD,
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+
+  introText: {
+    color: '#ccc',
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 10,
   },
 
   subTitle: {
     color: GOLD,
+    fontSize: 14,
     fontWeight: '600',
     marginTop: 14,
   },
@@ -149,6 +160,6 @@ const styles = StyleSheet.create({
     color: '#ccc',
     fontSize: 13,
     lineHeight: 20,
-    marginTop: 6,
+    marginTop: 4,
   },
 });

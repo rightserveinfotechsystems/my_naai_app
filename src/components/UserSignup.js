@@ -62,7 +62,7 @@ const UserSignup = ({ navigation }) => {
   };
 
   return (
-    <ImageBackground source={BG_IMAGE} style={styles.bg}>
+   // <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
         <SafeAreaView style={{ flex: 1 }}>
           {/* <View style={styles.header}>
@@ -154,7 +154,7 @@ const UserSignup = ({ navigation }) => {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </View>
-    </ImageBackground>
+    // </ImageBackground>
   );
 };
 
@@ -163,7 +163,7 @@ export default UserSignup;
 /* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.50)' },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.99)' },
   container: {
     flex: 1,
     paddingHorizontal: 24,
