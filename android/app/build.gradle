@@ -83,8 +83,8 @@ android {
         applicationId "com.mynaai"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 32
-        versionName "1.3.1"
+        versionCode 33
+        versionName "1.4.1"
     }
     signingConfigs {
         debug {
