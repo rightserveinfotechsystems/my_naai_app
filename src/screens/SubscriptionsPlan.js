@@ -18,19 +18,19 @@ const plans = [
   {
     id: "trial_2_months",
     title: "Introductory",
-    price: "₹179",
+    price: "₹299",
     duration: "2 Months (60 Days)",
   },
   {
     id: "monthly",
     title: "Monthly Plan",
-    price: "₹99",
+    price: "₹199",
     duration: "Per Month",
   },
   {
     id: "quarterly",
     title: "Quarterly Plan",
-    price: "₹249",
+    price: "₹499",
     duration: "3 Months (90 Days)",
     best: true,
   },
@@ -207,7 +207,7 @@ const SubscriptionsPlan = ({ navigation, route, onLoginSuccess }) => {
 
           <Text allowFontScaling={false}style={styles.price}>₹ 00</Text>
 
-          <Text allowFontScaling={false}style={styles.duration}>{`7 days`}</Text>
+          <Text allowFontScaling={false}style={styles.duration}>{`20 days`}</Text>
         </TouchableOpacity>
       )}
       {plans.map(plan => (
