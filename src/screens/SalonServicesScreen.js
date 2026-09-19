@@ -137,7 +137,15 @@ const SalonServicesScreen = ({ route, navigation }) => {
                     disabled={selectedServices.length === 0}
                 >
 
-                    <Text allowFontScaling={false} style={styles.bookText}>Continue</Text>
+                    <Text
+                        allowFontScaling={false}
+                        style={[
+                            styles.bookText,
+                            selectedServices.length === 0 && styles.bookTextDisabled
+                        ]}
+                    >
+                        Continue
+                    </Text>
                 </TouchableOpacity>
             </View>
 
@@ -232,8 +240,14 @@ const styles = StyleSheet.create({
         bottom: 2,
         right: 0,
     },
+    // Disabled "Continue" must stay gold-family (like the web's dimmed
+    // primary), not wash into a gray — opacity over the dark bar read gray.
     bookBtnDisabled: {
-        opacity: 0.4,
+        backgroundColor: '#8D7353',
+    },
+
+    bookTextDisabled: {
+        color: '#B7BEBE',
     },
     servicePrice: {
         color: '#E8B97E',

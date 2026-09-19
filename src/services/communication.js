@@ -464,6 +464,30 @@ export const communication = {
             throw error;
         }
     },
+    // Salon Queue → "Update time": the salon moves the time of a booking it has
+    // ALREADY accepted and the customer is notified. Same endpoint + payload as
+    // the web platform (my-naai-web → src/lib/api.js, salonUpdateBookingTime):
+    //   time   — the new wall clock ('HH:mm:ss'), stored as-is by the server.
+    //   date   — the slot's own day, so a change that crosses midnight is exact.
+    //   reason — the salon's optional note, quoted in the customer's message.
+    // This is NOT the owner-action (accept/reject/delay) booking-request flow.
+    salonUpdateBookingTime: async (bookingId, { time, date, reason } = {}) => {
+        try {
+            const response = await api.post(`/api/booking/salon/queue/update-time/${bookingId}`, {
+                time,
+                ...(date ? { date } : {}),
+                ...(reason ? { reason } : {}),
+            }, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
     salonProfile: async ({ salonId }) => {
         try {
             const response = await api.post(`/api/salons/get-salon`, { salonId }, {

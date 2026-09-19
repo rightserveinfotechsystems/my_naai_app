@@ -16,6 +16,8 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication,getServerUrl } from '../services/communication';
 import Skeleton from '../utilities/Skeleton';
+import SalonQueueUpdateTimeModal from '../components/SalonQueueUpdateTimeModal';
+import { describeOffset } from '../utilities/bookingTime';
 import { useFocusEffect } from '@react-navigation/native';
 import moment from 'moment';
 import { wp, hp } from '../utils/AppScreen';
@@ -36,6 +38,12 @@ const SalonDashboard = ({ navigation }) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [notificationCount, setNotificationCount] = useState(0);
+  // Salon Queue → "Update time" (same flow as the web platform): the customer
+  // is already booked and confirmed, and the salon is moving *that* time. It
+  // has its own endpoint addressed by bookingId, and the customer is told —
+  // not asked — to come earlier or later.
+  const [timeTarget, setTimeTarget] = useState(null);
+  const [savingTime, setSavingTime] = useState(false);
 
   /* ---------------- USER INFO ---------------- */
   const userByIdInfo = async () => {
@@ -147,6 +155,43 @@ const SalonDashboard = ({ navigation }) => {
     );
   };
 
+  /* ---------------- UPDATE BOOKING TIME (web: UpdateTimeModal) ---------------- */
+  const submitTimeUpdate = async ({ preview, reason }) => {
+    const booking = timeTarget;
+    const bookingId = booking?.bookingId;
+    if (!booking || !preview || !bookingId) {
+      Alert.alert('Error', 'This booking cannot be updated. Refresh the queue and try again.');
+      return;
+    }
+    setSavingTime(true);
+    try {
+      const response = await communication.salonUpdateBookingTime(bookingId, {
+        time: preview.apiTime,
+        date: preview.apiDate,
+        reason,
+      });
+      if (response?.status && response.status !== 'SUCCESS') {
+        throw new Error(response.message || 'Could not update the appointment time.');
+      }
+      // The row moves optimistically, then the queue is re-read so the row
+      // reflects whatever the server actually stored, and so the group
+      // (Today/Tomorrow) is right after a day cross.
+      setCustomers(current => current.map(item => (item.bookingId === booking.bookingId
+        ? { ...item, bookingTime: preview.apiTime, bookingDate: preview.apiDate }
+        : item)));
+      setTimeTarget(null);
+      Alert.alert(
+        'Time updated',
+        `${booking.userName || 'Customer'} notified — new time ${preview.updatedLabel} (${describeOffset(preview.offsetMinutes)}).`
+      );
+      getCustomerList(1, false);
+    } catch (error) {
+      Alert.alert('Error', error?.response?.data?.message || error?.message || 'Could not update the appointment time.');
+    } finally {
+      setSavingTime(false);
+    }
+  };
+
   /* ---------------- EFFECTS ---------------- */
   useEffect(() => {
     userByIdInfo();
@@ -245,12 +290,25 @@ const SalonDashboard = ({ navigation }) => {
               {item?.userName || 'Guest'}
             </Text>
 
-            <TouchableOpacity
-              style={styles.doneBtn}
-              onPress={() => handleBookingDone(item.bookingId)}
-            >
-              <Text allowFontScaling={false} style={styles.doneText}>Done</Text>
-            </TouchableOpacity>
+            {/* Same actions as the web queue card: "Update time" (secondary) + "Done" (primary). */}
+            <View style={styles.cardActions}>
+              <TouchableOpacity
+                style={[styles.updateBtn, !item.bookingTime && styles.updateBtnDisabled]}
+                disabled={!item.bookingTime}
+                activeOpacity={0.7}
+                onPress={() => setTimeTarget(item)}
+              >
+                <Ionicons name="time-outline" size={13} color="#F8F8F5" />
+                <Text allowFontScaling={false} style={styles.updateText}>Update time</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.doneBtn}
+                onPress={() => handleBookingDone(item.bookingId)}
+              >
+                <Text allowFontScaling={false} style={styles.doneText}>Done</Text>
+              </TouchableOpacity>
+            </View>
 
           </View>
 
@@ -408,6 +466,15 @@ const SalonDashboard = ({ navigation }) => {
               }
             />
           )}
+
+          {/* Salon Queue → "Update time" sheet (same fields + API as the web platform). */}
+          <SalonQueueUpdateTimeModal
+            booking={timeTarget}
+            open={Boolean(timeTarget)}
+            onClose={() => setTimeTarget(null)}
+            onSubmit={submitTimeUpdate}
+            saving={savingTime}
+          />
         </SafeAreaView>
       </View>
     // </ImageBackground>
@@ -497,7 +564,8 @@ const styles = StyleSheet.create({
   name: {
     color: '#fff',
     fontSize: wp(4),
-    fontWeight: '700'
+    fontWeight: '700',
+    flexShrink: 1
   },
 
   subText: {
@@ -518,6 +586,37 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: wp(3),
     fontWeight: '600'
+  },
+
+  /* Web queue-card actions: secondary "Update time" + primary "Done".
+     Colours from the web palette (card-raised #1C2121, line, white text). */
+  cardActions: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+
+  updateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1C2121',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: wp(5),
+    paddingVertical: hp(.8),
+    paddingHorizontal: wp(3),
+    marginRight: wp(2),
+    alignSelf: 'center'
+  },
+
+  updateText: {
+    color: '#F8F8F5',
+    fontSize: wp(3),
+    fontWeight: '600',
+    marginLeft: wp(1)
+  },
+
+  updateBtnDisabled: {
+    opacity: 0.55
   },
 
   empty: {
