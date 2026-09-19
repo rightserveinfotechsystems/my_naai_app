@@ -680,7 +680,7 @@ export default NaaiDashboard;
 /* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.99)' },
+  overlay: { flex: 1, backgroundColor: '#080A0A' },
   container: {
     flex: 1,
     paddingHorizontal: wp(4),
@@ -819,7 +819,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: hp(1),
     left: 0,
-    backgroundColor: '#fff',
+    backgroundColor: '#F1E8DD',
     paddingHorizontal: wp(2.5),
     paddingVertical: hp(0.5),
     borderRadius: wp(2.5),
@@ -829,7 +829,7 @@ const styles = StyleSheet.create({
   distanceBadgeText: {
     fontSize: wp(3),
     fontWeight: '700',
-    color: '#000',
+    color: '#111',
   },
   bookmarkBtn: {
     position: 'absolute',

@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   bg: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.99)', },
+  overlay: { flex: 1, backgroundColor: '#080A0A', },
 
   header: {
     position: 'absolute',

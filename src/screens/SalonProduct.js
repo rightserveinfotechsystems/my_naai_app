@@ -420,7 +420,7 @@ export default SalonProduct;
 
 
 const styles = StyleSheet.create({
-    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.99)',  },
+    overlay: { flex: 1, backgroundColor: '#080A0A',  },
     container: { flex: 1, paddingHorizontal: 14, },
     title: {
     color: '#fff',

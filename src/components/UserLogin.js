@@ -206,7 +206,7 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
 
 
   return (
-    <ImageBackground source={BG_IMAGE} style={styles.bg}>
+    // <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
         <SafeAreaView style={{ flex: 1 }}>
           <KeyboardAvoidingView
@@ -369,7 +369,7 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </View>
-    </ImageBackground>
+    // </ImageBackground>
   );
 };
 
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: '#080A0A', // web --black: flat on mobile (web hides the auth image below the breakpoint)
   },
 
   container: {

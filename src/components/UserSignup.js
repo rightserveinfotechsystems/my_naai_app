@@ -163,7 +163,7 @@ export default UserSignup;
 /* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.99)' },
+  overlay: { flex: 1, backgroundColor: '#080A0A' },
   container: {
     flex: 1,
     paddingHorizontal: 24,
