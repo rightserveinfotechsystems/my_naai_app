@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getMessaging, getToken } from '@react-native-firebase/messaging'; 
+import getFcmDeviceToken from '../utilities/getFcmToken';
 import { communication } from '../services/communication';
 
 
@@ -83,23 +83,8 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
 
     /* ---------- 🚀 RELIABLE DEVICE TOKEN FETCH ---------- */
   const getDeviceToken = async () => {
-    try {
-      // 1. First check AsyncStorage
-      let token = await AsyncStorage.getItem('FCM_TOKEN');
-      if (token) return token;
-
-      // 2. Direct FCM call if missing from storage
-      const messaging = getMessaging();
-      token = await getToken(messaging);
-      
-      if (token) {
-        await AsyncStorage.setItem('FCM_TOKEN', token);
-        return token;
-      }
-    } catch (err) {
-      console.log("FCM Token fetch error inside screen:", err);
-    }
-    return '';
+    // Cache-first, retries on transient SERVICE_NOT_AVAILABLE, never blocks login.
+    return await getFcmDeviceToken();
   };
 
   async function createAccount() {

@@ -21,7 +21,7 @@ import {
 
 import {SafeAreaView} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getMessaging, getToken } from '@react-native-firebase/messaging';
+import getFcmDeviceToken from '../utilities/getFcmToken';
 import {communication} from '../services/communication';
 
 const RESEND_TIME = 30;
@@ -133,26 +133,8 @@ const SalonOtpScreen = ({route}) => {
 
   /* ---------- 🚀 SAFE DEVICE TOKEN FETCH (NON-BLOCKING) ---------- */
   const getDeviceToken = async () => {
-    try {
-      // 1. Check cached storage token first
-      let token = await AsyncStorage.getItem('FCM_TOKEN');
-      if (token) return token;
-
-      // 2. Direct FCM call wrapped in defensive try-catch to prevent SERVICE_NOT_AVAILABLE crashes
-      try {
-        const messaging = getMessaging();
-        token = await getToken(messaging);
-        if (token) {
-          await AsyncStorage.setItem('FCM_TOKEN', token);
-          return token;
-        }
-      } catch (fcmError) {
-        console.log("FCM Play Services background connection offline, skipping token:", fcmError?.message);
-      }
-    } catch (err) {
-      console.log("Storage token fetch error:", err);
-    }
-    return ''; // Return empty string so verification still succeeds!
+    // Cache-first, retries on transient SERVICE_NOT_AVAILABLE, never blocks login.
+    return await getFcmDeviceToken();
   };
 
   /* ---------- VERIFY OTP ---------- */
