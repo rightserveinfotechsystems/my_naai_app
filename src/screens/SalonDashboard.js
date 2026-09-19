@@ -369,10 +369,11 @@ const SalonDashboard = ({ navigation }) => {
   const EmptyState = () => (
     <View style={styles.empty}>
 
+      {/* Web empty state uses a gold icon, so no grey here either. */}
       <Ionicons
         name="people-outline"
         size={wp(15)}
-        color="#666"
+        color="#E8B97E"
       />
       <Text allowFontScaling={false} style={styles.emptyText}>No customers in queue</Text>
     </View>
@@ -429,7 +430,7 @@ const SalonDashboard = ({ navigation }) => {
               }}
               keyExtractor={(_, index) => index.toString()}
               renderItem={null}
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E1B378" />}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E8B97E" />}
               ListHeaderComponent={
                 <>
                   {todayBookings.length > 0 && (
@@ -462,7 +463,7 @@ const SalonDashboard = ({ navigation }) => {
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.5}
               ListFooterComponent={
-                loadingMore && <ActivityIndicator size="small" color="#E1B378" style={{ marginVertical: 20 }} />
+                loadingMore && <ActivityIndicator size="small" color="#E8B97E" style={{ marginVertical: 20 }} />
               }
             />
           )}
@@ -519,7 +520,7 @@ const styles = StyleSheet.create({
   },
 
   iconBtn: {
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
     width: wp(9),
     height: wp(9),
     borderRadius: wp(4.5),
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     borderRadius: wp(4),
     marginBottom: hp(1.8)
   },
@@ -569,13 +570,13 @@ const styles = StyleSheet.create({
   },
 
   subText: {
-    color: '#AAA',
+    color: '#B7BEBE',
     fontSize: wp(3.3),
     marginLeft: wp(2)
   },
 
   doneBtn: {
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
     borderRadius: wp(5),
     paddingVertical: hp(.8),
     paddingHorizontal: wp(4),
@@ -625,7 +626,7 @@ const styles = StyleSheet.create({
   },
 
   emptyText: {
-    color: '#777',
+    color: '#899191',
     marginTop: hp(1),
     fontSize: wp(3.5)
   },
@@ -645,7 +646,7 @@ const styles = StyleSheet.create({
   },
 
   sectionHeader: {
-    color: '#E1B378',
+    color: '#E8B97E',
     fontSize: wp(4.5),
     fontWeight: '700',
     marginVertical: hp(1)

@@ -25,7 +25,7 @@ const UserNotifications = ({ route, navigation }) => {
     // useLayoutEffect(() => {
     //     navigation.setOptions({
     //         title: 'Notifications',
-    //         headerStyle: { backgroundColor: '#121212' },
+    //         headerStyle: { backgroundColor: '#080A0A' },
     //         headerTintColor: '#fff',
     //     });
     // }, [navigation]);
@@ -102,7 +102,7 @@ const UserNotifications = ({ route, navigation }) => {
     /* ---------------- EMPTY ---------------- */
     const EmptyState = () => (
         <View style={styles.empty}>
-            <Ionicons name="notifications-off-outline" size={50} color="#666" />
+            <Ionicons name="notifications-off-outline" size={50} color="#899191" />
             <Text allowFontScaling={false}style={styles.emptyText}>No notifications yet</Text>
         </View>
     );
@@ -121,7 +121,7 @@ const UserNotifications = ({ route, navigation }) => {
                 <Text allowFontScaling={false}style={styles.headerTitle}>Notifications</Text>
             </View>
             {loading ? (
-                <ActivityIndicator size="large" color="#E1B378" style={{ marginTop: 40 }} />
+                <ActivityIndicator size="large" color="#E8B97E" style={{ marginTop: 40 }} />
             ) : (
                 <FlatList
                     data={notifications}
@@ -132,7 +132,7 @@ const UserNotifications = ({ route, navigation }) => {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            tintColor="#E1B378"
+                            tintColor="#E8B97E"
                         />
                     }
                     ListEmptyComponent={<EmptyState />}
@@ -142,7 +142,7 @@ const UserNotifications = ({ route, navigation }) => {
                         loadingMore && (
                             <ActivityIndicator
                                 size="small"
-                                color="#E1B378"
+                                color="#E8B97E"
                                 style={{ marginVertical: 20 }}
                             />
                         )
@@ -158,7 +158,7 @@ export default UserNotifications;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#121212',
+        backgroundColor: '#080A0A',
     },
 
     /* 🔥 HEADER */
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 0.5,
-        borderBottomColor: '#2a2a2a',
+        borderBottomColor: '#1C2121',
         marginBottom: 10,
     },
 
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
 
     /* 🔥 CARD */
     card: {
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#171B1B',
         borderRadius: 16,
         padding: 14,
         marginBottom: 12,
@@ -201,14 +201,14 @@ const styles = StyleSheet.create({
     },
 
     message: {
-        color: '#bbb',
+        color: '#B7BEBE',
         fontSize: 13.5,
         marginTop: 4,
         lineHeight: 18,
     },
 
     time: {
-        color: '#888',
+        color: '#899191',
         fontSize: 11,
         marginTop: 6,
     },
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     },
 
     emptyText: {
-        color: '#777',
+        color: '#899191',
         marginTop: 10,
         fontSize: 13,
     },

@@ -11,8 +11,8 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { wp, hp } from '../utils/AppScreen';
 
-const GOLD = '#E1B378';
-const DARK = '#121212';
+const GOLD = '#E8B97E';
+const DARK = '#080A0A';
 
 const SalonServicesScreen = ({ route, navigation }) => {
     const insets = useSafeAreaInsets();
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     },
 
     serviceCard: {
-        backgroundColor: '#2A2A2A',
+        backgroundColor: '#1C2121',
         paddingHorizontal: wp(3),
         borderRadius: wp(4),
         width: wp(44),
@@ -211,10 +211,10 @@ const styles = StyleSheet.create({
         right: 0,
         paddingHorizontal: wp(4),
         paddingTop: hp(1.5),
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#171B1B',
         elevation: 20
         // borderTopWidth: 1,
-        // borderTopColor: '#2A2A2A',
+        // borderTopColor: '#1C2121',
     },
 
     bookBtn: {

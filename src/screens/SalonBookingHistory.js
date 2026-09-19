@@ -123,7 +123,7 @@ const CustomerBookingHistory = () => {
 
 
   const renderItem = ({ item }) => {
-    // const statusColor = '#4CAF50'; 
+    // const statusColor = '#6ED19E'; 
 
     return (
       <View style={styles.card}>
@@ -190,7 +190,7 @@ const CustomerBookingHistory = () => {
   /* ---------------- EMPTY STATE ---------------- */
   const EmptyState = () => (
     <View style={styles.empty}>
-      <Ionicons name="calendar-outline" size={60} color="#555" />
+      <Ionicons name="calendar-outline" size={60} color="#E8B97E" />
       <Text allowFontScaling={false}style={styles.emptyText}>No bookings found</Text>
     </View>
   );
@@ -210,7 +210,7 @@ const CustomerBookingHistory = () => {
 
           {/* {WEEKLY_CUSTOMERS.length === 0 ? (
             <View style={styles.emptyBox}>
-              <Ionicons name="people-outline" size={48} color="#777" />
+              <Ionicons name="people-outline" size={48} color="#899191" />
               <Text allowFontScaling={false}style={styles.emptyText}>
                 No customers in the last 7 days
               </Text>
@@ -246,7 +246,7 @@ const CustomerBookingHistory = () => {
                 <RefreshControl
                   refreshing={refreshing}
                   onRefresh={onRefresh}
-                  tintColor="#E1B378"
+                  tintColor="#E8B97E"
                 />
               }
               ListEmptyComponent={<EmptyState />}
@@ -256,7 +256,7 @@ const CustomerBookingHistory = () => {
                 loadingMore && (
                   <ActivityIndicator
                     size="small"
-                    color="#E1B378"
+                    color="#E8B97E"
                     style={{ marginVertical: 20 }}
                   />
                 )
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     borderRadius: 16,
     marginBottom: 14,
   },
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   },
 
   subText: {
-    color: '#AAA',
+    color: '#B7BEBE',
     fontSize: 13,
     marginLeft: 8,
   },
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   },
 
   emptyText: {
-    color: '#999',
+    color: '#B7BEBE',
     marginTop: 12,
     fontSize: 14,
   },
@@ -378,14 +378,14 @@ const styles = StyleSheet.create({
     marginTop: 80,
   },
   emptyText: {
-    color: '#777',
+    color: '#899191',
     fontSize: 14,
     marginTop: 10,
   },
 
   skeletonCard: {
     height: 110,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     borderRadius: 20,
     marginBottom: 16,
     opacity: 0.6,

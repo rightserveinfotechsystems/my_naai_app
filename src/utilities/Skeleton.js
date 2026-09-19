@@ -57,18 +57,20 @@ const Skeleton = ({ height = 100, borderRadius = 20, style }) => {
 
 export default Skeleton;
 
+// Web skeleton colours: base --card #171B1B family (#1C2221) with a #27302E
+// shimmer wave — no grey.
 const styles = StyleSheet.create({
   skeletonCard: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2221',
     marginBottom: 16,
     overflow: 'hidden',
   },
   base: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2221',
   },
   wave: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#3D3D3D',
+    backgroundColor: '#27302E',
   },
 });

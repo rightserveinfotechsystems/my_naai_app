@@ -71,9 +71,9 @@ console.log("bookingRequestId, delayMinutes, proposedTime",bookingRequestId, del
           onPress={() => handleCustomerAction("ACCEPT")}
         >
           {loading && selectedAction === "ACCEPT" ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#09120D" />
           ) : (
-            <Text allowFontScaling={false}style={styles.btnText}>Accept</Text>
+            <Text allowFontScaling={false}style={styles.acceptText}>Accept</Text>
           )}
         </TouchableOpacity>
 
@@ -86,9 +86,9 @@ console.log("bookingRequestId, delayMinutes, proposedTime",bookingRequestId, del
           onPress={() => handleCustomerAction("REJECT")}
         >
           {loading && selectedAction === "REJECT" ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#190909" />
           ) : (
-            <Text allowFontScaling={false}style={styles.btnText}>Reject</Text>
+            <Text allowFontScaling={false}style={styles.rejectText}>Reject</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -100,27 +100,27 @@ console.log("bookingRequestId, delayMinutes, proposedTime",bookingRequestId, del
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F0F0F',
+    backgroundColor: '#080A0A',
     padding: 20,
   },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0F0F0F',
+    backgroundColor: '#080A0A',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#E1B378',
+    color: '#E8B97E',
     marginBottom: 25,
   },
   card: {
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#1C2121',
     padding: 20,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E1B378',
+    borderColor: '#E8B97E',
   },
   message: {
     fontSize: 17,
@@ -128,12 +128,12 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   highlight: {
-    color: '#E1B378',
+    color: '#E8B97E',
     fontWeight: 'bold',
   },
   subMessage: {
     marginTop: 15,
-    color: '#aaa',
+    color: '#B7BEBE',
     fontSize: 14,
   },
   buttonRow: {
@@ -142,21 +142,29 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   acceptBtn: {
-    backgroundColor: '#1DB954',
+    backgroundColor: '#6ED19E',
     flex: 0.48,
     padding: 16,
     borderRadius: 10,
     alignItems: 'center',
   },
   rejectBtn: {
-    backgroundColor: '#E53935',
+    backgroundColor: '#F27B74',
     flex: 0.48,
     padding: 16,
     borderRadius: 10,
     alignItems: 'center',
   },
-  btnText: {
-    color: '#fff',
+  // Web uses dark ink on the success/danger buttons (.btn-success #09120d,
+  // .btn-danger #190909), so the brighter green/red need dark labels.
+  acceptText: {
+    color: '#09120D',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+
+  rejectText: {
+    color: '#190909',
     fontWeight: 'bold',
     fontSize: 15,
   },

@@ -80,7 +80,7 @@ const UserSignup = ({ navigation }) => {
             <View style={styles.inputBox}>
               <TextInput allowFontScaling={false}
                 placeholder="User name"
-                placeholderTextColor="#999"
+                placeholderTextColor="#B7BEBE"
                 value={name}
                 onChangeText={setName}
                 style={styles.input}
@@ -90,7 +90,7 @@ const UserSignup = ({ navigation }) => {
             {/* <View style={styles.inputBox}>
               <TextInput allowFontScaling={false}
                 placeholder="Phone number"
-                placeholderTextColor="#999"
+                placeholderTextColor="#B7BEBE"
                 keyboardType="number-pad"
                 maxLength={10}
                 value={mobile}
@@ -104,7 +104,7 @@ const UserSignup = ({ navigation }) => {
 
                 <TextInput allowFontScaling={false}
                   placeholder="Phone number"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#B7BEBE"
                   keyboardType="number-pad"
                   maxLength={10}
                   value={mobile}
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   inputBox: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 54,
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   footer: {
-    color: '#aaa',
+    color: '#B7BEBE',
     fontSize: 16,
     textAlign: 'center',
     marginTop: 24,
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     marginVertical: 24,
   },
 

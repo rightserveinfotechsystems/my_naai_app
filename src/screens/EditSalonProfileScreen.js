@@ -46,14 +46,14 @@ import {
 import { STATE_OPTIONS } from '../utilities/stateArray';
 
 const GOLD = '#E8B97E';
-const DARK = '#101010';
-const CARD = '#1D1D1D';
-const INPUT = '#292929';
+const DARK = '#080A0A';
+const CARD = '#171B1B';
+const INPUT = '#1C2121';
 const WHITE = '#FFFFFF';
-const MUTED = '#B5B5B5';
-const BORDER = '#3A3A3A';
-const GREEN = '#43A047';
-const RED = '#E53935';
+const MUTED = '#B7BEBE';
+const BORDER = 'rgba(255,255,255,0.08)';
+const GREEN = '#6ED19E';
+const RED = '#F27B74';
 
 const MAX_IMAGE_MB = 2;
 const MAX_IMAGES = 4;
@@ -1605,7 +1605,7 @@ const toggleBarber = barberId => {
               value={ownerName}
               onChangeText={setOwnerName}
               placeholder="Enter salon owner name"
-              placeholderTextColor="#8D8D8D"
+              placeholderTextColor="#899191"
             />
 
             <FieldLabel
@@ -1634,7 +1634,7 @@ const toggleBarber = barberId => {
                 maxLength={10}
                 editable={!profileData?.phoneNumber}
                 placeholder="Enter mobile number"
-                placeholderTextColor="#8D8D8D"
+                placeholderTextColor="#899191"
               />
             </View>
 
@@ -1648,7 +1648,7 @@ const toggleBarber = barberId => {
               keyboardType="email-address"
               autoCapitalize="none"
               placeholder="Enter email address"
-              placeholderTextColor="#8D8D8D"
+              placeholderTextColor="#899191"
             />
           </View>
         ) : null}
@@ -1711,7 +1711,7 @@ const toggleBarber = barberId => {
               value={salonName}
               onChangeText={setSalonName}
               placeholder="Enter salon name"
-              placeholderTextColor="#8D8D8D"
+              placeholderTextColor="#899191"
             />
 
             <FieldLabel
@@ -1759,7 +1759,7 @@ const toggleBarber = barberId => {
               keyboardType="number-pad"
               maxLength={10}
               placeholder="Optional 10-digit agent code"
-              placeholderTextColor="#8D8D8D"
+              placeholderTextColor="#899191"
             />
           </View>
         ) : null}
@@ -1837,7 +1837,7 @@ const toggleBarber = barberId => {
               value={addressLine1}
               onChangeText={setAddressLine1}
               placeholder="House number, building, road and area"
-              placeholderTextColor="#8D8D8D"
+              placeholderTextColor="#899191"
               multiline
               numberOfLines={3}
               textAlignVertical="top"
@@ -1851,7 +1851,7 @@ const toggleBarber = barberId => {
               value={addressLine2}
               onChangeText={setAddressLine2}
               placeholder="Nearby landmark"
-              placeholderTextColor="#8D8D8D"
+              placeholderTextColor="#899191"
             />
 
             <FieldLabel label="State" />
@@ -1892,7 +1892,7 @@ const toggleBarber = barberId => {
                   value={city}
                   onChangeText={setCity}
                   placeholder="City"
-                  placeholderTextColor="#8D8D8D"
+                  placeholderTextColor="#899191"
                 />
               </View>
 
@@ -1911,7 +1911,7 @@ const toggleBarber = barberId => {
                   keyboardType="number-pad"
                   maxLength={6}
                   placeholder="Pincode"
-                  placeholderTextColor="#8D8D8D"
+                  placeholderTextColor="#899191"
                 />
               </View>
             </View>
@@ -1998,7 +1998,7 @@ const toggleBarber = barberId => {
                   <Ionicons
                     name="warning-outline"
                     size={24}
-                    color="#FFB74D"
+                    color="#F3C86E"
                   />
 
                   <Text
@@ -2583,7 +2583,7 @@ const toggleBarber = barberId => {
                           )
                         }
                         placeholder="Service name"
-                        placeholderTextColor="#8D8D8D"
+                        placeholderTextColor="#899191"
                       />
 
                       <View style={styles.twoColumnRow}>
@@ -2606,7 +2606,7 @@ const toggleBarber = barberId => {
                             }
                             keyboardType="decimal-pad"
                             placeholder="₹ Price"
-                            placeholderTextColor="#8D8D8D"
+                            placeholderTextColor="#899191"
                           />
                         </View>
 
@@ -2626,7 +2626,7 @@ const toggleBarber = barberId => {
                             }
                             keyboardType="number-pad"
                             placeholder="Minutes"
-                            placeholderTextColor="#8D8D8D"
+                            placeholderTextColor="#899191"
                           />
                         </View>
                       </View>
@@ -2648,7 +2648,7 @@ const toggleBarber = barberId => {
                           )
                         }
                         placeholder="Optional description"
-                        placeholderTextColor="#8D8D8D"
+                        placeholderTextColor="#899191"
                         multiline
                         textAlignVertical="top"
                       />
@@ -2833,8 +2833,8 @@ const toggleBarber = barberId => {
                           {
                             color:
                               barber.isAvailable !== false
-                                ? '#81C784'
-                                : '#EF9A9A',
+                                ? '#6ED19E'
+                                : '#F27B74',
                           },
                         ]}
                       >
@@ -2907,7 +2907,7 @@ const toggleBarber = barberId => {
                               )
                             }
                             placeholder="Barber name"
-                            placeholderTextColor="#8D8D8D"
+                            placeholderTextColor="#899191"
                           />
                         </View>
                       </View>
@@ -3296,7 +3296,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#171717',
+    backgroundColor: '#0C0F0F',
     borderBottomWidth: 1,
     borderBottomColor: BORDER,
     zIndex: 10,
@@ -3306,9 +3306,9 @@ const styles = StyleSheet.create({
     width: 41,
     height: 41,
     borderRadius: 21,
-    backgroundColor: '#292929',
+    backgroundColor: '#1C2121',
     borderWidth: 1,
-    borderColor: '#444',
+    borderColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -3331,7 +3331,7 @@ const styles = StyleSheet.create({
   },
 
   headerSubtitle: {
-    color: '#AAAAAA',
+    color: '#B7BEBE',
     fontSize: 11,
     marginTop: 3,
     fontWeight: '500',
@@ -3345,10 +3345,10 @@ const styles = StyleSheet.create({
   },
 
   sectionCard: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#111414',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: '#252B2B',
     marginBottom: 12,
     overflow: 'hidden',
   },
@@ -3390,7 +3390,7 @@ const styles = StyleSheet.create({
   },
 
   sectionSubtitle: {
-    color: '#AFAFAF',
+    color: '#899191',
     fontSize: 11,
     fontWeight: '500',
     marginTop: 3,
@@ -3406,7 +3406,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     paddingBottom: 15,
     borderTopWidth: 1,
-    borderTopColor: '#303030',
+    borderTopColor: 'rgba(255,255,255,0.08)',
   },
 
   headerAddButton: {
@@ -3427,7 +3427,7 @@ const styles = StyleSheet.create({
     minWidth: 25,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#333333',
+    backgroundColor: '#252B2B',
     marginLeft: 8,
     paddingHorizontal: 7,
     justifyContent: 'center',
@@ -3441,7 +3441,7 @@ const styles = StyleSheet.create({
   },
 
   fieldLabel: {
-    color: '#ECECEC',
+    color: '#F8F8F5',
     fontSize: 13,
     fontWeight: '700',
     marginBottom: 7,
@@ -3449,7 +3449,7 @@ const styles = StyleSheet.create({
   },
 
   required: {
-    color: '#FF5252',
+    color: '#F27B74',
   },
 
   input: {
@@ -3506,7 +3506,7 @@ const styles = StyleSheet.create({
     marginRight: 9,
     paddingRight: 9,
     borderRightWidth: 1,
-    borderRightColor: '#555',
+    borderRightColor: 'rgba(255,255,255,0.08)',
   },
 
   phoneInput: {
@@ -3536,7 +3536,7 @@ const styles = StyleSheet.create({
   },
 
   pickerPlaceholder: {
-    color: '#929292',
+    color: '#899191',
   },
 
   pickerIconContainer: {
@@ -3555,11 +3555,11 @@ const styles = StyleSheet.create({
 
   locationContainer: {
     marginTop: 18,
-    backgroundColor: '#202020',
+    backgroundColor: '#111414',
     borderRadius: 13,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#383838',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
 
   locationHeader: {
@@ -3589,7 +3589,7 @@ const styles = StyleSheet.create({
   },
 
   locationSubtitle: {
-    color: '#AFAFAF',
+    color: '#899191',
     fontSize: 10,
     marginTop: 2,
   },
@@ -3597,7 +3597,7 @@ const styles = StyleSheet.create({
   locationStatusCard: {
     minHeight: 59,
     borderRadius: 11,
-    backgroundColor: '#292929',
+    backgroundColor: '#1C2121',
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -3611,15 +3611,15 @@ const styles = StyleSheet.create({
   },
 
   locationSuccessCard: {
-    backgroundColor: '#17351F',
+    backgroundColor: 'rgba(110,209,158,0.1)',
     borderWidth: 1,
-    borderColor: '#2E7D32',
+    borderColor: 'rgba(110,209,158,0.34)',
   },
 
   locationWarningCard: {
     backgroundColor: '#392A16',
     borderWidth: 1,
-    borderColor: '#795548',
+    borderColor: 'rgba(243,200,110,0.4)',
   },
 
   locationCoordinateContent: {
@@ -3628,13 +3628,13 @@ const styles = StyleSheet.create({
   },
 
   locationSuccessTitle: {
-    color: '#A5D6A7',
+    color: '#6ED19E',
     fontSize: 13,
     fontWeight: '900',
   },
 
   coordinateText: {
-    color: '#E8F5E9',
+    color: '#6ED19E',
     fontSize: 10,
     fontWeight: '600',
     marginTop: 3,
@@ -3642,7 +3642,7 @@ const styles = StyleSheet.create({
 
   locationWarningText: {
     flex: 1,
-    color: '#FFE0B2',
+    color: '#F3C992',
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '600',
@@ -3667,7 +3667,7 @@ const styles = StyleSheet.create({
   },
 
   helperText: {
-    color: '#BEBEBE',
+    color: '#B7BEBE',
     fontSize: 11,
     lineHeight: 17,
     marginTop: 12,
@@ -3692,7 +3692,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: GOLD,
-    backgroundColor: '#333',
+    backgroundColor: '#252B2B',
   },
 
   imageEditIcon: {
@@ -3732,7 +3732,7 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     backgroundColor: RED,
     borderWidth: 2,
-    borderColor: '#1A1A1A',
+    borderColor: '#111414',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -3744,7 +3744,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: GOLD,
     borderStyle: 'dashed',
-    backgroundColor: '#232323',
+    backgroundColor: '#1C2121',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 8, /* Equal padding around all sides */
@@ -3804,14 +3804,14 @@ const styles = StyleSheet.create({
   },
 
   placeholderText: {
-    color: '#929292',
+    color: '#899191',
   },
 
   dropdownMenu: {
-    backgroundColor: '#242424',
+    backgroundColor: '#1C2121',
     borderRadius: 11,
     borderWidth: 1,
-    borderColor: '#444',
+    borderColor: 'rgba(255,255,255,0.08)',
     marginTop: 7,
     paddingHorizontal: 7,
     paddingVertical: 3,
@@ -3823,7 +3823,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#363636',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
 
   dropdownOptionText: {
@@ -3835,7 +3835,7 @@ const styles = StyleSheet.create({
 
   defaultServicesButton: {
     minHeight: 43,
-    backgroundColor: '#292929',
+    backgroundColor: '#1C2121',
     borderRadius: 11,
     borderWidth: 1,
     borderColor: GOLD,
@@ -3854,16 +3854,16 @@ const styles = StyleSheet.create({
   },
 
   compactItemCard: {
-    backgroundColor: '#222222',
+    backgroundColor: '#111414',
     borderRadius: 12,
     marginTop: 9,
     borderWidth: 1,
-    borderColor: '#343434',
+    borderColor: '#252B2B',
     overflow: 'hidden',
   },
 
   expandedItemCard: {
-    borderColor: '#665235',
+    borderColor: 'rgba(232,185,126,0.28)',
   },
 
   compactItemHeader: {
@@ -3907,7 +3907,7 @@ const styles = StyleSheet.create({
   },
 
   compactItemSubtitle: {
-    color: '#AAAAAA',
+    color: '#B7BEBE',
     fontSize: 11,
     marginTop: 4,
     fontWeight: '500',
@@ -3917,7 +3917,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingBottom: 12,
     borderTopWidth: 1,
-    borderTopColor: '#343434',
+    borderTopColor: '#252B2B',
   },
 
   deleteItemButton: {
@@ -3926,14 +3926,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#371B1B',
     borderWidth: 1,
-    borderColor: '#632929',
+    borderColor: 'rgba(242,123,116,0.4)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   deleteItemText: {
-    color: '#FF8A80',
+    color: '#F27B74',
     fontSize: 11,
     fontWeight: '800',
     marginLeft: 6,
@@ -3962,7 +3962,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderWidth: 1.5,
     borderColor: GOLD,
-    backgroundColor: '#333',
+    backgroundColor: '#252B2B',
   },
 
   barberStatusText: {
@@ -3989,7 +3989,7 @@ const styles = StyleSheet.create({
     borderRadius: 33,
     borderWidth: 2,
     borderColor: GOLD,
-    backgroundColor: '#333',
+    backgroundColor: '#252B2B',
   },
 
   cameraBadge: {
@@ -4017,12 +4017,12 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 41,
     borderRadius: 10,
-    backgroundColor: '#292929',
+    backgroundColor: '#1C2121',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#444',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
 
   availableButtonActive: {
@@ -4036,7 +4036,7 @@ const styles = StyleSheet.create({
   },
 
   availabilityText: {
-    color: '#D0D0D0',
+    color: '#B7BEBE',
     fontSize: 10,
     fontWeight: '800',
     marginLeft: 5,
@@ -4051,7 +4051,7 @@ const styles = StyleSheet.create({
   },
 
   emptyState: {
-    backgroundColor: '#222222',
+    backgroundColor: '#111414',
     borderRadius: 12,
     minHeight: 100,
     alignItems: 'center',
@@ -4059,20 +4059,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 11,
     borderWidth: 1,
-    borderColor: '#343434',
+    borderColor: '#252B2B',
   },
 
   emptyIconContainer: {
     width: 43,
     height: 43,
     borderRadius: 22,
-    backgroundColor: '#292929',
+    backgroundColor: '#1C2121',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   emptyStateText: {
-    color: '#C2C2C2',
+    color: '#B7BEBE',
     fontSize: 11,
     lineHeight: 17,
     textAlign: 'center',
@@ -4087,9 +4087,9 @@ const styles = StyleSheet.create({
     bottom: Platform.OS === 'ios' ? 12 : 10,
     padding: 6,
     borderRadius: 18,
-    backgroundColor: 'rgba(16,16,16,0.94)',
+    backgroundColor: 'rgba(8,10,10,0.94)',
     borderWidth: 1,
-    borderColor: '#343434',
+    borderColor: '#252B2B',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

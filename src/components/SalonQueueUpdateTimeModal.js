@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     modeBtnActiveText: {
-        color: '#111111',
+        color: '#0C0F0F',
     },
 
     /* .time-update-group-label */
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
         borderColor: C.gold,
     },
     chipActiveText: {
-        color: '#111111',
+        color: '#0C0F0F',
     },
     chipEarlierActive: {
         backgroundColor: C.green,

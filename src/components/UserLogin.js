@@ -231,7 +231,7 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
 
                   <TextInput allowFontScaling={false}
                     placeholder="Mobile Number"
-                    placeholderTextColor="#999"
+                    placeholderTextColor="#B7BEBE"
                     keyboardType="number-pad"
                     maxLength={10}
                     value={mobile}
@@ -247,7 +247,7 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
               <View style={styles.inputBox}>
                 <TextInput allowFontScaling={false}
                   placeholder="Enter OTP"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#B7BEBE"
                   keyboardType="number-pad"
                   maxLength={6}
                   value={otp}
@@ -268,7 +268,7 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
               <View style={styles.inputBox}>
                 <TextInput allowFontScaling={false}
                   placeholder="User name"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#B7BEBE"
                   value={name}
                   onChangeText={setName}
                   style={styles.input}
@@ -401,21 +401,21 @@ const styles = StyleSheet.create({
   },
 
   subtitle: {
-    color: '#BDBDBD',
+    color: '#B7BEBE',
     fontSize: 14,
     marginBottom: 30,
     lineHeight: 20,
   },
 
   // inputBox: {
-  //   backgroundColor: '#1E1E1E',
+  //   backgroundColor: '#171B1B',
   //   borderRadius: 14,
   //   paddingHorizontal: 18,
   //   height: 56,
   //   justifyContent: 'center',
   //   marginBottom: 20,
   //   borderWidth: 1,
-  //   borderColor: '#2A2A2A',
+  //   borderColor: '#1C2121',
   // },
 
   // input: {
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   },
 
   footerText: {
-    color: '#9E9E9E',
+    color: '#899191',
     fontSize: 15,
     textAlign: 'center',
     fontWeight: '500',
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   timerText: {
-    color: '#9E9E9E',
+    color: '#899191',
     fontSize: 13,
     textAlign: 'center',
     marginTop: 16,
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     marginVertical: 24,
   },
 
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
 
   inputBox: {
     width: '100%',
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 54,

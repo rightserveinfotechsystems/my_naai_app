@@ -193,13 +193,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    color: '#aaa',
+    color: '#B7BEBE',
     fontSize: 14,
     textAlign: 'center',
     marginVertical: 14,
   },
   otpInput: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     color: '#fff',
     height: 56,
     borderRadius: 12,
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   timerText: {
-    color: '#888',
+    color: '#899191',
     textAlign: 'center',
     marginTop: 20,
     fontSize: 13,

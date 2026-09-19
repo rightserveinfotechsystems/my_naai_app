@@ -56,7 +56,7 @@ const SplashLogoScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#0F0F0F" barStyle="light-content" />
+      <StatusBar backgroundColor="#080A0A" barStyle="light-content" />
       <Animated.Image
         source={require('../assets/my_naai.png')}
         style={[styles.logo, { opacity: fadeAnim }]}
@@ -71,7 +71,7 @@ export default SplashLogoScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F0F0F',
+    backgroundColor: '#080A0A',
     justifyContent: 'center',
     alignItems: 'center',
   },

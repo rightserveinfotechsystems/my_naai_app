@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
 
   planCard: {
-    backgroundColor: "#1E1E1E",
+    backgroundColor: "#171B1B",
     padding: 20,
     borderRadius: 14,
     marginBottom: 18,
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   },
 
   duration: {
-    color: "#aaa",
+    color: "#B7BEBE",
     fontSize: 14,
     marginTop: 4,
   },

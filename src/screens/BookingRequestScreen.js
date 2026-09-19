@@ -94,9 +94,9 @@ export default function BookingRequestScreen({ route, navigation }) {
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar backgroundColor="#0F0F0F" barStyle="light-content" />
+        <StatusBar backgroundColor="#080A0A" barStyle="light-content" />
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#E1B378" />
+          <ActivityIndicator size="large" color="#E8B97E" />
           {/* <Text allowFontScaling={false}style={{ color: '#fff', marginTop: 15 }}>
             Loading booking details...
           </Text> */}
@@ -111,7 +111,7 @@ export default function BookingRequestScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar backgroundColor="#0F0F0F" barStyle="light-content" />
+      <StatusBar backgroundColor="#080A0A" barStyle="light-content" />
 
       <ScrollView contentContainerStyle={styles.container}>
         <Text allowFontScaling={false}style={styles.title}>New Booking Request</Text>
@@ -155,9 +155,9 @@ export default function BookingRequestScreen({ route, navigation }) {
             onPress={() => handleOwnerAction("ACCEPT")}
           >
             {actionLoading && selectedAction === "ACCEPT" ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#09120D" />
             ) : (
-              <Text allowFontScaling={false}style={styles.btnWhiteText}>Accept</Text>
+              <Text allowFontScaling={false}style={styles.acceptText}>Accept</Text>
             )}
           </TouchableOpacity>
 
@@ -170,9 +170,9 @@ export default function BookingRequestScreen({ route, navigation }) {
             onPress={() => handleOwnerAction("REJECT")}
           >
             {actionLoading && selectedAction === "REJECT" ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#190909" />
             ) : (
-              <Text allowFontScaling={false}style={styles.btnWhiteText}>Reject</Text>
+              <Text allowFontScaling={false}style={styles.rejectText}>Reject</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -205,7 +205,7 @@ export default function BookingRequestScreen({ route, navigation }) {
                   onPress={() => handleOwnerAction("DELAY", min)}
                 >
                   {/* {actionLoading && selectedAction === "DELAY" ? (
-                    <ActivityIndicator color="#E1B378" />
+                    <ActivityIndicator color="#E8B97E" />
                   ) : (
                     <Text allowFontScaling={false}style={styles.timeText}>+{min} Minutes</Text>
                   )} */}
@@ -235,7 +235,7 @@ export default function BookingRequestScreen({ route, navigation }) {
       </ScrollView>
       {actionLoading && (
         <View style={styles.fullScreenLoader}>
-          <ActivityIndicator size="large" color="#E1B378" />
+          <ActivityIndicator size="large" color="#E8B97E" />
           <Text allowFontScaling={false}style={{ color: '#fff', marginTop: 10 }}>
             Processing...
           </Text>
@@ -247,12 +247,12 @@ export default function BookingRequestScreen({ route, navigation }) {
 
 /* ================= STYLES ================= */
 
-const GOLD = '#E1B378';
-const GREEN = '#1DB954';
-const RED = '#E53935';
-const BLACK = '#0F0F0F';
-const DARK_CARD = '#1C1C1C';
-const YELLOW = '#FFC107';
+const GOLD = '#E8B97E';
+const GREEN = '#6ED19E';
+const RED = '#F27B74';
+const BLACK = '#080A0A';
+const DARK_CARD = '#1C2121';
+const YELLOW = '#F3C86E';
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: BLACK },
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
 
   label: {
     fontSize: 13,
-    color: '#888',
+    color: '#899191',
     marginTop: 15,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -334,15 +334,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  btnWhiteText: {
-    color: '#fff',
+  // Web uses dark ink on the success/danger buttons (.btn-success #09120d,
+  // .btn-danger #190909), so the brighter green/red now need dark labels.
+  acceptText: {
+    color: '#09120D',
+    fontWeight: 'bold',
+    fontSize: 15,
+    letterSpacing: 1,
+  },
+
+  rejectText: {
+    color: '#190909',
     fontWeight: 'bold',
     fontSize: 15,
     letterSpacing: 1,
   },
 
   delayText: {
-    color: BLACK,
+    color: '#171106',
     fontWeight: 'bold',
     fontSize: 16,
     letterSpacing: 1,
@@ -389,7 +398,7 @@ const styles = StyleSheet.create({
 
   cancelText: {
     marginTop: 20,
-    color: '#999',
+    color: '#B7BEBE',
     textAlign: 'center',
   },
   fullScreenLoader: {

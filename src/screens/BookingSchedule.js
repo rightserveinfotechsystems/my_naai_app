@@ -282,7 +282,7 @@ const BookingSchedule = ({ route, navigation }) => {
   };
 
   const getStatusColor = isAvailable =>
-    isAvailable ? '#4CAF50' : '#F44336';
+    isAvailable ? '#6ED19E' : '#F27B74';
 
   return (
     <SafeAreaView
@@ -602,7 +602,7 @@ export default BookingSchedule;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#080A0A',
   },
   header: {
     flexDirection: 'row',
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
   },
 
   barberCard: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     borderRadius: wp(4),
     padding: wp(2.5),
     marginRight: wp(3),
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
 
   barberActive: {
     borderWidth: 1,
-    borderColor: '#E1B378',
+    borderColor: '#E8B97E',
   },
 
   barberImg: {
@@ -654,7 +654,7 @@ const styles = StyleSheet.create({
   },
 
   barberInfo: {
-    color: '#AAA',
+    color: '#B7BEBE',
     fontSize: wp(3),
   },
 
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
   },
 
   statusText: {
-    color: '#AAA',
+    color: '#B7BEBE',
     fontSize: wp(3),
   },
 
@@ -686,17 +686,17 @@ const styles = StyleSheet.create({
     width: wp(26),
     height: hp(9),
     borderRadius: wp(4),
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   dateActive: {
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
   },
 
   dateDay: {
-    color: '#AAA',
+    color: '#B7BEBE',
     fontSize: wp(3),
   },
 
@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
 
   timeSlot: {
     width: wp(29),
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     paddingVertical: hp(1.2),
     borderRadius: wp(3),
     marginBottom: hp(1.2),
@@ -726,7 +726,7 @@ const styles = StyleSheet.create({
   },
 
   timeSlotActive: {
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
   },
 
   timeSlotText: {
@@ -744,11 +744,11 @@ const styles = StyleSheet.create({
   },
 
   pastSlot: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
   },
 
   disabledText: {
-    color: '#888',
+    color: '#899191',
   },
 
   bottomBar: {
@@ -758,14 +758,14 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: wp(4),
     paddingTop: hp(1.5),
-    backgroundColor: '#121212',
+    backgroundColor: '#080A0A',
     // borderTopWidth: 1,
-    // borderTopColor: '#2A2A2A',
+    // borderTopColor: '#1C2121',
     elevation: 20,
     zIndex: 100,
   },
   confirmBtn: {
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
     paddingVertical: hp(1.8),
     borderRadius: wp(8),
     alignItems: 'center',
