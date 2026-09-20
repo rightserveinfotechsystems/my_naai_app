@@ -5,14 +5,15 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    ScrollView,
     TextInput,
     ActivityIndicator,
+    Platform,
+    KeyboardAvoidingView,
+    Dimensions,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { hp } from '../utils/AppScreen';
 import {
     EARLIER_OFFSETS,
     LATER_OFFSETS,
@@ -28,9 +29,11 @@ import {
     toInputTime,
 } from '../utilities/bookingTime';
 
-/* ---------------- WEB PLATFORM PALETTE ----------------
-   Same colour combination as my-naai-web (src/styles.css :root), so the
-   salon sees identical branding in the mobile queue as in the web portal. */
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+const IS_SMALL_SCREEN = SCREEN_HEIGHT < 700;
+const IS_VERY_SMALL = SCREEN_HEIGHT < 620;
+
+/* ---------------- PALETTE ---------------- */
 const C = {
     black: '#080A0A',
     panel: '#111414',
@@ -59,37 +62,23 @@ const C = {
     redLine: 'rgba(242,123,116,0.4)',
     redText: '#FFB3AD',
     placeholder: '#8D9695',
-    backdrop: 'rgba(0,0,0,0.76)',
+    backdrop: 'rgba(0,0,0,0.78)',
 };
 
-// Lets a salon move a queued appointment earlier or later and notify the
-// customer, without leaving the queue. The salon reads a real clock time
-// ("6:50 PM"), not just an offset, because that is what it will say to the
-// customer on the phone and what the customer sees in the notification.
-//
-// Fields mirror the web platform's UpdateTimeModal (my-naai-web →
-// src/components/SalonScreens.jsx) 1:1, and the time maths comes from the
-// same library (src/lib/bookingTime.js) so both clients send the same
-// payload to POST /api/booking/salon/queue/update-time/:bookingId.
 export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSubmit, saving }) {
     const insets = useSafeAreaInsets();
 
-    // `mode` decides which control owns the new time, so the two can never
-    // disagree about what will be sent: 'offset' = a chip or the minutes box,
-    // 'exact' = the time picker.
     const [mode, setMode] = useState('offset');
     const [offset, setOffset] = useState(null);
     const [custom, setCustom] = useState('');
     const [exactTime, setExactTime] = useState('');
     const [reason, setReason] = useState('');
     const [showTimePicker, setShowTimePicker] = useState(false);
+    const [showOffsetPicker, setShowOffsetPicker] = useState(false);
 
     const bookingDate = booking?.bookingDate;
     const bookingTime = booking?.bookingTime;
 
-    // Reset whenever a different booking is opened, so the previous customer's
-    // choice can never be sent for this one. The picker starts at the booking's
-    // own time, which is the sensible place to nudge from.
     useEffect(() => {
         if (!open) return;
         setMode('offset');
@@ -99,6 +88,7 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
         const start = parseBookingDateTime(bookingDate, bookingTime);
         setExactTime(start ? toInputTime(start) : '');
         setShowTimePicker(false);
+        setShowOffsetPicker(false);
     }, [open, booking?.bookingId, bookingDate, bookingTime]);
 
     const customOffset = custom.trim() !== '' ? Number(custom) : null;
@@ -111,7 +101,6 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
 
     const currentLabel = formatTime(bookingTime);
     const customInvalid = mode === 'offset' && custom.trim() !== '' && !isValidOffset(customOffset);
-    // Picking the time it is already booked for is a no-op, not an error worth shouting about.
     const exactUnchanged = mode === 'exact' && exactTime && exactOffset === 0;
     const exactOutOfRange = mode === 'exact' && exactTime && exactOffset !== null && exactOffset !== 0 && !isValidOffset(exactOffset);
     const blocked = Boolean(preview?.inPast);
@@ -121,9 +110,9 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
         setMode('offset');
         setOffset(value);
         setCustom('');
+        setShowOffsetPicker(false);
     };
 
-    // Native time picker behind "Pick exact time" (the web uses <input type="time">).
     const pickerBase = parseBookingDateTime(bookingDate, bookingTime) || new Date();
     const pickerDate = (() => {
         if (!exactTime) return pickerBase;
@@ -134,556 +123,512 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
     })();
 
     const safeClose = () => {
-        if (!saving) onClose();
+        if (!saving) {
+            setShowOffsetPicker(false);
+            onClose();
+        }
     };
 
-    const renderChip = value => {
+    const renderDropdownOption = value => {
         const active = mode === 'offset' && effectiveOffset === value;
         const earlier = value < 0;
         return (
             <TouchableOpacity
                 key={value}
                 style={[
-                    styles.chip,
-                    active && !earlier && styles.chipActive,
-                    active && earlier && styles.chipEarlierActive,
+                    styles.dropdownOption,
+                    active && !earlier && styles.dropdownOptionActive,
+                    active && earlier && styles.dropdownOptionEarlierActive,
                 ]}
                 disabled={saving}
-                activeOpacity={0.7}
+                activeOpacity={0.75}
                 onPress={() => pickOffset(value)}
             >
-                <Text style={[styles.chipText, active && !earlier && styles.chipActiveText, active && earlier && styles.chipEarlierActiveText]}>
-                    {earlier ? `${value} min` : `+${value} min`}
+                <Text style={[
+                    styles.dropdownOptionBadge,
+                    active && !earlier && styles.dropdownOptionBadgeActive,
+                    active && earlier && styles.dropdownOptionBadgeEarlier,
+                ]}>
+                    {earlier ? `${value}` : `+${value}`}
                 </Text>
+                <Text style={[
+                    styles.dropdownOptionText,
+                    active && styles.dropdownOptionTextActive
+                ]} numberOfLines={1}>
+                    {describeOffset(value)}
+                </Text>
+                {active && (
+                    <Ionicons name="checkmark-circle" size={14} color={earlier ? C.greenInk : C.ink} style={{ marginLeft: 'auto' }} />
+                )}
             </TouchableOpacity>
         );
     };
 
+    const selectedLabel = effectiveOffset !== null && isValidOffset(effectiveOffset)
+        ? describeOffset(effectiveOffset)
+        : null;
+
+    const selectedShort = effectiveOffset !== null && isValidOffset(effectiveOffset)
+        ? `${effectiveOffset > 0 ? '+' : ''}${effectiveOffset}m`
+        : null;
+
     return (
-        <Modal transparent visible={open} animationType="slide" onRequestClose={safeClose}>
-            <View style={[styles.backdrop, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-                <TouchableOpacity style={styles.backdropTouch} activeOpacity={1} onPress={safeClose} />
-                <View style={styles.sheet}>
-                    <View style={styles.header}>
-                        <Text style={styles.title}>Update appointment time</Text>
-                        <TouchableOpacity style={styles.closeBtn} onPress={safeClose} disabled={saving} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                            <Ionicons name="close" size={22} color={C.mutedLight} />
-                        </TouchableOpacity>
-                    </View>
+        <Modal transparent visible={open} animationType="slide" onRequestClose={safeClose} statusBarTranslucent>
+            <KeyboardAvoidingView
+                style={styles.keyboardAvoid}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                enabled
+            >
+                <View style={styles.backdrop}>
+                    <TouchableOpacity style={styles.backdropTouch} activeOpacity={1} onPress={safeClose} />
 
-                    <ScrollView
-                        style={styles.body}
-                        contentContainerStyle={styles.bodyContent}
-                        keyboardShouldPersistTaps="handled"
-                        keyboardDismissMode="on-drag"
-                        showsVerticalScrollIndicator={false}
-                    >
-                        <Text style={styles.lede}>
-                            Running late, or free earlier than expected? Set the new time for{' '}
-                            <Text style={styles.ledeStrong}>{booking?.userName || 'this customer'}</Text> and My Naai will notify them straight away.
-                        </Text>
+                    <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+                        <View style={styles.handleWrap}>
+                            <View style={styles.handleBar} />
+                        </View>
 
-                        {/* Current booking */}
-                        <View style={styles.currentBox}>
-                            <Ionicons name="time-outline" size={16} color={C.gold} />
-                            <View style={styles.currentTexts}>
-                                <Text style={styles.currentSmall}>Booked for</Text>
-                                <Text style={styles.currentStrong}>
-                                    {bookingDate ? formatDate(bookingDate) : '—'} · {currentLabel}
-                                </Text>
+                        <View style={styles.header}>
+                            <View style={styles.headerLeft}>
+                                <View style={styles.headerIcon}>
+                                    <Ionicons name="time" size={14} color={C.ink} />
+                                </View>
+                                <Text style={styles.title}>Update time</Text>
                             </View>
-                        </View>
-
-                        {/* Mode switch */}
-                        <View style={styles.modeSwitch}>
                             <TouchableOpacity
-                                style={[styles.modeBtn, mode === 'offset' && styles.modeBtnActive]}
+                                style={styles.closeBtn}
+                                onPress={safeClose}
                                 disabled={saving}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                 activeOpacity={0.7}
-                                onPress={() => setMode('offset')}
                             >
-                                <Text style={[styles.modeBtnText, mode === 'offset' && styles.modeBtnActiveText]}>Shift by minutes</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modeBtn, mode === 'exact' && styles.modeBtnActive]}
-                                disabled={saving}
-                                activeOpacity={0.7}
-                                onPress={() => setMode('exact')}
-                            >
-                                <Text style={[styles.modeBtnText, mode === 'exact' && styles.modeBtnActiveText]}>Pick exact time</Text>
+                                <Ionicons name="close" size={18} color={C.mutedLight} />
                             </TouchableOpacity>
                         </View>
 
-                        {mode === 'offset' ? (
-                            <>
-                                <Text style={styles.groupLabel}>Running late — push it later</Text>
-                                <View style={styles.offsetGrid}>
-                                    {LATER_OFFSETS.map(renderChip)}
-                                </View>
-
-                                <Text style={styles.groupLabel}>Free earlier — bring it forward</Text>
-                                <View style={styles.offsetGrid}>
-                                    {EARLIER_OFFSETS.map(renderChip)}
-                                </View>
-
-                                <Text style={styles.fieldLabel}>Or enter minutes</Text>
-                                <Text style={styles.fieldHint}>
-                                    Negative for earlier, e.g. -25. Between {MIN_OFFSET_MINUTES} and {MAX_OFFSET_MINUTES}.
-                                </Text>
-                                <TextInput
-                                    style={[styles.input, customInvalid && styles.inputError]}
-                                    value={custom}
-                                    onChangeText={text => {
-                                        setCustom(text);
-                                        setOffset(null);
-                                        setMode('offset');
-                                    }}
-                                    placeholder="e.g. 25 or -15"
-                                    placeholderTextColor={C.placeholder}
-                                    keyboardType="numbers-and-punctuation"
-                                    maxLength={4}
-                                    editable={!saving}
-                                    autoCorrect={false}
-                                />
-                                {customInvalid && (
-                                    <Text style={styles.errorText}>
-                                        Enter a whole number of minutes, not zero, within the allowed range.
+                        <View style={styles.body}>
+                            {/* Top pills */}
+                            <View style={styles.topRow}>
+                                <View style={styles.customerPill}>
+                                    <Ionicons name="person" size={11} color={C.gold} />
+                                    <Text style={styles.customerText} numberOfLines={1}>
+                                        {booking?.userName || 'Customer'}
                                     </Text>
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                <Text style={styles.fieldLabel}>New start time</Text>
-                                <Text style={styles.fieldHint}>
-                                    Choose the time this customer should arrive. My Naai works out the difference for you.
-                                </Text>
+                                </View>
+                                <View style={styles.currentPill}>
+                                    <Ionicons name="time-outline" size={11} color={C.gold} />
+                                    <Text style={styles.currentText}>{currentLabel}</Text>
+                                </View>
+                                <View style={styles.datePill}>
+                                    <Text style={styles.dateText} numberOfLines={1}>
+                                        {bookingDate ? formatDate(bookingDate) : ''}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* Mode switch */}
+                            <View style={styles.modeSwitch}>
                                 <TouchableOpacity
-                                    style={[styles.input, styles.timeInput, exactOutOfRange && styles.inputError]}
+                                    style={[styles.modeBtn, mode === 'offset' && styles.modeBtnActive]}
                                     disabled={saving}
                                     activeOpacity={0.7}
-                                    onPress={() => setShowTimePicker(true)}
+                                    onPress={() => { setMode('offset'); setShowOffsetPicker(false); }}
                                 >
-                                    <Ionicons name="time-outline" size={16} color={C.gold} />
-                                    <Text style={styles.timeInputText}>
-                                        {exactTime ? formatTime(exactTime) : 'Select time'}
-                                    </Text>
+                                    <Ionicons name="list" size={12} color={mode === 'offset' ? C.ink : C.muted} style={{ marginRight: 4 }} />
+                                    <Text style={[styles.modeBtnText, mode === 'offset' && styles.modeBtnActiveText]}>Quick select</Text>
                                 </TouchableOpacity>
-                                {showTimePicker && (
-                                    <DateTimePicker
-                                        value={pickerDate}
-                                        mode="time"
-                                        // Android: native clock dialog. iOS: inline wheel with a Set
-                                        // button. Both resolve through onChange(date).
-                                        display="default"
-                                        themeVariant="dark"
-                                        onChange={event => {
-                                            setShowTimePicker(false);
-                                            const date = event?.date;
-                                            if (date) {
-                                                const h = date.getHours();
-                                                const m = date.getMinutes();
-                                                setExactTime(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-                                                setMode('exact');
-                                            }
-                                        }}
-                                    />
-                                )}
-                                {exactOutOfRange && (
-                                    <Text style={styles.errorText}>
-                                        That is more than {MAX_OFFSET_MINUTES} minutes away from the booked time. Use a smaller change, or rebook the appointment.
-                                    </Text>
-                                )}
-                            </>
-                        )}
+                                <TouchableOpacity
+                                    style={[styles.modeBtn, mode === 'exact' && styles.modeBtnActive]}
+                                    disabled={saving}
+                                    activeOpacity={0.7}
+                                    onPress={() => { setMode('exact'); setShowOffsetPicker(false); }}
+                                >
+                                    <Ionicons name="time-outline" size={12} color={mode === 'exact' ? C.ink : C.muted} style={{ marginRight: 4 }} />
+                                    <Text style={[styles.modeBtnText, mode === 'exact' && styles.modeBtnActiveText]}>Exact time</Text>
+                                </TouchableOpacity>
+                            </View>
 
-                        {/* Note to the customer */}
-                        <Text style={styles.fieldLabel}>Note to the customer</Text>
-                        <Text style={styles.fieldHint}>Optional · sent with the notification, max 200 characters</Text>
-                        <TextInput
-                            style={styles.textarea}
-                            value={reason}
-                            onChangeText={text => setReason(text.slice(0, 200))}
-                            placeholder="e.g. Previous service is running long — sorry for the wait!"
-                            placeholderTextColor={C.placeholder}
-                            multiline
-                            maxLength={200}
-                            editable={!saving}
-                        />
+                            {/* Content */}
+                            {mode === 'offset' ? (
+                                <View style={styles.offsetSection}>
+                                    <Text style={styles.groupLabel}>Time adjustment</Text>
 
-                        {/* Preview */}
-                        {preview && (
-                            <View style={[styles.preview, blocked && styles.previewBlocked]}>
-                                <Ionicons
-                                    name={blocked ? 'alert-circle-outline' : 'time-outline'}
-                                    size={17}
-                                    color={blocked ? C.red : C.green}
-                                />
-                                <View style={styles.previewTexts}>
-                                    <Text style={styles.previewStrong}>
-                                        {preview.originalLabel} → {preview.updatedLabel}
-                                    </Text>
-                                    <Text style={styles.previewSmall}>
-                                        {describeOffset(preview.offsetMinutes)}
-                                        {preview.crossesDay ? ` · moves to ${formatDate(preview.apiDate)}` : ''}
-                                    </Text>
-                                    {blocked && (
-                                        <Text style={styles.previewWarning}>
-                                            That time has already passed. Pick a later time — a customer cannot be notified about a slot in the past.
-                                        </Text>
+                                    {/* SELECT BOX - replaces +10 +20 chips */}
+                                    <View style={styles.selectWrap}>
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.selectBox,
+                                                showOffsetPicker && styles.selectBoxOpen,
+                                                selectedLabel && styles.selectBoxHasValue,
+                                            ]}
+                                            disabled={saving}
+                                            activeOpacity={0.8}
+                                            onPress={() => setShowOffsetPicker(v => !v)}
+                                        >
+                                            <View style={styles.selectLeft}>
+                                                <View style={[styles.selectIconBox, selectedLabel && styles.selectIconBoxActive]}>
+                                                    <Ionicons name="flash" size={14} color={selectedLabel ? C.ink : C.gold} />
+                                                </View>
+                                                <View style={styles.selectTexts}>
+                                                    <Text style={styles.selectLabel}>Shift appointment</Text>
+                                                    <Text style={[styles.selectValue, !selectedLabel && styles.selectPlaceholder]} numberOfLines={1}>
+                                                        {selectedLabel ? `${selectedShort} • ${selectedLabel}` : 'Select minutes (e.g. 20 min later)'}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                            <View style={styles.selectRight}>
+                                                {selectedLabel && (
+                                                    <View style={styles.selectBadge}>
+                                                        <Text style={styles.selectBadgeText}>{selectedShort}</Text>
+                                                    </View>
+                                                )}
+                                                <Ionicons name={showOffsetPicker ? "chevron-up" : "chevron-down"} size={16} color={C.mutedLight} />
+                                            </View>
+                                        </TouchableOpacity>
+
+                                        {/* DROPDOWN - proper mobile select */}
+                                        {showOffsetPicker && (
+                                            <View style={styles.dropdownWrapper} pointerEvents="box-none">
+                                                <TouchableOpacity
+                                                    style={styles.dropdownBackdrop}
+                                                    activeOpacity={1}
+                                                    onPress={() => setShowOffsetPicker(false)}
+                                                />
+                                                <View style={styles.dropdownCard}>
+                                                    <View style={styles.dropdownHeader}>
+                                                        <Text style={styles.dropdownTitle}>Choose time shift</Text>
+                                                        <TouchableOpacity onPress={() => setShowOffsetPicker(false)} style={styles.dropdownClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                                                            <Ionicons name="close-circle" size={18} color={C.muted} />
+                                                        </TouchableOpacity>
+                                                    </View>
+
+                                                    <View style={styles.dropdownContent}>
+                                                        <View style={styles.dropdownSection}>
+                                                            <View style={styles.dropdownSectionHeader}>
+                                                                <Ionicons name="arrow-forward" size={10} color={C.gold} />
+                                                                <Text style={styles.dropdownSectionLabel}>Running late</Text>
+                                                            </View>
+                                                            <View style={styles.dropdownGrid}>
+                                                                {LATER_OFFSETS.map(renderDropdownOption)}
+                                                            </View>
+                                                        </View>
+
+                                                        <View style={styles.dropdownSection}>
+                                                            <View style={styles.dropdownSectionHeader}>
+                                                                <Ionicons name="arrow-back" size={10} color={C.green} />
+                                                                <Text style={[styles.dropdownSectionLabel, { color: C.green }]}>Free earlier</Text>
+                                                            </View>
+                                                            <View style={styles.dropdownGrid}>
+                                                                {EARLIER_OFFSETS.map(renderDropdownOption)}
+                                                            </View>
+                                                        </View>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        )}
+                                    </View>
+
+                                    {/* Custom input - compact row */}
+                                    <View style={styles.customRow}>
+                                        <Text style={styles.customLabel}>Or custom</Text>
+                                        <View style={styles.customInputWrap}>
+                                            <TextInput
+                                                style={[styles.inputSmall, customInvalid && styles.inputError]}
+                                                value={custom}
+                                                onChangeText={text => {
+                                                    setCustom(text);
+                                                    setOffset(null);
+                                                    setMode('offset');
+                                                }}
+                                                placeholder="e.g. 25 or -15"
+                                                placeholderTextColor={C.placeholder}
+                                                keyboardType="numbers-and-punctuation"
+                                                maxLength={4}
+                                                editable={!saving}
+                                                autoCorrect={false}
+                                            />
+                                        </View>
+                                        <Text style={styles.customHint}>min</Text>
+                                    </View>
+                                    {customInvalid ? (
+                                        <Text style={styles.errorText}>Enter -120 to +240, not 0</Text>
+                                    ) : (
+                                        <Text style={styles.helperText}>Negative = earlier, between {MIN_OFFSET_MINUTES} and {MAX_OFFSET_MINUTES}</Text>
                                     )}
                                 </View>
+                            ) : (
+                                <View style={styles.exactSection}>
+                                    <Text style={styles.groupLabel}>Pick new time</Text>
+                                    <TouchableOpacity
+                                        style={[styles.timeInputBox, exactOutOfRange && styles.inputError]}
+                                        disabled={saving}
+                                        activeOpacity={0.7}
+                                        onPress={() => setShowTimePicker(true)}
+                                    >
+                                        <View style={styles.timeInputLeft}>
+                                            <View style={styles.timeIconBox}>
+                                                <Ionicons name="time-outline" size={16} color={C.gold} />
+                                            </View>
+                                            <View>
+                                                <Text style={styles.timeInputLabel}>New start time</Text>
+                                                <Text style={styles.timeInputValue}>
+                                                    {exactTime ? formatTime(exactTime) : 'Select time'}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                        <Ionicons name="chevron-forward" size={16} color={C.muted} />
+                                    </TouchableOpacity>
+
+                                    {showTimePicker && (
+                                        <DateTimePicker
+                                            value={pickerDate}
+                                            mode="time"
+                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                            themeVariant="dark"
+                                            onChange={event => {
+                                                if (Platform.OS === 'android') setShowTimePicker(false);
+                                                const date = event?.nativeEvent?.timestamp ? new Date(event.nativeEvent.timestamp) : event?.date;
+                                                if (date) {
+                                                    const h = date.getHours();
+                                                    const m = date.getMinutes();
+                                                    setExactTime(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+                                                    setMode('exact');
+                                                    if (Platform.OS === 'ios') setShowTimePicker(false);
+                                                } else if (event?.type === 'dismissed') {
+                                                    setShowTimePicker(false);
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                    {exactOutOfRange && (
+                                        <Text style={styles.errorText}>More than {MAX_OFFSET_MINUTES} min away. Pick closer.</Text>
+                                    )}
+                                    {!exactOutOfRange && (
+                                        <Text style={styles.helperText}>Choose when customer should arrive</Text>
+                                    )}
+                                </View>
+                            )}
+
+                            {/* Note */}
+                            <View style={styles.noteRow}>
+                                <TextInput
+                                    style={styles.noteInput}
+                                    value={reason}
+                                    onChangeText={text => setReason(text.slice(0, 200))}
+                                    placeholder="Note to customer (optional)"
+                                    placeholderTextColor={C.placeholder}
+                                    editable={!saving}
+                                    maxLength={200}
+                                    returnKeyType="done"
+                                />
+                                <Ionicons name="chatbubble-outline" size={14} color={C.muted} />
                             </View>
-                        )}
 
-                        {/* Actions */}
-                        <View style={styles.actions}>
-                            <TouchableOpacity style={styles.cancelBtn} disabled={saving} activeOpacity={0.7} onPress={safeClose}>
-                                <Text style={styles.cancelText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.submitBtn, !canSend && styles.submitBtnDisabled]}
-                                disabled={!canSend}
-                                activeOpacity={0.8}
-                                onPress={() => onSubmit({ preview, reason: reason.trim() })}
-                            >
-                                {saving ? (
-                                    <ActivityIndicator size="small" color={C.ink} />
-                                ) : (
-                                    <View style={styles.submitRow}>
-                                        <Text style={styles.submitText}>Update &amp; notify</Text>
-                                        <Ionicons name="checkmark" size={17} color={C.ink} />
+                            {/* Preview */}
+                            {preview ? (
+                                <View style={[styles.preview, blocked && styles.previewBlocked]}>
+                                    <View style={[styles.previewIcon, blocked && styles.previewIconBlocked]}>
+                                        <Ionicons name={blocked ? 'alert' : 'checkmark'} size={12} color={blocked ? C.red : C.greenInk} />
                                     </View>
-                                )}
-                            </TouchableOpacity>
-                        </View>
+                                    <View style={styles.previewTexts}>
+                                        <Text style={styles.previewMain} numberOfLines={1}>
+                                            {preview.originalLabel} → {preview.updatedLabel}
+                                            <Text style={styles.previewDot}> • </Text>
+                                            <Text style={styles.previewOffset}>{describeOffset(preview.offsetMinutes)}</Text>
+                                        </Text>
+                                        {preview.crossesDay ? <Text style={styles.previewSub}>Moves to {formatDate(preview.apiDate)}</Text> : null}
+                                        {blocked && <Text style={styles.previewWarning}>Time already passed</Text>}
+                                    </View>
+                                </View>
+                            ) : (
+                                <View style={styles.emptyPreview}>
+                                    <Text style={styles.hintText}>
+                                        {exactUnchanged ? 'Same as current — pick different' : customInvalid || exactOutOfRange ? 'Fix time to continue' : 'Select a time to preview'}
+                                    </Text>
+                                </View>
+                            )}
 
-                        {!preview && !customInvalid && !exactOutOfRange && (
-                            <Text style={styles.hint}>
-                                {exactUnchanged
-                                    ? 'That is the current booking time — pick a different one.'
-                                    : 'Choose a new time to continue.'}
-                            </Text>
-                        )}
-                    </ScrollView>
+                            {/* Actions */}
+                            <View style={styles.actions}>
+                                <TouchableOpacity style={styles.cancelBtn} disabled={saving} activeOpacity={0.7} onPress={safeClose}>
+                                    <Text style={styles.cancelText}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.submitBtn, !canSend && styles.submitBtnDisabled]}
+                                    disabled={!canSend}
+                                    activeOpacity={0.85}
+                                    onPress={() => onSubmit({ preview, reason: reason.trim() })}
+                                >
+                                    {saving ? <ActivityIndicator size="small" color={C.ink} /> : (
+                                        <>
+                                            <Text style={styles.submitText}>Update & notify</Text>
+                                            <View style={styles.submitIcon}><Ionicons name="paper-plane" size={13} color={C.ink} /></View>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
                 </View>
-            </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
 
-/* ---------------- STYLES (web styles.css colour values) ---------------- */
 const styles = StyleSheet.create({
-    backdrop: {
-        flex: 1,
-        backgroundColor: C.backdrop,
-        justifyContent: 'flex-end',
-        padding: 12,
-    },
-    backdropTouch: {
-        flex: 1,
-    },
-    /* .modal-card — floats above the screen edge like the web sheet. */
+    keyboardAvoid: { flex: 1 },
+    backdrop: { flex: 1, backgroundColor: C.backdrop, justifyContent: 'flex-end' },
+    backdropTouch: { ...StyleSheet.absoluteFillObject },
     sheet: {
-        maxHeight: hp(88),
-        borderTopLeftRadius: 22,
-        borderTopRightRadius: 22,
-        borderBottomLeftRadius: 16,
-        borderBottomRightRadius: 16,
+        width: '100%',
+        maxHeight: IS_VERY_SMALL ? '96%' : IS_SMALL_SCREEN ? '92%' : '88%',
         backgroundColor: C.modalCard,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
         borderWidth: 1,
+        borderBottomWidth: 0,
         borderColor: C.lineStrong,
+        overflow: 'hidden',
+        ...Platform.select({
+            ios: { shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.3, shadowRadius: 12 },
+            android: { elevation: 24 },
+        }),
     },
+    handleWrap: { alignItems: 'center', paddingTop: 8, paddingBottom: 2 },
+    handleBar: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.18)' },
     header: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12,
+        borderBottomWidth: 1, borderBottomColor: C.line,
+    },
+    headerLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+    headerIcon: { width: 26, height: 26, borderRadius: 13, backgroundColor: C.gold, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+    title: { color: C.white, fontSize: IS_SMALL_SCREEN ? 15 : 16, fontWeight: '700', letterSpacing: -0.2 },
+    closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center', marginLeft: 12 },
+    body: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 6 },
+    topRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
+    customerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderWidth: 1, borderColor: C.line, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5, gap: 5, maxWidth: SCREEN_WIDTH * 0.38 },
+    customerText: { color: C.white, fontSize: 11.5, fontWeight: '600', maxWidth: 100 },
+    currentPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.goldWash, borderWidth: 1, borderColor: 'rgba(232,185,126,0.18)', borderRadius: 20, paddingHorizontal: 9, paddingVertical: 5, gap: 4 },
+    currentText: { color: C.goldSoft, fontSize: 11.5, fontWeight: '700' },
+    datePill: { flex: 1, alignItems: 'flex-end' },
+    dateText: { color: C.muted, fontSize: 10.5, fontWeight: '500' },
+
+    modeSwitch: { flexDirection: 'row', backgroundColor: C.card, borderWidth: 1, borderColor: C.line, borderRadius: 12, padding: 3, marginBottom: 12, height: 40 },
+    modeBtn: { flex: 1, flexDirection: 'row', borderRadius: 9, alignItems: 'center', justifyContent: 'center', height: 32 },
+    modeBtnActive: { backgroundColor: C.gold },
+    modeBtnText: { color: C.mutedLight, fontSize: 12.5, fontWeight: '600' },
+    modeBtnActiveText: { color: C.ink, fontWeight: '700' },
+
+    offsetSection: { zIndex: 10 },
+    groupLabel: { color: C.muted, fontSize: 10, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 },
+
+    /* ---- NEW SELECT (replaces chips) ---- */
+    selectWrap: { position: 'relative', zIndex: 20, marginBottom: 12 },
+    selectBox: {
+        height: 56,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: 16,
-        paddingBottom: 12,
-    },
-    title: {
-        color: C.white,
-        fontSize: 18,
-        fontWeight: '700',
-        flex: 1,
-    },
-    closeBtn: {
-        padding: 4,
-        marginLeft: 12,
-    },
-    body: {
-        maxHeight: hp(76),
-    },
-    bodyContent: {
-        paddingHorizontal: 16,
-        paddingBottom: 18,
-        paddingTop: 2,
-    },
-    lede: {
-        color: C.muted,
-        fontSize: 12,
-        lineHeight: 18,
-        marginBottom: 13,
-    },
-    ledeStrong: {
-        color: C.white,
-        fontWeight: '700',
-    },
-
-    /* .time-update-current */
-    currentBox: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16,
-        paddingVertical: 11,
+        borderWidth: 1,
+        borderColor: C.lineInput,
+        backgroundColor: C.inputBg,
+        borderRadius: 12,
         paddingHorizontal: 12,
-        borderRadius: 12,
-        backgroundColor: C.card,
-        borderWidth: 1,
-        borderColor: C.line,
     },
-    currentTexts: {
-        marginLeft: 10,
-        flex: 1,
-    },
-    currentSmall: {
-        color: C.muted,
-        fontSize: 10,
-        letterSpacing: 0.8,
-        textTransform: 'uppercase',
-    },
-    currentStrong: {
-        color: C.white,
-        fontSize: 13,
-        fontWeight: '700',
-        marginTop: 2,
-    },
+    selectBoxOpen: { borderColor: C.gold, backgroundColor: C.inputFocusBg },
+    selectBoxHasValue: { borderColor: 'rgba(232,185,126,0.35)', backgroundColor: '#1A1F1E' },
+    selectLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+    selectIconBox: { width: 32, height: 32, borderRadius: 8, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' },
+    selectIconBoxActive: { backgroundColor: C.gold, borderColor: C.gold },
+    selectTexts: { flex: 1 },
+    selectLabel: { color: C.muted, fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+    selectValue: { color: C.white, fontSize: 13.5, fontWeight: '600', marginTop: 2 },
+    selectPlaceholder: { color: C.placeholder, fontWeight: '400' },
+    selectRight: { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 8 },
+    selectBadge: { backgroundColor: C.goldWash, borderWidth: 1, borderColor: 'rgba(232,185,126,0.2)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+    selectBadgeText: { color: C.goldSoft, fontSize: 11, fontWeight: '700' },
 
-    /* .time-mode-switch */
-    modeSwitch: {
-        flexDirection: 'row',
-        marginBottom: 14,
-        padding: 4,
-        borderRadius: 13,
-        backgroundColor: C.card,
-        borderWidth: 1,
-        borderColor: C.line,
-    },
-    modeBtn: {
-        flex: 1,
-        minHeight: 38,
-        borderRadius: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 4,
-    },
-    modeBtnActive: {
-        backgroundColor: C.gold,
-    },
-    modeBtnText: {
-        color: C.mutedLight,
-        fontSize: 12.5,
-        fontWeight: '700',
-        textAlign: 'center',
-    },
-    modeBtnActiveText: {
-        color: '#0C0F0F',
-    },
-
-    /* .time-update-group-label */
-    groupLabel: {
-        color: C.muted,
-        fontSize: 10,
-        fontWeight: '700',
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        marginBottom: 8,
-        marginTop: 4,
-    },
-
-    /* .time-offset-grid (gap 7px) / .time-offset-chip */
-    offsetGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 7,
-        marginBottom: 16,
-    },
-    chip: {
-        width: '31%',
-        minHeight: 42,
-        borderWidth: 1,
-        borderColor: C.line,
-        borderRadius: 11,
-        backgroundColor: C.card,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    chipText: {
-        color: C.white,
-        fontSize: 12.5,
-        fontWeight: '700',
-    },
-    chipActive: {
-        backgroundColor: C.gold,
-        borderColor: C.gold,
-    },
-    chipActiveText: {
-        color: '#0C0F0F',
-    },
-    chipEarlierActive: {
-        backgroundColor: C.green,
-        borderColor: C.green,
-    },
-    chipEarlierActiveText: {
-        color: C.greenInk,
-    },
-
-    /* .field label / hint / input */
-    fieldLabel: {
-        color: C.white,
-        fontSize: 12.5,
-        fontWeight: '700',
-        marginTop: 8,
-        marginBottom: 4,
-    },
-    fieldHint: {
-        color: C.muted,
-        fontSize: 11,
-        lineHeight: 16,
-        marginBottom: 8,
-    },
-    input: {
-        minHeight: 50,
-        borderWidth: 1,
-        borderColor: C.lineInput,
-        borderRadius: 12,
-        backgroundColor: C.inputBg,
-        paddingHorizontal: 14,
-        color: C.inputText,
-        fontSize: 15,
-        fontWeight: '500',
-    },
-    inputError: {
-        borderColor: C.red,
-    },
-    errorText: {
-        color: C.red,
-        fontSize: 11,
-        marginTop: 6,
-        lineHeight: 16,
-    },
-    timeInput: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    timeInputText: {
-        color: C.inputText,
-        fontSize: 15,
-        fontWeight: '500',
-    },
-
-    /* .time-update-note */
-    textarea: {
-        minHeight: 58,
-        borderWidth: 1,
-        borderColor: C.lineInput,
-        borderRadius: 12,
-        backgroundColor: C.inputBg,
-        padding: 13,
-        color: C.inputText,
-        fontSize: 15,
-        textAlignVertical: 'top',
-        lineHeight: 22,
-    },
-
-    /* .time-update-preview */
-    preview: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        marginTop: 16,
-        marginBottom: 16,
-        padding: 12,
-        borderRadius: 12,
-        backgroundColor: C.greenWash,
-        borderWidth: 1,
-        borderColor: C.greenLine,
-    },
-    previewBlocked: {
-        backgroundColor: C.redWash,
-        borderColor: C.redLine,
-    },
-    previewTexts: {
-        flex: 1,
-        marginLeft: 10,
-    },
-    previewStrong: {
-        color: C.white,
-        fontSize: 14,
-        fontWeight: '700',
-    },
-    previewSmall: {
-        color: C.mutedLight,
-        fontSize: 11,
-        lineHeight: 16,
-        marginTop: 4,
-    },
-    previewWarning: {
-        color: C.redText,
-        fontSize: 11,
-        lineHeight: 16,
-        marginTop: 4,
-    },
-
-    /* .form-actions (.btn / .btn-secondary / .btn-primary) */
-    actions: {
-        flexDirection: 'row',
-        gap: 8,
-        marginTop: 4,
-    },
-    cancelBtn: {
-        flex: 1,
-        minHeight: 46,
-        borderRadius: 13,
+    dropdownWrapper: { ...StyleSheet.absoluteFillObject, top: 62, zIndex: 30 },
+    dropdownBackdrop: { ...StyleSheet.absoluteFillObject },
+    dropdownCard: {
         backgroundColor: C.cardRaised,
         borderWidth: 1,
-        borderColor: C.line,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 18,
+        borderColor: C.lineStrong,
+        borderRadius: 14,
+        overflow: 'hidden',
+        ...Platform.select({
+            ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 16 },
+            android: { elevation: 12 },
+        }),
     },
-    cancelText: {
-        color: C.white,
-        fontWeight: '700',
-        fontSize: 13,
-    },
-    submitBtn: {
-        flex: 1.4,
-        minHeight: 46,
-        borderRadius: 13,
-        backgroundColor: C.gold,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 18,
-    },
-    submitBtnDisabled: {
-        opacity: 0.5,
-    },
-    submitRow: {
+    dropdownHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.line, backgroundColor: C.card },
+    dropdownTitle: { color: C.white, fontSize: 12.5, fontWeight: '700' },
+    dropdownClose: { padding: 2 },
+    dropdownContent: { padding: 8, gap: 10 },
+    dropdownSection: { gap: 6 },
+    dropdownSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingLeft: 2 },
+    dropdownSectionLabel: { color: C.muted, fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
+    dropdownGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    dropdownOption: {
+        width: '48.5%',
+        height: 42,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 7,
+        borderWidth: 1,
+        borderColor: C.line,
+        backgroundColor: C.card,
+        borderRadius: 10,
+        paddingHorizontal: 10,
     },
-    submitText: {
-        color: C.ink,
-        fontWeight: '700',
-        fontSize: 13,
-    },
+    dropdownOptionActive: { backgroundColor: C.gold, borderColor: C.gold },
+    dropdownOptionEarlierActive: { backgroundColor: C.green, borderColor: C.green },
+    dropdownOptionBadge: { backgroundColor: C.panel, borderRadius: 5, paddingHorizontal: 5, paddingVertical: 2, color: C.white, fontSize: 10.5, fontWeight: '800', minWidth: 30, textAlign: 'center', overflow: 'hidden' },
+    dropdownOptionBadgeActive: { backgroundColor: 'rgba(0,0,0,0.15)', color: C.ink },
+    dropdownOptionBadgeEarlier: { backgroundColor: 'rgba(0,0,0,0.12)', color: C.greenInk },
+    dropdownOptionText: { color: C.mutedLight, fontSize: 11.5, fontWeight: '500', flex: 1 },
+    dropdownOptionTextActive: { color: C.ink, fontWeight: '700' },
 
-    /* .time-update-hint */
-    hint: {
-        color: C.muted,
-        fontSize: 11,
-        textAlign: 'center',
-        marginTop: 10,
+    customRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
+    customLabel: { color: C.muted, fontSize: 11, fontWeight: '600' },
+    customInputWrap: { flex: 1, maxWidth: 130 },
+    inputSmall: { height: 38, borderWidth: 1, borderColor: C.lineInput, borderRadius: 10, backgroundColor: C.inputBg, paddingHorizontal: 12, color: C.inputText, fontSize: 13, fontWeight: '500' },
+    customHint: { color: C.muted, fontSize: 11, fontWeight: '500' },
+    inputError: { borderColor: C.red },
+    errorText: { color: C.redText, fontSize: 11, marginTop: 6, lineHeight: 13 },
+    helperText: { color: C.muted, fontSize: 10.5, marginTop: 6, lineHeight: 13 },
+
+    exactSection: { gap: 6, zIndex: 1 },
+    timeInputBox: { height: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: C.lineInput, backgroundColor: C.inputBg, borderRadius: 12, paddingHorizontal: 12 },
+    timeInputLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    timeIconBox: { width: 32, height: 32, borderRadius: 8, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' },
+    timeInputLabel: { color: C.muted, fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+    timeInputValue: { color: C.inputText, fontSize: 14, fontWeight: '600', marginTop: 1 },
+
+    noteRow: { flexDirection: 'row', alignItems: 'center', height: 42, borderWidth: 1, borderColor: C.lineInput, backgroundColor: C.inputBg, borderRadius: 11, paddingHorizontal: 12, marginTop: 12, gap: 8, zIndex: 1 },
+    noteInput: { flex: 1, color: C.inputText, fontSize: 13.5, fontWeight: '400', paddingVertical: 0, height: '100%' },
+
+    preview: { flexDirection: 'row', alignItems: 'center', marginTop: 10, paddingHorizontal: 10, paddingVertical: 9, borderRadius: 11, backgroundColor: C.greenWash, borderWidth: 1, borderColor: C.greenLine, gap: 9, zIndex: 1 },
+    previewBlocked: { backgroundColor: C.redWash, borderColor: C.redLine },
+    previewIcon: { width: 22, height: 22, borderRadius: 11, backgroundColor: C.green, alignItems: 'center', justifyContent: 'center' },
+    previewIconBlocked: { backgroundColor: C.red },
+    previewTexts: { flex: 1 },
+    previewMain: { color: C.white, fontSize: 12.5, fontWeight: '700', lineHeight: 16 },
+    previewDot: { color: C.muted, fontWeight: '400' },
+    previewOffset: { color: C.mutedLight, fontSize: 11.5, fontWeight: '500' },
+    previewSub: { color: C.mutedLight, fontSize: 10.5, marginTop: 2 },
+    previewWarning: { color: C.redText, fontSize: 10.5, fontWeight: '600', marginTop: 2 },
+    emptyPreview: { marginTop: 10, paddingVertical: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)', borderStyle: 'dashed', zIndex: 1 },
+    hintText: { color: C.muted, fontSize: 11, fontWeight: '500', textAlign: 'center' },
+
+    actions: { flexDirection: 'row', gap: 10, marginTop: 12, paddingTop: 2, zIndex: 1 },
+    cancelBtn: { flex: 1, height: 50, borderRadius: 13, backgroundColor: C.cardRaised, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' },
+    cancelText: { color: C.white, fontSize: 14, fontWeight: '700', letterSpacing: 0.2 },
+    submitBtn: {
+        flex: 1.35, height: 50, borderRadius: 13, backgroundColor: C.gold, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+        ...Platform.select({ ios: { shadowColor: C.gold, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 }, android: { elevation: 3 } }),
     },
+    submitBtnDisabled: { opacity: 0.45 },
+    submitText: { color: C.ink, fontSize: 14, fontWeight: '800', letterSpacing: 0.2 },
+    submitIcon: { width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(0,0,0,0.12)', alignItems: 'center', justifyContent: 'center' },
 });
