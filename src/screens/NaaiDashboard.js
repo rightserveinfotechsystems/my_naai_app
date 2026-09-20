@@ -464,6 +464,7 @@ const NaaiDashboard = ({ navigation }) => {
     setPage(1);
     setHasMore(true);
     getSalonList(1, true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [genderFilter, locationFilter]);
 
   useEffect(() => {
@@ -474,6 +475,7 @@ const NaaiDashboard = ({ navigation }) => {
     }, 400);
 
     return () => clearTimeout(delay);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   const firstName = useMemo(() => {

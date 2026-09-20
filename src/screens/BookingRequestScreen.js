@@ -28,6 +28,7 @@ export default function BookingRequestScreen({ route, navigation }) {
     if (bookingRequestId) {
       fetchBookingDetails();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingRequestId]);
 
   useEffect(() => {

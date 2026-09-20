@@ -90,6 +90,7 @@ const OtpScreen = ({ route, onLoginSuccess }) => {
     if (otp.length === 6) {
       verifyOtp();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp]);
   /* 🔁 RESEND OTP */
   const resendOtp = async () => {

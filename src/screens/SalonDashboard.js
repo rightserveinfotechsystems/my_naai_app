@@ -201,6 +201,7 @@ const SalonDashboard = ({ navigation }) => {
     if (!salonId) return;
     getCustomerList();
     fetchNotificationCount();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [salonId, fetchNotificationCount]);
 
   useFocusEffect(useCallback(() => {
@@ -277,6 +278,7 @@ const SalonDashboard = ({ navigation }) => {
         socket.disconnect();
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [salonId]);
 
   /* ---------------- RENDER SINGLE BOOKING ---------------- */

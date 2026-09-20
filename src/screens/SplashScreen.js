@@ -91,6 +91,7 @@ const SplashScreen = ({ navigation }) => {
     };
 
     checkFlow();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 

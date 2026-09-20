@@ -24,6 +24,7 @@ const Skeleton = ({ height = 100, borderRadius = 20, style }) => {
 
     blink.start();
     return () => blink.stop();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const opacity = blinkAnim.interpolate({

@@ -348,11 +348,6 @@ const styles = StyleSheet.create({
     marginTop: 60,
   },
 
-  emptyText: {
-    color: '#B7BEBE',
-    marginTop: 12,
-    fontSize: 14,
-  },
   cardRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

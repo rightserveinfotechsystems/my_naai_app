@@ -440,6 +440,7 @@ const SalonAccountScreen = ({ navigation }) => {
     if (salonId) {
       salonProfile(salonId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [salonId]);
 
   const getImageSource = (path) => {
@@ -709,6 +710,7 @@ const SalonAccountScreen = ({ navigation }) => {
       }
     }
     initialize();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (profileLoading) {

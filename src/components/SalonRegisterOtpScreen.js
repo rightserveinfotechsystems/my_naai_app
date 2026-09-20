@@ -123,6 +123,7 @@ const SalonRegisterOtpScreen = ({ navigation, route }) => {
     if (otp.length === 6) {
       verifyOtp();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp]);
 
   // const handlePayment = () => {

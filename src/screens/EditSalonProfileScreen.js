@@ -465,6 +465,7 @@ const toggleBarber = barberId => {
           'Failed to fetch salon profile.',
       );
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const initialiseScreen = useCallback(async () => {
@@ -479,6 +480,7 @@ const toggleBarber = barberId => {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchSalonProfile]);
 
   useEffect(() => {
@@ -644,6 +646,7 @@ const toggleBarber = barberId => {
 
     locationRequestStarted.current = true;
     requestAndFetchLocation();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
   const handleSalonTypeChange = selectedType => {

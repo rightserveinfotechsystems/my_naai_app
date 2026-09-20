@@ -207,6 +207,7 @@ const BookingSchedule = ({ route, navigation }) => {
     ) {
       setSelectedTime(timeSlots[0].value);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, salon]);
 
   const handleConfirm = async () => {

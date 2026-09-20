@@ -187,6 +187,7 @@ const UserLogin = ({ navigation, onLoginSuccess }) => {
     if (otp.length === 6) {
       verifyOtp();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp]);
 
   useEffect(() => {
