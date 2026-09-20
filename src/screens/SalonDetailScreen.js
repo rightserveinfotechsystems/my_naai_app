@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700', marginLeft: 16 },
+  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700', marginLeft: 16, textTransform: 'uppercase' },
   salonType: { color: GOLD, fontSize: 13, marginLeft: 16 },
 
   sliderImage: {
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 16,
     paddingTop: 12,
-    backgroundColor: '#171B1B',
+    backgroundColor: '#0b0b0b',
     elevation: 20,
   },
   bookBtn: {

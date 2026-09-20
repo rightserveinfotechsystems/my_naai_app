@@ -354,7 +354,7 @@ const SalonDashboard = ({ navigation }) => {
             />
             <Text allowFontScaling={false} style={styles.subText}>
               {/* {formatDateReadable(item?.bookingDate)}, token: {item?.queueNumber} */}
-              {formatDateReadable(item?.bookingDate)}, {formatTime(item.bookingTime)}, token: {item?.queueNumber}
+              {formatDateReadable(item?.bookingDate)}, {formatTime(item.bookingTime)}, 
             </Text>
           </View>
         </View>

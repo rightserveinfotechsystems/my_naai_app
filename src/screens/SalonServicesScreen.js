@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
         right: 0,
         paddingHorizontal: wp(4),
         paddingTop: hp(1.5),
-        backgroundColor: '#171B1B',
+        backgroundColor: '#070707',
         elevation: 20
         // borderTopWidth: 1,
         // borderTopColor: '#1C2121',
