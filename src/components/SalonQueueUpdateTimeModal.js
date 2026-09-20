@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Modal,
     View,
@@ -9,6 +9,7 @@ import {
     ScrollView,
     ActivityIndicator,
     Platform,
+    Keyboard,
     KeyboardAvoidingView,
     Dimensions,
 } from 'react-native';
@@ -33,9 +34,6 @@ import {
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 const IS_SMALL_SCREEN = SCREEN_HEIGHT < 700;
 const IS_VERY_SMALL = SCREEN_HEIGHT < 620;
-
-// Where the option card hangs below the select box (56px box + 6px gap).
-const DROPDOWN_CARD_TOP = 62;
 
 /* ---------------- PALETTE ---------------- */
 const C = {
@@ -78,50 +76,9 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
     const [exactTime, setExactTime] = useState('');
     const [reason, setReason] = useState('');
     const [showTimePicker, setShowTimePicker] = useState(false);
-    const [showOffsetPicker, setShowOffsetPicker] = useState(false);
 
     const bookingDate = booking?.bookingDate;
     const bookingTime = booking?.bookingTime;
-
-    /* ---------------- DROPDOWN GEOMETRY ----------------
-     * The option card floats over the rest of the sheet, so it must fit in the
-     * space between its top edge and the sheet's bottom (the sheet clips
-     * overflow). Measure the sheet height and the select box's position inside
-     * it (body → offset section → select wrap, all onLayout-driven so font
-     * scaling and small screens are handled), then cap the card height and let
-     * the options scroll inside it. */
-    const [sheetHeight, setSheetHeight] = useState(0);
-    const [anchorTop, setAnchorTop] = useState(0);
-    const bodyTopRef = useRef(0); // body y within sheet
-    const sectionTopRef = useRef(0); // offset section y within body
-    const wrapTopRef = useRef(0); // select wrap y within offset section
-
-    const recomputeAnchor = useCallback(() => {
-        const y = bodyTopRef.current + sectionTopRef.current + wrapTopRef.current;
-        setAnchorTop(prev => (prev === y ? prev : y));
-    }, []);
-
-    const onSheetLayout = useCallback(e => {
-        const h = e.nativeEvent.layout.height;
-        setSheetHeight(prev => (prev === h ? prev : h));
-    }, []);
-    const onBodyLayout = useCallback(e => {
-        bodyTopRef.current = e.nativeEvent.layout.y;
-        recomputeAnchor();
-    }, [recomputeAnchor]);
-    const onSectionLayout = useCallback(e => {
-        sectionTopRef.current = e.nativeEvent.layout.y;
-        recomputeAnchor();
-    }, [recomputeAnchor]);
-    const onWrapLayout = useCallback(e => {
-        wrapTopRef.current = e.nativeEvent.layout.y;
-        recomputeAnchor();
-    }, [recomputeAnchor]);
-
-    const measured = sheetHeight > 0 && anchorTop > 0;
-    const cardMaxHeight = measured
-        ? Math.max(110, Math.min(sheetHeight - anchorTop - DROPDOWN_CARD_TOP - 8, 340))
-        : 300; // safe default for the first frame before layout events land
 
     useEffect(() => {
         if (!open) return;
@@ -132,7 +89,6 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
         const start = parseBookingDateTime(bookingDate, bookingTime);
         setExactTime(start ? toInputTime(start) : '');
         setShowTimePicker(false);
-        setShowOffsetPicker(false);
     }, [open, booking?.bookingId, bookingDate, bookingTime]);
 
     const customOffset = custom.trim() !== '' ? Number(custom) : null;
@@ -151,10 +107,10 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
     const canSend = Boolean(preview) && !blocked && !saving;
 
     const pickOffset = value => {
+        Keyboard.dismiss();
         setMode('offset');
         setOffset(value);
         setCustom('');
-        setShowOffsetPicker(false);
     };
 
     const pickerBase = parseBookingDateTime(bookingDate, bookingTime) || new Date();
@@ -167,50 +123,35 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
     })();
 
     const safeClose = () => {
-        if (!saving) {
-            setShowOffsetPicker(false);
-            onClose();
-        }
+        if (!saving) onClose();
     };
 
-    const renderDropdownOption = value => {
+    /* Quick-select options are plain always-visible chips (no dropdown), grouped
+     * into "Running later" and "Free earlier" so every option is visible at a
+     * glance and reachable with a single tap. */
+    const renderChip = value => {
         const active = mode === 'offset' && effectiveOffset === value;
-        const earlier = value < 0;
+        const later = value > 0;
         return (
             <TouchableOpacity
                 key={value}
                 style={[
-                    styles.dropdownOption,
-                    active && !earlier && styles.dropdownOptionActive,
-                    active && earlier && styles.dropdownOptionEarlierActive,
+                    styles.chip,
+                    later ? styles.chipLater : styles.chipEarlier,
+                    active && (later ? styles.chipLaterActive : styles.chipEarlierActive),
                 ]}
                 disabled={saving}
                 activeOpacity={0.75}
                 onPress={() => pickOffset(value)}
+                testID={`update-time-chip-${value}`}
             >
-                <Text style={[
-                    styles.dropdownOptionBadge,
-                    active && !earlier && styles.dropdownOptionBadgeActive,
-                    active && earlier && styles.dropdownOptionBadgeEarlier,
-                ]}>
-                    {earlier ? `${value}` : `+${value}`}
+                {active && <Ionicons name="checkmark" size={13} color={C.ink} />}
+                <Text style={[styles.chipText, active && styles.chipTextActive]} numberOfLines={1}>
+                    {later ? `${value} min later` : `${Math.abs(value)} min earlier`}
                 </Text>
-                <Text style={[
-                    styles.dropdownOptionText,
-                    active && styles.dropdownOptionTextActive
-                ]} numberOfLines={1}>
-                    {describeOffset(value)}
-                </Text>
-                {active && (
-                    <Ionicons name="checkmark-circle" size={14} color={earlier ? C.greenInk : C.ink} style={{ marginLeft: 'auto' }} />
-                )}
             </TouchableOpacity>
         );
     };
-
-    const selectedLabel = effectiveOffset !== null && isValidOffset(effectiveOffset)
-        ? describeOffset(effectiveOffset)
-        : null;
 
     const selectedShort = effectiveOffset !== null && isValidOffset(effectiveOffset)
         ? `${effectiveOffset > 0 ? '+' : ''}${effectiveOffset}m`
@@ -226,22 +167,7 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
                 <View style={styles.backdrop}>
                     <TouchableOpacity style={styles.backdropTouch} activeOpacity={1} onPress={safeClose} />
 
-                    <View
-                        style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 12) }]}
-                        onLayout={onSheetLayout}
-                        testID="update-time-sheet"
-                    >
-                        {/* Closes the dropdown when the user taps the sheet outside
-                            the option card. Rendered before the body so the body
-                            (and the card inside it) stays on top and tappable. */}
-                        {showOffsetPicker && (
-                            <TouchableOpacity
-                                style={StyleSheet.absoluteFillObject}
-                                activeOpacity={1}
-                                onPress={() => setShowOffsetPicker(false)}
-                                testID="update-time-dropdown-tapcatcher"
-                            />
-                        )}
+                    <View style={styles.sheet} testID="update-time-sheet">
                         <View style={styles.handleWrap}>
                             <View style={styles.handleBar} />
                         </View>
@@ -264,7 +190,16 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
                             </TouchableOpacity>
                         </View>
 
-                        <View style={styles.body} onLayout={onBodyLayout} testID="update-time-body">
+                        {/* Scrollable content: the sheet never grows past its max
+                            height, so on small phones (or with the keyboard open)
+                            this scrolls instead of clipping the controls. */}
+                        <ScrollView
+                            style={styles.bodyScroll}
+                            contentContainerStyle={styles.body}
+                            keyboardShouldPersistTaps="handled"
+                            showsVerticalScrollIndicator={false}
+                            testID="update-time-body"
+                        >
                             {/* Top pills */}
                             <View style={styles.topRow}>
                                 <View style={styles.customerPill}>
@@ -290,7 +225,7 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
                                     style={[styles.modeBtn, mode === 'offset' && styles.modeBtnActive]}
                                     disabled={saving}
                                     activeOpacity={0.7}
-                                    onPress={() => { setMode('offset'); setShowOffsetPicker(false); }}
+                                    onPress={() => setMode('offset')}
                                 >
                                     <Ionicons name="list" size={12} color={mode === 'offset' ? C.ink : C.muted} style={{ marginRight: 4 }} />
                                     <Text style={[styles.modeBtnText, mode === 'offset' && styles.modeBtnActiveText]}>Quick select</Text>
@@ -299,7 +234,7 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
                                     style={[styles.modeBtn, mode === 'exact' && styles.modeBtnActive]}
                                     disabled={saving}
                                     activeOpacity={0.7}
-                                    onPress={() => { setMode('exact'); setShowOffsetPicker(false); }}
+                                    onPress={() => setMode('exact')}
                                 >
                                     <Ionicons name="time-outline" size={12} color={mode === 'exact' ? C.ink : C.muted} style={{ marginRight: 4 }} />
                                     <Text style={[styles.modeBtnText, mode === 'exact' && styles.modeBtnActiveText]}>Exact time</Text>
@@ -308,86 +243,36 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
 
                             {/* Content */}
                             {mode === 'offset' ? (
-                                <View style={styles.offsetSection} onLayout={onSectionLayout} testID="update-time-offset-section">
-                                    <Text style={styles.groupLabel}>Time adjustment</Text>
-
-                                    {/* SELECT BOX - replaces +10 +20 chips */}
-                                    <View style={styles.selectWrap} onLayout={onWrapLayout} testID="update-time-select-wrap">
-                                        <TouchableOpacity
-                                            style={[
-                                                styles.selectBox,
-                                                showOffsetPicker && styles.selectBoxOpen,
-                                                selectedLabel && styles.selectBoxHasValue,
-                                            ]}
-                                            disabled={saving}
-                                            activeOpacity={0.8}
-                                            onPress={() => setShowOffsetPicker(v => !v)}
-                                        >
-                                            <View style={styles.selectLeft}>
-                                                <View style={[styles.selectIconBox, selectedLabel && styles.selectIconBoxActive]}>
-                                                    <Ionicons name="flash" size={14} color={selectedLabel ? C.ink : C.gold} />
-                                                </View>
-                                                <View style={styles.selectTexts}>
-                                                    <Text style={styles.selectLabel}>Shift appointment</Text>
-                                                    <Text style={[styles.selectValue, !selectedLabel && styles.selectPlaceholder]} numberOfLines={1}>
-                                                        {selectedLabel ? `${selectedShort} • ${selectedLabel}` : 'Select minutes (e.g. 20 min later)'}
-                                                    </Text>
-                                                </View>
-                                            </View>
-                                            <View style={styles.selectRight}>
-                                                {selectedLabel && (
-                                                    <View style={styles.selectBadge}>
-                                                        <Text style={styles.selectBadgeText}>{selectedShort}</Text>
-                                                    </View>
-                                                )}
-                                                <Ionicons name={showOffsetPicker ? "chevron-up" : "chevron-down"} size={16} color={C.mutedLight} />
-                                            </View>
-                                        </TouchableOpacity>
-
-                                        {/* DROPDOWN - proper mobile select.
-                                            Anchored just under the select box (no bottom inset, so its
-                                            height is always exactly its content), capped to the space
-                                            left inside the sheet, with the options scrolling inside. */}
-                                        {showOffsetPicker && (
-                                            <View
-                                                style={[styles.dropdownCard, { maxHeight: cardMaxHeight }]}
-                                                testID="update-time-dropdown-card"
-                                            >
-                                                <View style={styles.dropdownHeader}>
-                                                    <Text style={styles.dropdownTitle}>Choose time shift</Text>
-                                                    <TouchableOpacity onPress={() => setShowOffsetPicker(false)} style={styles.dropdownClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                                                        <Ionicons name="close-circle" size={18} color={C.muted} />
-                                                    </TouchableOpacity>
-                                                </View>
-
-                                                <ScrollView
-                                                    style={styles.dropdownScroll}
-                                                    contentContainerStyle={styles.dropdownContent}
-                                                    showsVerticalScrollIndicator={false}
-                                                    bounces={false}
-                                                >
-                                                    <View style={styles.dropdownSection}>
-                                                        <View style={styles.dropdownSectionHeader}>
-                                                            <Ionicons name="arrow-forward" size={10} color={C.gold} />
-                                                            <Text style={styles.dropdownSectionLabel}>Running late</Text>
-                                                        </View>
-                                                        <View style={styles.dropdownGrid}>
-                                                            {LATER_OFFSETS.map(renderDropdownOption)}
-                                                        </View>
-                                                    </View>
-
-                                                    <View style={styles.dropdownSection}>
-                                                        <View style={styles.dropdownSectionHeader}>
-                                                            <Ionicons name="arrow-back" size={10} color={C.green} />
-                                                            <Text style={[styles.dropdownSectionLabel, { color: C.green }]}>Free earlier</Text>
-                                                        </View>
-                                                        <View style={styles.dropdownGrid}>
-                                                            {EARLIER_OFFSETS.map(renderDropdownOption)}
-                                                        </View>
-                                                    </View>
-                                                </ScrollView>
+                                <View style={styles.offsetSection} testID="update-time-offset-section">
+                                    <View style={styles.groupLabelRow}>
+                                        <Text style={styles.groupLabel}>Time adjustment</Text>
+                                        {selectedShort && (
+                                            <View style={styles.selectedPill}>
+                                                <Text style={styles.selectedPillText}>{selectedShort}</Text>
                                             </View>
                                         )}
+                                    </View>
+
+                                    {/* Running late - always visible */}
+                                    <View style={styles.chipGroup}>
+                                        <View style={styles.chipGroupHeader}>
+                                            <Ionicons name="arrow-forward" size={11} color={C.gold} />
+                                            <Text style={[styles.chipGroupLabel, { color: C.goldSoft }]}>Running late</Text>
+                                        </View>
+                                        <View style={styles.chipGrid}>
+                                            {LATER_OFFSETS.map(renderChip)}
+                                        </View>
+                                    </View>
+
+                                    {/* Free earlier - always visible */}
+                                    <View style={styles.chipGroup}>
+                                        <View style={styles.chipGroupHeader}>
+                                            <Ionicons name="arrow-back" size={11} color={C.green} />
+                                            <Text style={[styles.chipGroupLabel, { color: C.green }]}>Free earlier</Text>
+                                        </View>
+                                        <View style={styles.chipGrid}>
+                                            {EARLIER_OFFSETS.map(renderChip)}
+                                        </View>
                                     </View>
 
                                     {/* Custom input - compact row */}
@@ -509,8 +394,11 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
                                     </Text>
                                 </View>
                             )}
+                        </ScrollView>
 
-                            {/* Actions */}
+                        {/* Pinned footer: Update & notify is always reachable,
+                            even while the content above scrolls. */}
+                        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]} testID="update-time-footer">
                             <View style={styles.actions}>
                                 <TouchableOpacity style={styles.cancelBtn} disabled={saving} activeOpacity={0.7} onPress={safeClose}>
                                     <Text style={styles.cancelText}>Cancel</Text>
@@ -567,7 +455,15 @@ const styles = StyleSheet.create({
     headerIcon: { width: 26, height: 26, borderRadius: 13, backgroundColor: C.gold, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
     title: { color: C.white, fontSize: IS_SMALL_SCREEN ? 15 : 16, fontWeight: '700', letterSpacing: -0.2 },
     closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center', marginLeft: 12 },
+
+    /* Scrollable body + pinned footer */
+    bodyScroll: { flexGrow: 0, flexShrink: 1 },
     body: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 6 },
+    footer: {
+        paddingHorizontal: 14, paddingTop: 10,
+        borderTopWidth: 1, borderTopColor: C.line, backgroundColor: C.modalCard,
+    },
+
     topRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
     customerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderWidth: 1, borderColor: C.line, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5, gap: 5, maxWidth: SCREEN_WIDTH * 0.38 },
     customerText: { color: C.white, fontSize: 11.5, fontWeight: '600', maxWidth: 100 },
@@ -582,79 +478,36 @@ const styles = StyleSheet.create({
     modeBtnText: { color: C.mutedLight, fontSize: 12.5, fontWeight: '600' },
     modeBtnActiveText: { color: C.ink, fontWeight: '700' },
 
-    offsetSection: { zIndex: 10 },
-    groupLabel: { color: C.muted, fontSize: 10, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 },
+    offsetSection: {},
+    groupLabelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+    groupLabel: { color: C.muted, fontSize: 10, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase' },
+    selectedPill: { backgroundColor: C.goldWash, borderWidth: 1, borderColor: 'rgba(232,185,126,0.25)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+    selectedPillText: { color: C.goldSoft, fontSize: 10.5, fontWeight: '800' },
 
-    /* ---- NEW SELECT (replaces chips) ---- */
-    selectWrap: { position: 'relative', zIndex: 20, marginBottom: 12 },
-    selectBox: {
-        height: 56,
+    /* ---- Quick select chips (always visible, no dropdown) ---- */
+    chipGroup: { marginBottom: 10 },
+    chipGroupHeader: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 7 },
+    chipGroupLabel: { fontSize: 10.5, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
+    chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    chip: {
+        flexGrow: 1,
+        flexBasis: '30.5%',
+        minHeight: 36,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
+        gap: 4,
         borderWidth: 1,
-        borderColor: C.lineInput,
-        backgroundColor: C.inputBg,
-        borderRadius: 12,
-        paddingHorizontal: 12,
-    },
-    selectBoxOpen: { borderColor: C.gold, backgroundColor: C.inputFocusBg },
-    selectBoxHasValue: { borderColor: 'rgba(232,185,126,0.35)', backgroundColor: '#1A1F1E' },
-    selectLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-    selectIconBox: { width: 32, height: 32, borderRadius: 8, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' },
-    selectIconBoxActive: { backgroundColor: C.gold, borderColor: C.gold },
-    selectTexts: { flex: 1 },
-    selectLabel: { color: C.muted, fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
-    selectValue: { color: C.white, fontSize: 13.5, fontWeight: '600', marginTop: 2 },
-    selectPlaceholder: { color: C.placeholder, fontWeight: '400' },
-    selectRight: { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 8 },
-    selectBadge: { backgroundColor: C.goldWash, borderWidth: 1, borderColor: 'rgba(232,185,126,0.2)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-    selectBadgeText: { color: C.goldSoft, fontSize: 11, fontWeight: '700' },
-
-    dropdownCard: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: DROPDOWN_CARD_TOP,
-        zIndex: 30,
-        backgroundColor: C.cardRaised,
-        borderWidth: 1,
-        borderColor: C.lineStrong,
-        borderRadius: 14,
-        overflow: 'hidden',
-        ...Platform.select({
-            ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 16 },
-            android: { elevation: 12 },
-        }),
-    },
-    dropdownScroll: { flex: 1 },
-    dropdownHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.line, backgroundColor: C.card },
-    dropdownTitle: { color: C.white, fontSize: 12.5, fontWeight: '700' },
-    dropdownClose: { padding: 2 },
-    dropdownContent: { padding: 8, gap: 10 },
-    dropdownSection: { gap: 6 },
-    dropdownSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingLeft: 2 },
-    dropdownSectionLabel: { color: C.muted, fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
-    dropdownGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-    dropdownOption: {
-        width: '48.5%',
-        height: 42,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 7,
-        borderWidth: 1,
-        borderColor: C.line,
-        backgroundColor: C.card,
         borderRadius: 10,
-        paddingHorizontal: 10,
+        paddingHorizontal: 6,
+        paddingVertical: 6,
     },
-    dropdownOptionActive: { backgroundColor: C.gold, borderColor: C.gold },
-    dropdownOptionEarlierActive: { backgroundColor: C.green, borderColor: C.green },
-    dropdownOptionBadge: { backgroundColor: C.panel, borderRadius: 5, paddingHorizontal: 5, paddingVertical: 2, color: C.white, fontSize: 10.5, fontWeight: '800', minWidth: 30, textAlign: 'center', overflow: 'hidden' },
-    dropdownOptionBadgeActive: { backgroundColor: 'rgba(0,0,0,0.15)', color: C.ink },
-    dropdownOptionBadgeEarlier: { backgroundColor: 'rgba(0,0,0,0.12)', color: C.greenInk },
-    dropdownOptionText: { color: C.mutedLight, fontSize: 11.5, fontWeight: '500', flex: 1 },
-    dropdownOptionTextActive: { color: C.ink, fontWeight: '700' },
+    chipLater: { backgroundColor: C.card, borderColor: 'rgba(232,185,126,0.28)' },
+    chipEarlier: { backgroundColor: C.card, borderColor: 'rgba(110,209,158,0.28)' },
+    chipLaterActive: { backgroundColor: C.gold, borderColor: C.gold },
+    chipEarlierActive: { backgroundColor: C.green, borderColor: C.green },
+    chipText: { color: C.mutedLight, fontSize: 11.5, fontWeight: '600', flexShrink: 1 },
+    chipTextActive: { color: C.ink, fontWeight: '700' },
 
     customRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
     customLabel: { color: C.muted, fontSize: 11, fontWeight: '600' },
@@ -665,17 +518,17 @@ const styles = StyleSheet.create({
     errorText: { color: C.redText, fontSize: 11, marginTop: 6, lineHeight: 13 },
     helperText: { color: C.muted, fontSize: 10.5, marginTop: 6, lineHeight: 13 },
 
-    exactSection: { gap: 6, zIndex: 1 },
+    exactSection: { gap: 6 },
     timeInputBox: { height: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: C.lineInput, backgroundColor: C.inputBg, borderRadius: 12, paddingHorizontal: 12 },
     timeInputLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     timeIconBox: { width: 32, height: 32, borderRadius: 8, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' },
     timeInputLabel: { color: C.muted, fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
     timeInputValue: { color: C.inputText, fontSize: 14, fontWeight: '600', marginTop: 1 },
 
-    noteRow: { flexDirection: 'row', alignItems: 'center', height: 42, borderWidth: 1, borderColor: C.lineInput, backgroundColor: C.inputBg, borderRadius: 11, paddingHorizontal: 12, marginTop: 12, gap: 8, zIndex: 1 },
+    noteRow: { flexDirection: 'row', alignItems: 'center', height: 42, borderWidth: 1, borderColor: C.lineInput, backgroundColor: C.inputBg, borderRadius: 11, paddingHorizontal: 12, marginTop: 12, gap: 8 },
     noteInput: { flex: 1, color: C.inputText, fontSize: 13.5, fontWeight: '400', paddingVertical: 0, height: '100%' },
 
-    preview: { flexDirection: 'row', alignItems: 'center', marginTop: 10, paddingHorizontal: 10, paddingVertical: 9, borderRadius: 11, backgroundColor: C.greenWash, borderWidth: 1, borderColor: C.greenLine, gap: 9, zIndex: 1 },
+    preview: { flexDirection: 'row', alignItems: 'center', marginTop: 10, paddingHorizontal: 10, paddingVertical: 9, borderRadius: 11, backgroundColor: C.greenWash, borderWidth: 1, borderColor: C.greenLine, gap: 9 },
     previewBlocked: { backgroundColor: C.redWash, borderColor: C.redLine },
     previewIcon: { width: 22, height: 22, borderRadius: 11, backgroundColor: C.green, alignItems: 'center', justifyContent: 'center' },
     previewIconBlocked: { backgroundColor: C.red },
@@ -685,10 +538,10 @@ const styles = StyleSheet.create({
     previewOffset: { color: C.mutedLight, fontSize: 11.5, fontWeight: '500' },
     previewSub: { color: C.mutedLight, fontSize: 10.5, marginTop: 2 },
     previewWarning: { color: C.redText, fontSize: 10.5, fontWeight: '600', marginTop: 2 },
-    emptyPreview: { marginTop: 10, paddingVertical: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)', borderStyle: 'dashed', zIndex: 1 },
+    emptyPreview: { marginTop: 10, paddingVertical: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)', borderStyle: 'dashed' },
     hintText: { color: C.muted, fontSize: 11, fontWeight: '500', textAlign: 'center' },
 
-    actions: { flexDirection: 'row', gap: 10, marginTop: 12, paddingTop: 2, zIndex: 1 },
+    actions: { flexDirection: 'row', gap: 10 },
     cancelBtn: { flex: 1, height: 50, borderRadius: 13, backgroundColor: C.cardRaised, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' },
     cancelText: { color: C.white, fontSize: 14, fontWeight: '700', letterSpacing: 0.2 },
     submitBtn: {
