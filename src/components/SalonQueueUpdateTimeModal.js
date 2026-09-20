@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Modal,
     View,
@@ -6,6 +6,7 @@ import {
     StyleSheet,
     TouchableOpacity,
     TextInput,
+    ScrollView,
     ActivityIndicator,
     Platform,
     KeyboardAvoidingView,
@@ -32,6 +33,9 @@ import {
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 const IS_SMALL_SCREEN = SCREEN_HEIGHT < 700;
 const IS_VERY_SMALL = SCREEN_HEIGHT < 620;
+
+// Where the option card hangs below the select box (56px box + 6px gap).
+const DROPDOWN_CARD_TOP = 62;
 
 /* ---------------- PALETTE ---------------- */
 const C = {
@@ -78,6 +82,46 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
 
     const bookingDate = booking?.bookingDate;
     const bookingTime = booking?.bookingTime;
+
+    /* ---------------- DROPDOWN GEOMETRY ----------------
+     * The option card floats over the rest of the sheet, so it must fit in the
+     * space between its top edge and the sheet's bottom (the sheet clips
+     * overflow). Measure the sheet height and the select box's position inside
+     * it (body → offset section → select wrap, all onLayout-driven so font
+     * scaling and small screens are handled), then cap the card height and let
+     * the options scroll inside it. */
+    const [sheetHeight, setSheetHeight] = useState(0);
+    const [anchorTop, setAnchorTop] = useState(0);
+    const bodyTopRef = useRef(0); // body y within sheet
+    const sectionTopRef = useRef(0); // offset section y within body
+    const wrapTopRef = useRef(0); // select wrap y within offset section
+
+    const recomputeAnchor = useCallback(() => {
+        const y = bodyTopRef.current + sectionTopRef.current + wrapTopRef.current;
+        setAnchorTop(prev => (prev === y ? prev : y));
+    }, []);
+
+    const onSheetLayout = useCallback(e => {
+        const h = e.nativeEvent.layout.height;
+        setSheetHeight(prev => (prev === h ? prev : h));
+    }, []);
+    const onBodyLayout = useCallback(e => {
+        bodyTopRef.current = e.nativeEvent.layout.y;
+        recomputeAnchor();
+    }, [recomputeAnchor]);
+    const onSectionLayout = useCallback(e => {
+        sectionTopRef.current = e.nativeEvent.layout.y;
+        recomputeAnchor();
+    }, [recomputeAnchor]);
+    const onWrapLayout = useCallback(e => {
+        wrapTopRef.current = e.nativeEvent.layout.y;
+        recomputeAnchor();
+    }, [recomputeAnchor]);
+
+    const measured = sheetHeight > 0 && anchorTop > 0;
+    const cardMaxHeight = measured
+        ? Math.max(110, Math.min(sheetHeight - anchorTop - DROPDOWN_CARD_TOP - 8, 340))
+        : 300; // safe default for the first frame before layout events land
 
     useEffect(() => {
         if (!open) return;
@@ -182,7 +226,22 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
                 <View style={styles.backdrop}>
                     <TouchableOpacity style={styles.backdropTouch} activeOpacity={1} onPress={safeClose} />
 
-                    <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+                    <View
+                        style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 12) }]}
+                        onLayout={onSheetLayout}
+                        testID="update-time-sheet"
+                    >
+                        {/* Closes the dropdown when the user taps the sheet outside
+                            the option card. Rendered before the body so the body
+                            (and the card inside it) stays on top and tappable. */}
+                        {showOffsetPicker && (
+                            <TouchableOpacity
+                                style={StyleSheet.absoluteFillObject}
+                                activeOpacity={1}
+                                onPress={() => setShowOffsetPicker(false)}
+                                testID="update-time-dropdown-tapcatcher"
+                            />
+                        )}
                         <View style={styles.handleWrap}>
                             <View style={styles.handleBar} />
                         </View>
@@ -205,7 +264,7 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
                             </TouchableOpacity>
                         </View>
 
-                        <View style={styles.body}>
+                        <View style={styles.body} onLayout={onBodyLayout} testID="update-time-body">
                             {/* Top pills */}
                             <View style={styles.topRow}>
                                 <View style={styles.customerPill}>
@@ -249,11 +308,11 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
 
                             {/* Content */}
                             {mode === 'offset' ? (
-                                <View style={styles.offsetSection}>
+                                <View style={styles.offsetSection} onLayout={onSectionLayout} testID="update-time-offset-section">
                                     <Text style={styles.groupLabel}>Time adjustment</Text>
 
                                     {/* SELECT BOX - replaces +10 +20 chips */}
-                                    <View style={styles.selectWrap}>
+                                    <View style={styles.selectWrap} onLayout={onWrapLayout} testID="update-time-select-wrap">
                                         <TouchableOpacity
                                             style={[
                                                 styles.selectBox,
@@ -285,44 +344,48 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
                                             </View>
                                         </TouchableOpacity>
 
-                                        {/* DROPDOWN - proper mobile select */}
+                                        {/* DROPDOWN - proper mobile select.
+                                            Anchored just under the select box (no bottom inset, so its
+                                            height is always exactly its content), capped to the space
+                                            left inside the sheet, with the options scrolling inside. */}
                                         {showOffsetPicker && (
-                                            <View style={styles.dropdownWrapper} pointerEvents="box-none">
-                                                <TouchableOpacity
-                                                    style={styles.dropdownBackdrop}
-                                                    activeOpacity={1}
-                                                    onPress={() => setShowOffsetPicker(false)}
-                                                />
-                                                <View style={styles.dropdownCard}>
-                                                    <View style={styles.dropdownHeader}>
-                                                        <Text style={styles.dropdownTitle}>Choose time shift</Text>
-                                                        <TouchableOpacity onPress={() => setShowOffsetPicker(false)} style={styles.dropdownClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                                                            <Ionicons name="close-circle" size={18} color={C.muted} />
-                                                        </TouchableOpacity>
-                                                    </View>
-
-                                                    <View style={styles.dropdownContent}>
-                                                        <View style={styles.dropdownSection}>
-                                                            <View style={styles.dropdownSectionHeader}>
-                                                                <Ionicons name="arrow-forward" size={10} color={C.gold} />
-                                                                <Text style={styles.dropdownSectionLabel}>Running late</Text>
-                                                            </View>
-                                                            <View style={styles.dropdownGrid}>
-                                                                {LATER_OFFSETS.map(renderDropdownOption)}
-                                                            </View>
-                                                        </View>
-
-                                                        <View style={styles.dropdownSection}>
-                                                            <View style={styles.dropdownSectionHeader}>
-                                                                <Ionicons name="arrow-back" size={10} color={C.green} />
-                                                                <Text style={[styles.dropdownSectionLabel, { color: C.green }]}>Free earlier</Text>
-                                                            </View>
-                                                            <View style={styles.dropdownGrid}>
-                                                                {EARLIER_OFFSETS.map(renderDropdownOption)}
-                                                            </View>
-                                                        </View>
-                                                    </View>
+                                            <View
+                                                style={[styles.dropdownCard, { maxHeight: cardMaxHeight }]}
+                                                testID="update-time-dropdown-card"
+                                            >
+                                                <View style={styles.dropdownHeader}>
+                                                    <Text style={styles.dropdownTitle}>Choose time shift</Text>
+                                                    <TouchableOpacity onPress={() => setShowOffsetPicker(false)} style={styles.dropdownClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                                                        <Ionicons name="close-circle" size={18} color={C.muted} />
+                                                    </TouchableOpacity>
                                                 </View>
+
+                                                <ScrollView
+                                                    style={styles.dropdownScroll}
+                                                    contentContainerStyle={styles.dropdownContent}
+                                                    showsVerticalScrollIndicator={false}
+                                                    bounces={false}
+                                                >
+                                                    <View style={styles.dropdownSection}>
+                                                        <View style={styles.dropdownSectionHeader}>
+                                                            <Ionicons name="arrow-forward" size={10} color={C.gold} />
+                                                            <Text style={styles.dropdownSectionLabel}>Running late</Text>
+                                                        </View>
+                                                        <View style={styles.dropdownGrid}>
+                                                            {LATER_OFFSETS.map(renderDropdownOption)}
+                                                        </View>
+                                                    </View>
+
+                                                    <View style={styles.dropdownSection}>
+                                                        <View style={styles.dropdownSectionHeader}>
+                                                            <Ionicons name="arrow-back" size={10} color={C.green} />
+                                                            <Text style={[styles.dropdownSectionLabel, { color: C.green }]}>Free earlier</Text>
+                                                        </View>
+                                                        <View style={styles.dropdownGrid}>
+                                                            {EARLIER_OFFSETS.map(renderDropdownOption)}
+                                                        </View>
+                                                    </View>
+                                                </ScrollView>
                                             </View>
                                         )}
                                     </View>
@@ -548,9 +611,12 @@ const styles = StyleSheet.create({
     selectBadge: { backgroundColor: C.goldWash, borderWidth: 1, borderColor: 'rgba(232,185,126,0.2)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
     selectBadgeText: { color: C.goldSoft, fontSize: 11, fontWeight: '700' },
 
-    dropdownWrapper: { ...StyleSheet.absoluteFillObject, top: 62, zIndex: 30 },
-    dropdownBackdrop: { ...StyleSheet.absoluteFillObject },
     dropdownCard: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: DROPDOWN_CARD_TOP,
+        zIndex: 30,
         backgroundColor: C.cardRaised,
         borderWidth: 1,
         borderColor: C.lineStrong,
@@ -561,6 +627,7 @@ const styles = StyleSheet.create({
             android: { elevation: 12 },
         }),
     },
+    dropdownScroll: { flex: 1 },
     dropdownHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.line, backgroundColor: C.card },
     dropdownTitle: { color: C.white, fontSize: 12.5, fontWeight: '700' },
     dropdownClose: { padding: 2 },
