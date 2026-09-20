@@ -64,7 +64,7 @@ const NaaiLogin = ({ navigation }) => {
 
 
   return (
-   // <ImageBackground source={BG_IMAGE} style={styles.bg}>
+   <ImageBackground source={BG_IMAGE} style={styles.bg}>
       <View style={styles.overlay}>
 
         <SafeAreaView style={{ flex: 1 }}>
@@ -127,7 +127,7 @@ const NaaiLogin = ({ navigation }) => {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </View>
-    // </ImageBackground>
+    </ImageBackground>
   );
 };
 
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: '#080A0A', // web --black: flat on mobile (web hides the auth image below the breakpoint)
+    backgroundColor: 'rgba(0,0,0,0.75)',
   },
 
   header: {

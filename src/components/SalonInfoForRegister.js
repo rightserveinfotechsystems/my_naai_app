@@ -20,7 +20,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoding';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import getFcmDeviceToken from '../utilities/getFcmToken';
+import messaging from '@react-native-firebase/messaging';
 
 Geocoder.init("AIzaSyCz32prVTCy8x0xtd2mB2Q8rTYmvbqi8Tw");
 
@@ -210,11 +210,11 @@ const SalonInfoForRegister = ({ navigation, route }) => {
     // }
     //  const deviceToken = await getDeviceToken();
 
-    const token = deviceToken || (await getFcmDeviceToken());
-    if (!token) {
+    if (!deviceToken) {
       Alert.alert("Please wait", "Getting device token...");
       return;
     }
+    const token = await messaging().getToken();
 
     const step1Data = {
       ownerName: naaiName,
@@ -238,10 +238,12 @@ const SalonInfoForRegister = ({ navigation, route }) => {
 
   useEffect(() => {
     const getDeviceToken = async () => {
-      const token = await getFcmDeviceToken();
-      if (token) {
+      try {
+        const token = await messaging().getToken();
         console.log('FCM DEVICE TOKEN salon registration:', token);
         setDeviceToken(token);
+      } catch (e) {
+        console.log('FCM token error', e);
       }
     };
 
