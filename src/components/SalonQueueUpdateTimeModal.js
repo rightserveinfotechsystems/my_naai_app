@@ -158,7 +158,7 @@ export default function SalonQueueUpdateTimeModal({ booking, open, onClose, onSu
         : null;
 
     return (
-        <Modal transparent visible={open} animationType="slide" onRequestClose={safeClose} statusBarTranslucent>
+        <Modal transparent visible={open} animationType="slide" onRequestClose={safeClose}>
             <KeyboardAvoidingView
                 style={styles.keyboardAvoid}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}

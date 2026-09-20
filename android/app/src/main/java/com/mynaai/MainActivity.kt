@@ -5,7 +5,6 @@ import android.content.Intent // 👈 Required for onNewIntent
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Bundle
-import androidx.core.view.WindowCompat
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -24,14 +23,20 @@ class MainActivity : ReactActivity() {
     setIntent(intent)
   }
 
-  // ✅ FIX FOR VIVO / OPPO SYSTEM NAVIGATION OVERLAP
+  // ✅ EDGE-TO-EDGE (Google Play "deprecated APIs for edge-to-edge" fix)
+  //
+  // Previously this override called WindowCompat.setDecorFitsSystemWindows(window, true)
+  // to fight the system-navigation overlap on Vivo/Oppo devices. That approach:
+  //   * is ignored on Android 15/16 (edge-to-edge is enforced for targetSdk 35+),
+  //   * conflicts with React Native's own edge-to-edge support, and
+  //   * is reported by Play Console as deprecated edge-to-edge behavior.
+  //
+  // Edge-to-edge is now enabled the supported way: edgeToEdgeEnabled=true in
+  // gradle.properties lets React Native make the bars transparent, and content
+  // avoids the system bars via insets (react-native-safe-area-context +
+  // react-navigation), which also fixes the old Vivo/Oppo overlap correctly.
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(null)
-
-    WindowCompat.setDecorFitsSystemWindows(
-        window,
-        true
-    )
   }
 
   // 🔥 BLOCK FONT SCALING

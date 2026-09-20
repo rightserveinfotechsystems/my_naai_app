@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Resource-shrinker keep list (shrinkResources true).
+
+  The notification sounds below are resolved by NAME at runtime
+  (notifee sound: 'buzzer' / 'buzzer_old' -> R.raw lookup via getIdentifier),
+  so the shrinker cannot see a static reference. Keep every raw resource
+  to guarantee notification sounds survive release builds.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/*" />

@@ -57,8 +57,13 @@ react {
 
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
+ *
+ * Enabled (R8): shrinks, optimizes and obfuscates the release DEX. This is what
+ * the Play Console "Code optimization" report measures — with this off, the
+ * Obfuscation score is ~0-2%. React Native ships the required keep rules inside
+ * the react-android AAR (consumerProguardFiles), so this is safe to enable.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -83,8 +88,8 @@ android {
         applicationId "com.mynaai"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 34
-        versionName "1.4.2"
+        versionCode 35
+        versionName "1.4.3"
     }
     signingConfigs {
         debug {
@@ -109,6 +114,10 @@ android {
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
+            // Remove unused resources as well (needs minifyEnabled). Resources that
+            // are only looked up by name at runtime (notifee notification sounds in
+            // res/raw) are protected via res/raw/keep.xml.
+            shrinkResources true
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
