@@ -95,7 +95,9 @@ export default function BookingRequestScreen({ route, navigation }) {
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar backgroundColor="#080A0A" barStyle="light-content" />
+        {/* backgroundColor removed: deprecated for edge-to-edge (API 35+);
+            screen bg (#080A0A) shows behind the transparent status bar */}
+        <StatusBar barStyle="light-content" />
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#E8B97E" />
           {/* <Text allowFontScaling={false}style={{ color: '#fff', marginTop: 15 }}>
@@ -112,7 +114,7 @@ export default function BookingRequestScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar backgroundColor="#080A0A" barStyle="light-content" />
+      <StatusBar barStyle="light-content" />
 
       <ScrollView contentContainerStyle={styles.container}>
         <Text allowFontScaling={false}style={styles.title}>New Booking Request</Text>

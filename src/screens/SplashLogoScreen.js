@@ -56,7 +56,9 @@ const SplashLogoScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#080A0A" barStyle="light-content" />
+      {/* backgroundColor removed: deprecated for edge-to-edge (API 35+);
+          container bg (#080A0A) shows behind the transparent status bar */}
+      <StatusBar barStyle="light-content" />
       <Animated.Image
         source={require('../assets/my_naai.png')}
         style={[styles.logo, { opacity: fadeAnim }]}
