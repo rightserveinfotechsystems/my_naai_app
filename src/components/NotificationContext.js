@@ -44,6 +44,7 @@ export const NotificationProvider = ({ children, userId ,userType}) => {
                 globalSocket = null;
             }
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userId]);
 
     const loadNotifications = async () => {

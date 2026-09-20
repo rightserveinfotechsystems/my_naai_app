@@ -11,8 +11,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const GOLD = '#E8B97E';
-const DARK = '#121212';
-const CARD = '#1E1E1E';
+const DARK = '#080A0A';
+const CARD = '#171B1B';
 
 const SalonAboutScreen = ({ navigation }) => {
   return (
@@ -140,14 +140,14 @@ const styles = StyleSheet.create({
   },
 
   text: {
-    color: '#ccc',
+    color: '#B7BEBE',
     fontSize: 13,
     lineHeight: 20,
     marginTop: 4,
   },
 
   bulletItem: {
-    color: '#ccc',
+    color: '#B7BEBE',
     fontSize: 13,
     lineHeight: 22,
     marginTop: 4,

@@ -348,7 +348,7 @@ export default SalonOtpScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#080A0A',
   },
   content: {
     flex: 1,
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    color: '#aaa',
+    color: '#B7BEBE',
     fontSize: 14,
     textAlign: 'center',
     marginTop: 10,
@@ -373,12 +373,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   otpInput: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     color: '#fff',
     height: 56,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#252B2B',
     fontSize: 22,
     letterSpacing: 12,
     textAlign: 'center',
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   timerText: {
-    color: '#888',
+    color: '#899191',
     textAlign: 'center',
     marginTop: 20,
     fontSize: 13,

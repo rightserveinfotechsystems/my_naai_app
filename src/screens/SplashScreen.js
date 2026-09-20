@@ -91,6 +91,7 @@ const SplashScreen = ({ navigation }) => {
     };
 
     checkFlow();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -155,7 +156,7 @@ export default SplashScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#080A0A',
   },
 
   slide: {
@@ -184,7 +185,7 @@ const styles = StyleSheet.create({
   },
 
   skipText: {
-    color: '#E1B378',
+    color: '#E8B97E',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
   },
 
   desc: {
-    color: '#ccc',
+    color: '#B7BEBE',
     fontSize: 14,
     marginTop: 12,
     lineHeight: 20,
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
   dot: {
     width: 16,
     height: 4,
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
     borderRadius: 10,
     marginRight: 8,
   },
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
     height: wp(14),
     borderRadius: wp(7),
 
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
     alignItems: 'center',
     justifyContent: 'center',
 

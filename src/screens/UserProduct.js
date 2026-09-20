@@ -72,6 +72,7 @@ const UserProduct = () => {
 
   useEffect(() => {
     fetchProducts(1, '');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearch = text => {
@@ -98,7 +99,7 @@ const UserProduct = () => {
         <Image source={{ uri: item.image }} style={styles.image} />
       ) : (
         <View style={styles.imagePlaceholder}>
-          <Ionicons name="pricetag-outline" size={32} color="#777" />
+          <Ionicons name="pricetag-outline" size={32} color="#899191" />
         </View>
       )}
 
@@ -117,7 +118,7 @@ const UserProduct = () => {
         <View style={styles.row}>
           <Text allowFontScaling={false}style={styles.price}>₹ {item.price}</Text>
           <View style={styles.rating}>
-            <Ionicons name="star" size={14} color="#FFD700" />
+            <Ionicons name="star" size={14} color="#F3C86E" />
             <Text allowFontScaling={false}style={styles.ratingText}>{Math.min(item.rating, 5)}</Text>
           </View>
         </View>
@@ -125,7 +126,7 @@ const UserProduct = () => {
         <Text allowFontScaling={false}
           style={[
             styles.availability,
-            { color: item.available ? '#4CAF50' : '#F44336' },
+            { color: item.available ? '#6ED19E' : '#F27B74' },
           ]}
         >
           {item.available ? 'Available' : 'Out of Stock'}
@@ -140,10 +141,10 @@ const UserProduct = () => {
         <SafeAreaView style={styles.container}>
           {/* SEARCH BAR */}
           <View style={styles.searchBox}>
-            <Ionicons name="search-outline" size={18} color="#999" />
+            <Ionicons name="search-outline" size={18} color="#B7BEBE" />
             <TextInput allowFontScaling={false}
               placeholder="Search products"
-              placeholderTextColor="#999"
+              placeholderTextColor="#B7BEBE"
               value={search}
               onChangeText={handleSearch}
               style={styles.searchInput}
@@ -162,14 +163,14 @@ const UserProduct = () => {
             ListEmptyComponent={
               !loading && (
                 <View style={styles.noResult}>
-                  <Ionicons name="search-circle-outline" size={64} color="#555" />
+                  <Ionicons name="search-circle-outline" size={64} color="#E8B97E" />
                   <Text allowFontScaling={false}style={styles.noResultText}>No results found</Text>
                 </View>
               )
             }
             ListFooterComponent={
               loading ? (
-                <ActivityIndicator size="large" color="#E0B973" style={{ margin: 20 }} />
+                <ActivityIndicator size="large" color="#E8B97E" style={{ margin: 20 }} />
               ) : null
             }
             onEndReached={handleLoadMore}
@@ -188,7 +189,7 @@ export default UserProduct;
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.99)',
+    backgroundColor: '#080A0A',
   },
   container: {
     flex: 1,
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#1C2121',
     borderRadius: 14,
     paddingHorizontal: 12,
     marginBottom: 16,
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
   },
   card: {
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#1C2121',
     borderRadius: 16,
     marginBottom: 16,
     width: CARD_WIDTH,
@@ -221,7 +222,7 @@ const styles = StyleSheet.create({
   },
   imagePlaceholder: {
     height: 120,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   salonName: {
-    color: '#E0B973',
+    color: '#E8B97E',
     fontSize: 12,
     marginBottom: 4,
   },
@@ -245,7 +246,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   price: {
-    color: '#E0B973',
+    color: '#E8B97E',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -268,7 +269,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   noResultText: {
-    color: '#777',
+    color: '#899191',
     fontSize: 15,
     marginTop: 8,
     fontWeight: '600',

@@ -35,12 +35,12 @@ const CACHE_KEYS = {
 /* -------------------- IST TIMEZONE OPEN/CLOSED CALCULATOR -------------------- */
 const getSalonStatus = (businessHours = []) => {
   if (!businessHours || !businessHours.length) {
-    return { isOpen: false, text: 'CLOSED', color: '#F44336' };
+    return { isOpen: false, text: 'CLOSED', color: '#F27B74' };
   }
 
   const schedule = businessHours[0];
   if (!schedule) {
-    return { isOpen: false, text: 'CLOSED', color: '#F44336' };
+    return { isOpen: false, text: 'CLOSED', color: '#F27B74' };
   }
 
   /* 🎯 Calculate Indian Standard Time (IST = UTC + 5:30) */
@@ -56,7 +56,7 @@ const getSalonStatus = (businessHours = []) => {
 
   // 1. Check Holiday Days
   if (schedule.holidayDays && Array.isArray(schedule.holidayDays) && schedule.holidayDays.includes(currentDay)) {
-    return { isOpen: false, text: 'CLOSED (HOLIDAY)', color: '#F44336' };
+    return { isOpen: false, text: 'CLOSED (HOLIDAY)', color: '#F27B74' };
   }
 
   const parseTimeToMinutes = (timeStr) => {
@@ -85,7 +85,7 @@ const getSalonStatus = (businessHours = []) => {
   return {
     isOpen,
     text: isOpen ? 'OPEN NOW' : 'CLOSED',
-    color: isOpen ? '#4CAF50' : '#F44336',
+    color: isOpen ? '#6ED19E' : '#F27B74',
   };
 };
 
@@ -226,19 +226,22 @@ const SalonCard = React.memo(
             <Ionicons
               name={isSaved ? 'bookmark' : 'bookmark-outline'}
               size={22}
-              color={isSaved ? '#E1B378' : '#AAA'}
+              color={isSaved ? '#E8B97E' : '#B7BEBE'}
             />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
               styles.bookBtn,
-              { backgroundColor: item.isOpen ? '#E1B378' : '#555' },
+              { backgroundColor: item.isOpen ? '#E8B97E' : '#1C2121' },
             ]}
             disabled={!item.isOpen}
             onPress={() => onSelect(item.id)}
           >
-            <Text allowFontScaling={false} style={styles.bookText}>
+            <Text
+              allowFontScaling={false}
+              style={[styles.bookText, !item.isOpen && { color: '#B7BEBE' }]}
+            >
               {item.isOpen
                 ? 'Book Now'
                 : item.statusText === 'CLOSED (HOLIDAY)'
@@ -461,6 +464,7 @@ const NaaiDashboard = ({ navigation }) => {
     setPage(1);
     setHasMore(true);
     getSalonList(1, true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [genderFilter, locationFilter]);
 
   useEffect(() => {
@@ -471,6 +475,7 @@ const NaaiDashboard = ({ navigation }) => {
     }, 400);
 
     return () => clearTimeout(delay);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   const firstName = useMemo(() => {
@@ -518,15 +523,15 @@ const NaaiDashboard = ({ navigation }) => {
 
   const renderFooter = useCallback(() => {
     if (!loading || refreshing || !hasMore) return null;
-    return <ActivityIndicator size="large" color="#E1B378" style={{ marginVertical: 20 }} />;
+    return <ActivityIndicator size="large" color="#E8B97E" style={{ marginVertical: 20 }} />;
   }, [loading, refreshing, hasMore]);
 
   const renderEmpty = useCallback(() => {
     if (loading) return null;
     return (
       <View style={{ alignItems: 'center', marginTop: 60 }}>
-        <Ionicons name="cut-outline" size={wp(10)} color="#777" />
-        <Text allowFontScaling={false} style={{ color: '#aaa', marginTop: 10, fontSize: 14 }}>
+        <Ionicons name="cut-outline" size={wp(10)} color="#899191" />
+        <Text allowFontScaling={false} style={{ color: '#B7BEBE', marginTop: 10, fontSize: 14 }}>
           No salons available
         </Text>
       </View>
@@ -641,11 +646,11 @@ const NaaiDashboard = ({ navigation }) => {
               ListHeaderComponent={
                 <>
                   <View style={styles.searchBox}>
-                    <Ionicons name="search" size={wp(4.5)} color="#999" />
+                    <Ionicons name="search" size={wp(4.5)} color="#B7BEBE" />
                     <TextInput
                       allowFontScaling={false}
                       placeholder="Find salon, specialists..."
-                      placeholderTextColor="#999"
+                      placeholderTextColor="#B7BEBE"
                       style={styles.searchInput}
                       value={search}
                       onChangeText={setSearch}
@@ -677,7 +682,7 @@ export default NaaiDashboard;
 /* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.99)' },
+  overlay: { flex: 1, backgroundColor: '#080A0A' },
   container: {
     flex: 1,
     paddingHorizontal: wp(4),
@@ -691,7 +696,7 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     borderRadius: wp(4),
     paddingHorizontal: wp(4),
     height: hp(6),
@@ -719,16 +724,17 @@ const styles = StyleSheet.create({
     width: wp(2),
     height: wp(2),
     borderRadius: wp(1),
-    backgroundColor: '#555',
+    // Inactive carousel dot: dim gold (web gold-wash family), not grey.
+    backgroundColor: 'rgba(232,185,126,0.35)',
     marginHorizontal: wp(1),
   },
   activeDot: {
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
     width: wp(5),
   },
   card: {
     flexDirection: 'row',
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     borderRadius: wp(4),
     marginBottom: hp(2),
     overflow: 'hidden',
@@ -741,7 +747,7 @@ const styles = StyleSheet.create({
     width: wp(30),
     height: '100%',
     minHeight: hp(14),
-    backgroundColor: '#333',
+    backgroundColor: '#252B2B',
   },
   cardContent: {
     flex: 1,
@@ -755,7 +761,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   genderName: {
-    color: '#bcb3b3c0',
+    color: '#B7BEBE',
     fontSize: wp(3.2),
     fontWeight: '500',
     letterSpacing: 1,
@@ -763,7 +769,7 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', alignItems: 'center', marginVertical: 0 },
   linkText: {
-    color: '#E1B378',
+    color: '#E8B97E',
     fontSize: wp(3.4),
     textTransform: 'capitalize',
     marginLeft: wp(2),
@@ -781,12 +787,12 @@ const styles = StyleSheet.create({
   },
   genderToggle: {
     flexDirection: 'row',
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     borderRadius: wp(6),
     padding: wp(1),
   },
   activeGenderBtn: {
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
     borderRadius: wp(4),
   },
   genderBtn: {
@@ -795,7 +801,7 @@ const styles = StyleSheet.create({
     borderRadius: wp(4),
   },
   iconBtn: {
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
     width: wp(9),
     height: wp(9),
     borderRadius: wp(4.5),
@@ -806,7 +812,7 @@ const styles = StyleSheet.create({
   genderText: {
     fontSize: wp(3),
     fontWeight: '700',
-    color: '#AAA',
+    color: '#B7BEBE',
   },
   activeGenderText: {
     color: '#000',
@@ -815,7 +821,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: hp(1),
     left: 0,
-    backgroundColor: '#fff',
+    backgroundColor: '#F1E8DD',
     paddingHorizontal: wp(2.5),
     paddingVertical: hp(0.5),
     borderRadius: wp(2.5),
@@ -825,7 +831,7 @@ const styles = StyleSheet.create({
   distanceBadgeText: {
     fontSize: wp(3),
     fontWeight: '700',
-    color: '#000',
+    color: '#111',
   },
   bookmarkBtn: {
     position: 'absolute',

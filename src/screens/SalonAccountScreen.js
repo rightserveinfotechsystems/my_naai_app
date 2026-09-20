@@ -30,8 +30,8 @@ Geocoder.init("AIzaSyCz32prVTCy8x0xtd2mB2Q8rTYmvbqi8Tw");
 
 
 const GOLD = '#E8B97E';
-const DARK = '#121212';
-const CARD = '#1E1E1E';
+const DARK = '#080A0A';
+const CARD = '#171B1B';
 const MAX_IMAGE_MB = 2;
 const MAX_IMAGES = 4;
 // const [salonImages, setSalonImages] = useState([]);
@@ -440,6 +440,7 @@ const SalonAccountScreen = ({ navigation }) => {
     if (salonId) {
       salonProfile(salonId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [salonId]);
 
   const getImageSource = (path) => {
@@ -709,6 +710,7 @@ const SalonAccountScreen = ({ navigation }) => {
       }
     }
     initialize();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (profileLoading) {
@@ -759,7 +761,7 @@ const SalonAccountScreen = ({ navigation }) => {
             <Text allowFontScaling={false} style={styles.editText}>Edit Salon Profile</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.editBtn, { marginTop: 10, backgroundColor: '#2A2A2A' }]}
+            style={[styles.editBtn, { marginTop: 10, backgroundColor: '#1C2121' }]}
             onPress={handleRefreshProfile}
           >
             <Text allowFontScaling={false} style={[styles.editText, { color: GOLD }]}>
@@ -775,7 +777,7 @@ const SalonAccountScreen = ({ navigation }) => {
           <TouchableOpacity
             style={[
               styles.toggleBtn,
-              { backgroundColor: isOpen ? '#4CAF50' : '#E53935' },
+              { backgroundColor: isOpen ? '#6ED19E' : '#F27B74' },
             ]}
             onPress={handleToggleSalon}
           >
@@ -810,7 +812,7 @@ const SalonAccountScreen = ({ navigation }) => {
                 <Ionicons name={item.icon} size={20} color={GOLD} />
                 <Text allowFontScaling={false} style={styles.menuText}>{item.label}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#777" />
+              <Ionicons name="chevron-forward" size={18} color="#899191" />
             </TouchableOpacity>
           ))}
         </View>
@@ -906,7 +908,7 @@ const SalonAccountScreen = ({ navigation }) => {
               value={salonName}
               onChangeText={setSalonName}
               placeholder="Salon Name"
-              placeholderTextColor="#999"
+              placeholderTextColor="#B7BEBE"
             />
 
             <TextInput allowFontScaling={false}
@@ -914,7 +916,7 @@ const SalonAccountScreen = ({ navigation }) => {
               value={salonAddress}
               onChangeText={setSalonAddress}
               placeholder="Salon Address"
-              placeholderTextColor="#999"
+              placeholderTextColor="#B7BEBE"
             />
 
            
@@ -971,7 +973,7 @@ const SalonAccountScreen = ({ navigation }) => {
                           : 'radio-button-off'
                       }
                       size={18}
-                      color={holiday === day.value ? '#4CAF50' : '#999'}
+                      color={holiday === day.value ? '#6ED19E' : '#B7BEBE'}
                     />
                     <Text allowFontScaling={false} style={styles.dropdownText}>{day.label}</Text>
                   </TouchableOpacity>
@@ -991,7 +993,7 @@ const SalonAccountScreen = ({ navigation }) => {
                 <TextInput allowFontScaling={false}
                   style={[styles.input, { flex: 1 }]}
                   placeholder="Service Name"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#B7BEBE"
                   value={service.name}
                   onChangeText={text => {
                     const updated = [...services];
@@ -1004,7 +1006,7 @@ const SalonAccountScreen = ({ navigation }) => {
                   style={[styles.input, styles.smallInput]}
                   placeholder="Price"
                   keyboardType="numeric"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#B7BEBE"
                   value={service.price}
                   onChangeText={text => {
                     const updated = [...services];
@@ -1018,7 +1020,7 @@ const SalonAccountScreen = ({ navigation }) => {
                 <TouchableOpacity
                   onPress={() => handleDeleteService(service.id)}
                 >
-                  <Ionicons name="trash-outline" size={20} color="#E53935" />
+                  <Ionicons name="trash-outline" size={20} color="#F27B74" />
                 </TouchableOpacity>
               </View>
             ))}
@@ -1077,7 +1079,7 @@ const SalonAccountScreen = ({ navigation }) => {
                   <TextInput allowFontScaling={false}
                     style={[styles.input, styles.barberNameInput]}
                     placeholder="Barber Name"
-                    placeholderTextColor="#999"
+                    placeholderTextColor="#B7BEBE"
                     value={b.name}
                     onChangeText={text => {
                       const updated = [...barbers];
@@ -1092,7 +1094,7 @@ const SalonAccountScreen = ({ navigation }) => {
                   <TextInput allowFontScaling={false}
                     style={styles.ratingInput}
                     placeholder="Rating (1–5)"
-                    placeholderTextColor="#999"
+                    placeholderTextColor="#B7BEBE"
                     keyboardType="number-pad"
                     maxLength={1}
                     value={String(b.rating)}
@@ -1113,7 +1115,7 @@ const SalonAccountScreen = ({ navigation }) => {
                     }}
                   />
 
-                  <Text allowFontScaling={false} style={{ color: '#777', fontSize: 11, marginTop: 4 }}>
+                  <Text allowFontScaling={false} style={{ color: '#899191', fontSize: 11, marginTop: 4 }}>
                     Out of 5
                   </Text>
 
@@ -1131,9 +1133,9 @@ const SalonAccountScreen = ({ navigation }) => {
                             backgroundColor:
                               b.isAvailable === opt.value
                                 ? opt.value
-                                  ? '#4CAF50'
-                                  : '#E53935'
-                                : '#333',
+                                  ? '#6ED19E'
+                                  : '#F27B74'
+                                : '#252B2B',
                           },
                         ]}
                         onPress={() => {
@@ -1164,7 +1166,7 @@ const SalonAccountScreen = ({ navigation }) => {
                     <TouchableOpacity
                       onPress={() => handleDeleteBarber(b.id)}
                     >
-                      <Ionicons name="trash-outline" size={20} color="#E53935" />
+                      <Ionicons name="trash-outline" size={20} color="#F27B74" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -1284,7 +1286,7 @@ const styles = StyleSheet.create({
   },
 
   mobile: {
-    color: '#aaa',
+    color: '#B7BEBE',
     fontSize: 13,
     marginTop: 6,
     textAlign: 'center',
@@ -1349,7 +1351,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderColor: '#2A2A2A',
+    borderColor: '#1C2121',
   },
 
   menuLeft: {
@@ -1389,7 +1391,7 @@ const styles = StyleSheet.create({
   },
 
   input: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     borderRadius: 14,
     paddingHorizontal: 6,
     paddingVertical: 12,
@@ -1407,7 +1409,7 @@ const styles = StyleSheet.create({
 
   timeBtn: {
     flex: 1,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     paddingVertical: 12,
     borderRadius: 14,
     alignItems: 'center',
@@ -1433,7 +1435,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     padding: 10,
     borderRadius: 12,
     marginTop: 6,
@@ -1507,7 +1509,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginRight: 6,
     borderRadius: 22,
-    backgroundColor: '#333',
+    backgroundColor: '#252B2B',
     alignItems: 'center',
   },
 
@@ -1535,7 +1537,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     borderRadius: 20,
     paddingVertical: 12,
     marginBottom: 20,
@@ -1549,7 +1551,7 @@ const styles = StyleSheet.create({
 
   version: {
     textAlign: 'center',
-    color: '#777',
+    color: '#899191',
     fontSize: 12,
     marginBottom: 30,
   },
@@ -1573,7 +1575,7 @@ const styles = StyleSheet.create({
   ratingInput: {
     width: 90,
     textAlign: 'center',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     borderRadius: 12,
     paddingVertical: 8,
     color: '#fff',
@@ -1582,7 +1584,7 @@ const styles = StyleSheet.create({
 
 
   barberCard: {
-    backgroundColor: '#1F1F1F',
+    backgroundColor: '#171B1B',
     borderRadius: 16,
     padding: 12,
     marginBottom: 12,
@@ -1614,7 +1616,7 @@ const styles = StyleSheet.create({
   },
 
   dropdown: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     borderRadius: 14,
     padding: 10,
     marginBottom: 10,
@@ -1648,7 +1650,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: '#E53935',
+    backgroundColor: '#F27B74',
     width: 18,
     height: 18,
     borderRadius: 9,
@@ -1658,7 +1660,7 @@ const styles = StyleSheet.create({
 
   longPressHint: {
     fontSize: 11,
-    color: '#999',
+    color: '#B7BEBE',
     marginTop: -4,
   },
 

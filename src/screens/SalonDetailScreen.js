@@ -19,17 +19,17 @@ import { wp, hp } from '../utils/AppScreen';
 
 const BG_IMAGE = require('../assets/salon_page_bg.png');
 const GOLD = '#E8B97E';
-const DARK = '#121212';
+const DARK = '#080A0A';
 
 /* -------------------- IST TIMEZONE OPEN/CLOSED CALCULATOR -------------------- */
 const getSalonStatus = (businessHours = []) => {
   if (!businessHours || !businessHours.length) {
-    return { isOpen: false, text: 'CLOSED', color: '#F44336' };
+    return { isOpen: false, text: 'CLOSED', color: '#F27B74' };
   }
 
   const schedule = businessHours[0];
   if (!schedule) {
-    return { isOpen: false, text: 'CLOSED', color: '#F44336' };
+    return { isOpen: false, text: 'CLOSED', color: '#F27B74' };
   }
 
   /* 🎯 Calculate Indian Standard Time (IST = UTC + 5:30) */
@@ -45,7 +45,7 @@ const getSalonStatus = (businessHours = []) => {
 
   // 1. Check Holiday Days
   if (schedule.holidayDays && Array.isArray(schedule.holidayDays) && schedule.holidayDays.includes(currentDay)) {
-    return { isOpen: false, text: 'CLOSED (HOLIDAY)', color: '#F44336' };
+    return { isOpen: false, text: 'CLOSED (HOLIDAY)', color: '#F27B74' };
   }
 
   const parseTimeToMinutes = (timeStr) => {
@@ -74,7 +74,7 @@ const getSalonStatus = (businessHours = []) => {
   return {
     isOpen,
     text: isOpen ? 'OPEN NOW' : 'CLOSED',
-    color: isOpen ? '#4CAF50' : '#F44336',
+    color: isOpen ? '#6ED19E' : '#F27B74',
   };
 };
 
@@ -309,11 +309,11 @@ const SalonDetailScreen = ({ route, navigation }) => {
                     <Ionicons
                       name="alert-circle-outline"
                       size={16}
-                      color="#FF5252"
+                      color="#F27B74"
                     />
                     <Text
                       allowFontScaling={false}
-                      style={[styles.infoText, { color: '#FF5252' }]}
+                      style={[styles.infoText, { color: '#F27B74' }]}
                     >
                       Holiday: {salonDetails.upcomingHoliday}
                     </Text>
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   bg: { flex: 1 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.99)', },
+  overlay: { flex: 1, backgroundColor: '#080A0A', },
 
   header: {
     position: 'absolute',
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700', marginLeft: 16 },
+  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700', marginLeft: 16, textTransform: 'uppercase' },
   salonType: { color: GOLD, fontSize: 13, marginLeft: 16 },
 
   sliderImage: {
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 16,
     paddingTop: 12,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#0b0b0b',
     elevation: 20,
   },
   bookBtn: {
@@ -462,11 +462,11 @@ const styles = StyleSheet.create({
   staticInfoBox: {
     marginTop: 18,
     padding: 12,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     borderRadius: 12,
   },
   staticText: {
-    color: '#AAA',
+    color: '#B7BEBE',
     fontSize: 13,
     lineHeight: 20,
     marginBottom: 4,
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
   },
   infoSub: {
     fontSize: 12,
-    color: '#AAA',
+    color: '#B7BEBE',
     marginLeft: 6,
   },
   linkText: {

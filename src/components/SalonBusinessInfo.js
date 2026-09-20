@@ -139,7 +139,7 @@ const SalonBusinessInfo = ({ navigation, route }) => {
                                 style={{
                                     inputAndroid: styles.pickerInput,
                                     inputIOS: styles.pickerInput,
-                                    placeholder: { color: '#999' },
+                                    placeholder: { color: '#B7BEBE' },
                                 }}
                                 useNativeAndroidPickerStyle={false}
                             />
@@ -169,7 +169,7 @@ const SalonBusinessInfo = ({ navigation, route }) => {
                         <View style={styles.inputBox}>
                             <TextInput allowFontScaling={false}
                                 placeholder="Agent Code"
-                                placeholderTextColor="#999"
+                                placeholderTextColor="#B7BEBE"
                                 keyboardType="number-pad"
                                 maxLength={10}
                                 value={agentCode}
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
 
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.99)',
+        backgroundColor: '#080A0A',
     },
 
     container: {
@@ -264,18 +264,18 @@ const styles = StyleSheet.create({
     },
 
     stepText: {
-        color: '#aaa',
+        color: '#B7BEBE',
         marginBottom: 20,
     },
 
     label: {
-        color: '#aaa',
+        color: '#B7BEBE',
         marginBottom: 6,
         marginLeft: 2,
     },
 
     inputBox: {
-        backgroundColor: '#1E1E1E',
+        backgroundColor: '#171B1B',
         borderRadius: 12,
         paddingHorizontal: 16,
         height: 54,

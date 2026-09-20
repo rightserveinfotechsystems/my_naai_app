@@ -25,7 +25,7 @@ const AddOfflineCustomer = ({ route, navigation }) => {
   useLayoutEffect(() => {
     navigation.setOptions({
       title: 'Add Walk-in Customers',
-      headerStyle: { backgroundColor: '#121212' },
+      headerStyle: { backgroundColor: '#080A0A' },
       headerTintColor: '#fff',
     });
   }, [navigation]);
@@ -35,6 +35,7 @@ const AddOfflineCustomer = ({ route, navigation }) => {
      ========================= */
   useEffect(() => {
     getBarbersList();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getBarbersList = async () => {
@@ -124,10 +125,10 @@ const AddOfflineCustomer = ({ route, navigation }) => {
 
         {/* CUSTOMER NAME */}
         <View style={styles.inputBox}>
-          <Ionicons name="person-outline" size={20} color="#999" />
+          <Ionicons name="person-outline" size={20} color="#B7BEBE" />
           <TextInput allowFontScaling={false}
             placeholder="Customer Name"
-            placeholderTextColor="#999"
+            placeholderTextColor="#B7BEBE"
             style={styles.input}
             value={customer}
             onChangeText={setCustomer}
@@ -136,10 +137,10 @@ const AddOfflineCustomer = ({ route, navigation }) => {
 
         {/* SERVICE DURATION */}
         <View style={styles.inputBox}>
-          <Ionicons name="time-outline" size={20} color="#999" />
+          <Ionicons name="time-outline" size={20} color="#B7BEBE" />
           <TextInput allowFontScaling={false}
             placeholder="Duration in minutes"
-            placeholderTextColor="#999"
+            placeholderTextColor="#B7BEBE"
             style={styles.input}
             value={serviceTime}
             onChangeText={setServiceTime}
@@ -150,7 +151,7 @@ const AddOfflineCustomer = ({ route, navigation }) => {
 
         {/* BARBER DROPDOWN */}
         <View style={styles.inputBox}>
-          <Ionicons name="cut-outline" size={20} color="#999" />
+          <Ionicons name="cut-outline" size={20} color="#B7BEBE" />
           <View style={{ flex: 1, marginLeft: 12 }}>
             <RNPickerSelect
               placeholder={{ label: 'Select Barber', value: "" }}
@@ -160,7 +161,7 @@ const AddOfflineCustomer = ({ route, navigation }) => {
               style={{
                 inputAndroid: styles.pickerInput,
                 inputIOS: styles.pickerInput,
-                placeholder: { color: '#999' },
+                placeholder: { color: '#B7BEBE' },
               }}
               useNativeAndroidPickerStyle={false}
             />
@@ -192,12 +193,12 @@ export default AddOfflineCustomer;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#080A0A',
     padding: 16,
     justifyContent: 'center',
   },
   formCard: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     borderRadius: 18,
     padding: 20,
   },
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   subtitle: {
-    color: '#aaa',
+    color: '#B7BEBE',
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 18,
@@ -217,7 +218,7 @@ const styles = StyleSheet.create({
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121212',
+    backgroundColor: '#080A0A',
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 52,
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   addBtn: {
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
     borderRadius: 28,
     paddingVertical: 14,
     alignItems: 'center',

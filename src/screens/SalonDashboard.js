@@ -16,6 +16,8 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication,getServerUrl } from '../services/communication';
 import Skeleton from '../utilities/Skeleton';
+import SalonQueueUpdateTimeModal from '../components/SalonQueueUpdateTimeModal';
+import { describeOffset } from '../utilities/bookingTime';
 import { useFocusEffect } from '@react-navigation/native';
 import moment from 'moment';
 import { wp, hp } from '../utils/AppScreen';
@@ -36,6 +38,12 @@ const SalonDashboard = ({ navigation }) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [notificationCount, setNotificationCount] = useState(0);
+  // Salon Queue → "Update time" (same flow as the web platform): the customer
+  // is already booked and confirmed, and the salon is moving *that* time. It
+  // has its own endpoint addressed by bookingId, and the customer is told —
+  // not asked — to come earlier or later.
+  const [timeTarget, setTimeTarget] = useState(null);
+  const [savingTime, setSavingTime] = useState(false);
 
   /* ---------------- USER INFO ---------------- */
   const userByIdInfo = async () => {
@@ -147,6 +155,43 @@ const SalonDashboard = ({ navigation }) => {
     );
   };
 
+  /* ---------------- UPDATE BOOKING TIME (web: UpdateTimeModal) ---------------- */
+  const submitTimeUpdate = async ({ preview, reason }) => {
+    const booking = timeTarget;
+    const bookingId = booking?.bookingId;
+    if (!booking || !preview || !bookingId) {
+      Alert.alert('Error', 'This booking cannot be updated. Refresh the queue and try again.');
+      return;
+    }
+    setSavingTime(true);
+    try {
+      const response = await communication.salonUpdateBookingTime(bookingId, {
+        time: preview.apiTime,
+        date: preview.apiDate,
+        reason,
+      });
+      if (response?.status && response.status !== 'SUCCESS') {
+        throw new Error(response.message || 'Could not update the appointment time.');
+      }
+      // The row moves optimistically, then the queue is re-read so the row
+      // reflects whatever the server actually stored, and so the group
+      // (Today/Tomorrow) is right after a day cross.
+      setCustomers(current => current.map(item => (item.bookingId === booking.bookingId
+        ? { ...item, bookingTime: preview.apiTime, bookingDate: preview.apiDate }
+        : item)));
+      setTimeTarget(null);
+      Alert.alert(
+        'Time updated',
+        `${booking.userName || 'Customer'} notified — new time ${preview.updatedLabel} (${describeOffset(preview.offsetMinutes)}).`
+      );
+      getCustomerList(1, false);
+    } catch (error) {
+      Alert.alert('Error', error?.response?.data?.message || error?.message || 'Could not update the appointment time.');
+    } finally {
+      setSavingTime(false);
+    }
+  };
+
   /* ---------------- EFFECTS ---------------- */
   useEffect(() => {
     userByIdInfo();
@@ -156,6 +201,7 @@ const SalonDashboard = ({ navigation }) => {
     if (!salonId) return;
     getCustomerList();
     fetchNotificationCount();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [salonId, fetchNotificationCount]);
 
   useFocusEffect(useCallback(() => {
@@ -232,6 +278,7 @@ const SalonDashboard = ({ navigation }) => {
         socket.disconnect();
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [salonId]);
 
   /* ---------------- RENDER SINGLE BOOKING ---------------- */
@@ -245,12 +292,25 @@ const SalonDashboard = ({ navigation }) => {
               {item?.userName || 'Guest'}
             </Text>
 
-            <TouchableOpacity
-              style={styles.doneBtn}
-              onPress={() => handleBookingDone(item.bookingId)}
-            >
-              <Text allowFontScaling={false} style={styles.doneText}>Done</Text>
-            </TouchableOpacity>
+            {/* Same actions as the web queue card: "Update time" (secondary) + "Done" (primary). */}
+            <View style={styles.cardActions}>
+              <TouchableOpacity
+                style={[styles.updateBtn, !item.bookingTime && styles.updateBtnDisabled]}
+                disabled={!item.bookingTime}
+                activeOpacity={0.7}
+                onPress={() => setTimeTarget(item)}
+              >
+                <Ionicons name="time-outline" size={13} color="#F8F8F5" />
+                <Text allowFontScaling={false} style={styles.updateText}>Update time</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.doneBtn}
+                onPress={() => handleBookingDone(item.bookingId)}
+              >
+                <Text allowFontScaling={false} style={styles.doneText}>Done</Text>
+              </TouchableOpacity>
+            </View>
 
           </View>
 
@@ -296,7 +356,7 @@ const SalonDashboard = ({ navigation }) => {
             />
             <Text allowFontScaling={false} style={styles.subText}>
               {/* {formatDateReadable(item?.bookingDate)}, token: {item?.queueNumber} */}
-              {formatDateReadable(item?.bookingDate)}, {formatTime(item.bookingTime)}, token: {item?.queueNumber}
+              {formatDateReadable(item?.bookingDate)}, {formatTime(item.bookingTime)}, 
             </Text>
           </View>
         </View>
@@ -311,10 +371,11 @@ const SalonDashboard = ({ navigation }) => {
   const EmptyState = () => (
     <View style={styles.empty}>
 
+      {/* Web empty state uses a gold icon, so no grey here either. */}
       <Ionicons
         name="people-outline"
         size={wp(15)}
-        color="#666"
+        color="#E8B97E"
       />
       <Text allowFontScaling={false} style={styles.emptyText}>No customers in queue</Text>
     </View>
@@ -371,7 +432,7 @@ const SalonDashboard = ({ navigation }) => {
               }}
               keyExtractor={(_, index) => index.toString()}
               renderItem={null}
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E1B378" />}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E8B97E" />}
               ListHeaderComponent={
                 <>
                   {todayBookings.length > 0 && (
@@ -404,10 +465,19 @@ const SalonDashboard = ({ navigation }) => {
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.5}
               ListFooterComponent={
-                loadingMore && <ActivityIndicator size="small" color="#E1B378" style={{ marginVertical: 20 }} />
+                loadingMore && <ActivityIndicator size="small" color="#E8B97E" style={{ marginVertical: 20 }} />
               }
             />
           )}
+
+          {/* Salon Queue → "Update time" sheet (same fields + API as the web platform). */}
+          <SalonQueueUpdateTimeModal
+            booking={timeTarget}
+            open={Boolean(timeTarget)}
+            onClose={() => setTimeTarget(null)}
+            onSubmit={submitTimeUpdate}
+            saving={savingTime}
+          />
         </SafeAreaView>
       </View>
     // </ImageBackground>
@@ -424,7 +494,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.99)'
+    backgroundColor: '#080A0A'
   },
 
   container: {
@@ -452,7 +522,7 @@ const styles = StyleSheet.create({
   },
 
   iconBtn: {
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
     width: wp(9),
     height: wp(9),
     borderRadius: wp(4.5),
@@ -480,7 +550,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     borderRadius: wp(4),
     marginBottom: hp(1.8)
   },
@@ -497,17 +567,18 @@ const styles = StyleSheet.create({
   name: {
     color: '#fff',
     fontSize: wp(4),
-    fontWeight: '700'
+    fontWeight: '700',
+    flexShrink: 1
   },
 
   subText: {
-    color: '#AAA',
+    color: '#B7BEBE',
     fontSize: wp(3.3),
     marginLeft: wp(2)
   },
 
   doneBtn: {
-    backgroundColor: '#E1B378',
+    backgroundColor: '#E8B97E',
     borderRadius: wp(5),
     paddingVertical: hp(.8),
     paddingHorizontal: wp(4),
@@ -520,13 +591,44 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
 
+  /* Web queue-card actions: secondary "Update time" + primary "Done".
+     Colours from the web palette (card-raised #1C2121, line, white text). */
+  cardActions: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+
+  updateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1C2121',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: wp(5),
+    paddingVertical: hp(.8),
+    paddingHorizontal: wp(3),
+    marginRight: wp(2),
+    alignSelf: 'center'
+  },
+
+  updateText: {
+    color: '#F8F8F5',
+    fontSize: wp(3),
+    fontWeight: '600',
+    marginLeft: wp(1)
+  },
+
+  updateBtnDisabled: {
+    opacity: 0.55
+  },
+
   empty: {
     alignItems: 'center',
     marginTop: hp(10)
   },
 
   emptyText: {
-    color: '#777',
+    color: '#899191',
     marginTop: hp(1),
     fontSize: wp(3.5)
   },
@@ -546,7 +648,7 @@ const styles = StyleSheet.create({
   },
 
   sectionHeader: {
-    color: '#E1B378',
+    color: '#E8B97E',
     fontSize: wp(4.5),
     fontWeight: '700',
     marginVertical: hp(1)

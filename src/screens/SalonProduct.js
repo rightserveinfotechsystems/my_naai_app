@@ -265,7 +265,7 @@ const SalonProduct = () => {
                 <Image source={{ uri: item.image }} style={styles.image} />
             ) : (
                 <View style={styles.imagePlaceholder}>
-                    <Ionicons name="image-outline" size={30} color="#777" />
+                    <Ionicons name="image-outline" size={30} color="#899191" />
                 </View>
             )}
             <View style={styles.cardContent}>
@@ -276,13 +276,13 @@ const SalonProduct = () => {
                 <View style={styles.row}>
                     <Text allowFontScaling={false} style={styles.price}>₹ {item.price}</Text>
                     <View style={styles.rating}>
-                        <Ionicons name="star" size={14} color="#FFD700" />
+                        <Ionicons name="star" size={14} color="#F3C86E" />
                         <Text allowFontScaling={false} style={styles.ratingText}>{item.rating}</Text>
                     </View>
                 </View>
 
                 <View style={styles.row}>
-                    <Text allowFontScaling={false} style={[styles.availability, { color: item.available ? '#4CAF50' : '#F44336' }]}>
+                    <Text allowFontScaling={false} style={[styles.availability, { color: item.available ? '#6ED19E' : '#F27B74' }]}>
                         {item.available ? 'In Stock' : 'Out of Stock'}
                     </Text>
                     <Switch
@@ -297,10 +297,10 @@ const SalonProduct = () => {
 
                 <View style={styles.actionRow}>
                     <TouchableOpacity onPress={() => editProduct(item)}>
-                        <Ionicons name="create-outline" size={18} color="#E0B973" />
+                        <Ionicons name="create-outline" size={18} color="#E8B97E" />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleDeleteProduct(item.id)}>
-                        <Ionicons name="trash-outline" size={18} color="#F44336" />
+                        <Ionicons name="trash-outline" size={18} color="#F27B74" />
                     </TouchableOpacity>
 
                 </View>
@@ -345,13 +345,13 @@ const SalonProduct = () => {
                                             />
 
                                         ) : (
-                                            <Ionicons name="camera-outline" size={26} color="#999" />
+                                            <Ionicons name="camera-outline" size={26} color="#B7BEBE" />
                                         )}
                                     </TouchableOpacity>
 
                                     <TextInput allowFontScaling={false}
                                         placeholder="Product Name"
-                                        placeholderTextColor="#999"
+                                        placeholderTextColor="#B7BEBE"
                                         style={styles.input}
                                         value={productForm.productName}
                                         onChangeText={text => setProductForm(prev => ({ ...prev, productName: text }))}
@@ -359,7 +359,7 @@ const SalonProduct = () => {
 
                                     <TextInput allowFontScaling={false}
                                         placeholder="Price"
-                                        placeholderTextColor="#999"
+                                        placeholderTextColor="#B7BEBE"
                                         keyboardType="numeric"
                                         style={styles.input}
                                         value={productForm.price}
@@ -368,7 +368,7 @@ const SalonProduct = () => {
 
                                     <TextInput allowFontScaling={false}
                                         placeholder="Rating (0-5)"
-                                        placeholderTextColor="#999"
+                                        placeholderTextColor="#B7BEBE"
                                         keyboardType="numeric"
                                         style={styles.input}
                                         value={productForm.rating}
@@ -420,7 +420,7 @@ export default SalonProduct;
 
 
 const styles = StyleSheet.create({
-    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.99)',  },
+    overlay: { flex: 1, backgroundColor: '#080A0A',  },
     container: { flex: 1, paddingHorizontal: 14, },
     title: {
     color: '#fff',
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     } ,
 
     card: {
-        backgroundColor: '#1C1C1C',
+        backgroundColor: '#1C2121',
         borderRadius: 16,
         marginBottom: 16,
         width: CARD_WIDTH,
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
 
     imagePlaceholder: {
         height: 120,
-        backgroundColor: '#2A2A2A',
+        backgroundColor: '#1C2121',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
     },
 
     price: {
-        color: '#E0B973',
+        color: '#E8B97E',
         fontSize: 14,
         fontWeight: '600',
     },
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
         height: wp(14),
         width: wp(14),
         borderRadius: wp(7),
-        backgroundColor: '#E0B973',
+        backgroundColor: '#E8B97E',
         justifyContent: 'center',
         alignItems: 'center',
 
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
     },
 
     modal: {
-        backgroundColor: '#1C1C1C',
+        backgroundColor: '#1C2121',
         padding: 20,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     },
 
     input: {
-        backgroundColor: '#2A2A2A',
+        backgroundColor: '#1C2121',
         borderRadius: 12,
         padding: 12,
         color: '#fff',
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
 
     imagePicker: {
         height: 120,
-        backgroundColor: '#2A2A2A',
+        backgroundColor: '#1C2121',
         borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
     },
 
     saveBtn: {
-        backgroundColor: '#E0B973',
+        backgroundColor: '#E8B97E',
         padding: 14,
         borderRadius: 14,
         alignItems: 'center',
@@ -555,14 +555,14 @@ const styles = StyleSheet.create({
     saveText: { fontWeight: '800', color: '#000' },
 
     cancelText: {
-        color: '#F44336',
+        color: '#F27B74',
         textAlign: 'center',
         marginTop: 12,
         fontWeight: '600',
     },
 
     empty: {
-        color: '#777',
+        color: '#899191',
         textAlign: 'center',
         marginTop: 40,
         fontSize: 14,

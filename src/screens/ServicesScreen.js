@@ -171,10 +171,10 @@ const ServicesScreen = () => {
   };
 
   const STATUS_COLORS = {
-    pending: '#E1B378',
-    confirmed: '#4CAF50',
+    pending: '#E8B97E',
+    confirmed: '#6ED19E',
     completed: '#E8B97E',
-    cancelled: '#E53935',
+    cancelled: '#F27B74',
   };
 
   const STATUS_LABELS = {
@@ -237,7 +237,7 @@ const ServicesScreen = () => {
     const isExpired = isBookingPassed();
     const statusKey = isExpired ? 'completed' : item.status?.toLowerCase();
     
-    const btnColor = STATUS_COLORS[statusKey] || (isExpired ? '#4CAF50' : '#9E9E9E');
+    const btnColor = STATUS_COLORS[statusKey] || (isExpired ? '#6ED19E' : '#899191');
     const displayStatusLabel = STATUS_LABELS[statusKey] || (isExpired ? 'Completed' : 'Unknown');
 
     return (
@@ -248,20 +248,20 @@ const ServicesScreen = () => {
             <Text allowFontScaling={false} style={styles.address}>{item.salonCity}</Text>
 
             <View style={styles.barberRow}>
-              <Ionicons name="person-outline" size={14} color="#aaa" />
+              <Ionicons name="person-outline" size={14} color="#B7BEBE" />
               <Text allowFontScaling={false} style={styles.barberText}>
                 Barber: {item.barberName || 'N/A'}
               </Text>
             </View>
             <View style={styles.barberRow}>
-              <Ionicons name="cut-outline" size={14} color="#aaa" />
+              <Ionicons name="cut-outline" size={14} color="#B7BEBE" />
               <Text allowFontScaling={false} style={styles.barberText}>
                 Service: {item.serviceName || 'N/A'}
               </Text>
             </View>
 
             <View style={styles.dateRow}>
-              <Ionicons name="calendar-outline" size={14} color="#E1B378" />
+              <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
               <Text allowFontScaling={false} style={styles.dateText}>
                 {formatDateReadable(item.bookingDate)} - {formatTime(item.bookingTime)}
               </Text>
@@ -301,7 +301,7 @@ const ServicesScreen = () => {
 
   const EmptyState = () => (
     <View style={styles.empty}>
-      <Ionicons name="calendar-outline" size={60} color="#555" />
+      <Ionicons name="calendar-outline" size={60} color="#E8B97E" />
       <Text allowFontScaling={false} style={styles.emptyText}>No bookings found</Text>
     </View>
   );
@@ -331,7 +331,7 @@ const ServicesScreen = () => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                tintColor="#E1B378"
+                tintColor="#E8B97E"
               />
             }
             ListEmptyComponent={<EmptyState />}
@@ -341,7 +341,7 @@ const ServicesScreen = () => {
               loadingMore && (
                 <ActivityIndicator
                   size="small"
-                  color="#E1B378"
+                  color="#E8B97E"
                   style={{ marginVertical: 20 }}
                 />
               )
@@ -359,7 +359,7 @@ export default ServicesScreen;
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.99)',
+    backgroundColor: '#080A0A',
   },
   container: {
     flex: 1,
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flexDirection: 'row',
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     borderRadius: 20,
     marginBottom: 16,
     overflow: 'hidden',
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
   address: {
-    color: '#AAA',
+    color: '#B7BEBE',
     fontSize: 12,
     marginVertical: 4,
   },
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   dateText: {
-    color: '#E1B378',
+    color: '#E8B97E',
     fontSize: 12,
     marginLeft: 4,
   },
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   barberText: {
-    color: '#bbb',
+    color: '#B7BEBE',
     fontSize: 12,
     marginLeft: 6,
   },
@@ -429,13 +429,13 @@ const styles = StyleSheet.create({
     marginTop: 80,
   },
   emptyText: {
-    color: '#777',
+    color: '#899191',
     fontSize: 14,
     marginTop: 10,
   },
   skeletonCard: {
     height: 110,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     borderRadius: 20,
     marginBottom: 16,
     opacity: 0.6,
@@ -464,14 +464,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
-    backgroundColor: '#E53935',
+    backgroundColor: '#F27B74',
     paddingVertical: 8,
     paddingHorizontal: 8,
     borderRadius: 20,
     minWidth: 80,
   },
+  /* Web .btn-danger uses dark ink #190909 on the red background. */
   cancelBtnText: {
-    color: '#fff',
+    color: '#190909',
     fontSize: 12,
     fontWeight: '700',
   },

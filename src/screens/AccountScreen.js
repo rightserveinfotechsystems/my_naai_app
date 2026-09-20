@@ -18,8 +18,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication } from '../services/communication';
 
 const GOLD = '#E8B97E';
-const DARK = '#121212';
-const CARD = '#1E1E1E';
+const DARK = '#080A0A';
+const CARD = '#171B1B';
 
 const MENUS = [
   { label: 'About', screen: 'AboutScreen', icon: 'information-circle-outline' },
@@ -155,7 +155,7 @@ const AccountScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={GOLD} />
-        <Text allowFontScaling={false} style={{ color: '#aaa', marginTop: 10 }}>Loading profile...</Text>
+        <Text allowFontScaling={false} style={{ color: '#B7BEBE', marginTop: 10 }}>Loading profile...</Text>
       </SafeAreaView>
     );
   }
@@ -198,7 +198,7 @@ const AccountScreen = ({ navigation }) => {
                 <Ionicons name={item.icon} size={20} color={GOLD} />
                 <Text allowFontScaling={false} style={styles.menuText}>{item.label}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#777" />
+              <Ionicons name="chevron-forward" size={18} color="#899191" />
             </TouchableOpacity>
           ))}
         </View>
@@ -221,13 +221,13 @@ const AccountScreen = ({ navigation }) => {
             <TextInput allowFontScaling={false}
               style={styles.input}
               placeholder="Name"
-              placeholderTextColor="#999"
+              placeholderTextColor="#B7BEBE"
               value={name}
               onChangeText={setName}
             />
 
             <TextInput allowFontScaling={false}
-              style={[styles.input, { backgroundColor: '#2E2E2E', color: '#AAA' }]}
+              style={[styles.input, { backgroundColor: '#131818', color: '#B7BEBE' }]}
               placeholder="Mobile Number"
               keyboardType="number-pad"
               value={mobile}
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
 
   mobile: {
-    color: '#aaa',
+    color: '#B7BEBE',
     fontSize: 13,
     marginTop: 4,
   },
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderColor: '#2A2A2A',
+    borderColor: '#1C2121',
   },
 
   menuLeft: {
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     borderRadius: 20,
     paddingVertical: 12,
     marginBottom: 20,
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
 
   version: {
     textAlign: 'center',
-    color: '#777',
+    color: '#899191',
     fontSize: 12,
     marginBottom: 30,
   },
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   },
 
   input: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1C2121',
     borderRadius: 12,
     paddingHorizontal: 14,
     color: '#fff',
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginRight: 8,
     borderRadius: 20,
-    backgroundColor: '#333',
+    backgroundColor: '#252B2B',
     alignItems: 'center',
   },
 

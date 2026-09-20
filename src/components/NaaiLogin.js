@@ -89,7 +89,7 @@ const NaaiLogin = ({ navigation }) => {
 
                 <TextInput allowFontScaling={false}
                   placeholder="Mobile Number"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#B7BEBE"
                   keyboardType="number-pad"
                   maxLength={10}
                   value={mobile}
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   },
 
   subtitle: {
-    color: '#ccc',
+    color: '#B7BEBE',
     fontSize: 14,
     marginBottom: 30,
   }, 
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   },
 
   footerText: {
-    color: '#aaa',
+    color: '#B7BEBE',
     fontSize: 15,
     fontWeight: '500',
   },
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   inputBox: {
   width: '100%',
-  backgroundColor: '#1E1E1E',
+  backgroundColor: '#171B1B',
   borderRadius: 12,
   paddingHorizontal: 16,
   height: 54,

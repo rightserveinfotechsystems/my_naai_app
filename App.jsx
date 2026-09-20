@@ -93,9 +93,9 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const COLORS = {
-  primary: '#0F0F0F',
-  accent: '#E1B378',
-  inactive: '#9E9E9E',
+  primary: '#080A0A',
+  accent: '#E8B97E',
+  inactive: '#899191',
 };
 
 const tabOptions = ({ route, insets }) => ({
@@ -163,7 +163,7 @@ function AuthStack({ onLoginSuccess }) {
   return (
     <Stack.Navigator initialRouteName="SplashLogo" screenOptions={{
       headerShown: false, animation: 'slide_from_right',
-      contentStyle: { backgroundColor: '#0F0F0F' },
+      contentStyle: { backgroundColor: '#080A0A' },
     }}>
       <Stack.Screen name="SplashLogo" component={SplashLogoScreen} />
       <Stack.Screen name="SplashScreen" component={SplashScreen} />
@@ -592,15 +592,15 @@ export default function App() {
   if (forceUpdate) {
     return (
       <SafeAreaView style={{
-        flex: 1, backgroundColor: '#0F0F0F', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20
+        flex: 1, backgroundColor: '#080A0A', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20
       }}>
         <View style={{
-          width: 100, height: 100, borderRadius: 50, backgroundColor: '#1C1C1C', justifyContent: 'center', alignItems: 'center', marginBottom: 25
+          width: 100, height: 100, borderRadius: 50, backgroundColor: '#1C2121', justifyContent: 'center', alignItems: 'center', marginBottom: 25
         }}>
           <Image source={require('./src/assets/my_naai.png')} style={{ width: 60, height: 60, resizeMode: 'contain' }} />
         </View>
         <Text style={{ fontSize: 24, fontWeight: '700', color: '#FFFFFF', marginBottom: 10 }}>Update Required</Text>
-        <Text style={{ textAlign: 'center', color: '#B0B0B0', fontSize: 16, lineHeight: 22, marginBottom: 30 }}>
+        <Text style={{ textAlign: 'center', color: '#B7BEBE', fontSize: 16, lineHeight: 22, marginBottom: 30 }}>
           A new version of MyNaai is available. Please update the app to continue.
         </Text>
         <TouchableOpacity

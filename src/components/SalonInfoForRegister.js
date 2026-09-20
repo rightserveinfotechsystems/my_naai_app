@@ -270,7 +270,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
             <View style={styles.inputBox}>
               <TextInput allowFontScaling={false}
                 placeholder="Salon Owner Name"
-                placeholderTextColor="#999"
+                placeholderTextColor="#B7BEBE"
                 value={naaiName}
                 onChangeText={setNaaiName}
                 style={styles.input}
@@ -280,7 +280,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
             <View style={styles.inputBox}>
               <TextInput allowFontScaling={false}
                 placeholder="Salon Name"
-                placeholderTextColor="#999"
+                placeholderTextColor="#B7BEBE"
                 value={salonName}
                 onChangeText={setSalonName}
                 style={styles.input}
@@ -302,7 +302,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
             {/* <View style={[styles.inputBox, { height: 100, alignItems: 'flex-start' }]}>
               <TextInput allowFontScaling={false}
                 placeholder="Fetching location..."
-                placeholderTextColor="#999"
+                placeholderTextColor="#B7BEBE"
                 value={address}
                 editable={false}
                 multiline={true}
@@ -313,7 +313,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
             <View style={[styles.inputBox, { height: 100 }]}>
               <TextInput allowFontScaling={false}
                 placeholder="Enter Address"
-                placeholderTextColor="#999"
+                placeholderTextColor="#B7BEBE"
                 value={manualAddress}
                 onChangeText={setManualAddress}
                 multiline
@@ -333,7 +333,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
                 style={{
                   inputAndroid: styles.pickerInput,
                   inputIOS: styles.pickerInput,
-                  placeholder: { color: '#999' },
+                  placeholder: { color: '#B7BEBE' },
                 }}
                 useNativeAndroidPickerStyle={false}
               />
@@ -341,7 +341,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
             {/* <View style={styles.inputBox}>
               <TextInput allowFontScaling={false}
                 placeholder="City"
-                placeholderTextColor="#999"
+                placeholderTextColor="#B7BEBE"
                 value={city}
                 onChangeText={setCity}
                 style={styles.input}
@@ -350,7 +350,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
             {/* <View style={styles.inputBox}>
               <TextInput allowFontScaling={false}
                 placeholder="Agent Code"
-                placeholderTextColor="#999"
+                placeholderTextColor="#B7BEBE"
                 value={agentCode}
                 onChangeText={setAgentCode}
                 style={styles.input}
@@ -367,7 +367,7 @@ const SalonInfoForRegister = ({ navigation, route }) => {
                 style={{
                   inputAndroid: styles.pickerInput,
                   inputIOS: styles.pickerInput,
-                  placeholder: { color: '#999' },
+                  placeholder: { color: '#B7BEBE' },
                 }}
                 useNativeAndroidPickerStyle={false}
               />
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.99)',
+    backgroundColor: '#080A0A',
   },
 
   container: {
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
   },
 
   inputBox: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 54,
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   },
 
   terms: {
-    color: '#999',
+    color: '#B7BEBE',
     fontSize: 14,
     textAlign: 'center',
     marginTop: 16,
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
   },
 
   footer: {
-    color: '#aaa',
+    color: '#B7BEBE',
     fontSize: 15,
     textAlign: 'center',
     marginTop: 24,
@@ -554,7 +554,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   textAreaBox: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#171B1B',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
