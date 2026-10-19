@@ -111,9 +111,11 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
             </View>
             <View style={[styles.statusPill, {backgroundColor: statusColor+'14', borderColor: statusColor}]}><View style={[styles.dot, {backgroundColor: statusColor}]} /><Text style={[styles.pillText, {color: statusColor}]}>{status.label}</Text></View>
           </View>
-          {status.key!=='cancelled' && status.key!=='delivered' && <View style={styles.etaBox}><Ionicons name="car-outline" size={13} color={APP_THEME.gold}/><Text style={styles.etaText}>Arriving by <Text style={{fontWeight:'800'}}>{formatEta(status.eta)}</Text></Text></View>}
-          {status.key==='delivered' && <View style={styles.etaBox}><Ionicons name="checkmark-circle" size={13} color={APP_THEME.gold}/><Text style={styles.etaText}>Delivered — enjoy the stock at {order.salonName||'your salon'}</Text></View>}
-          {status.key==='cancelled' && <View style={[styles.etaBox, {backgroundColor:'rgba(242,123,116,0.12)', borderColor:'rgba(242,123,116,0.18)', borderWidth:1}]}><Text style={[styles.etaText, {color: APP_THEME.red}]}>{payment.method==='ONLINE' ? `Refund of ${formatCurrency(payment.amount)} is on the way (5–7 days).` : 'The order was cancelled before dispatch. No amount was collected.'}</Text></View>}
+          {status.key==='delivered' ? (
+            <View style={styles.etaBox}><Ionicons name="checkmark-circle" size={13} color={APP_THEME.gold}/><Text style={styles.etaText}>Delivered — enjoy the stock at {order.salonName || 'your salon'}</Text></View>
+          ) : status.key==='cancelled' ? (
+            <View style={[styles.etaBox, {backgroundColor:'rgba(242,123,116,0.12)', borderColor:'rgba(242,123,116,0.18)', borderWidth:1}]}><Text style={[styles.etaText, {color: APP_THEME.red}]}>{payment.method==='ONLINE' ? `Refund of ${formatCurrency(payment.amount)} is on the way (5–7 days).` : 'The order was cancelled before dispatch. No amount was collected.'}</Text></View>
+          ) : null}
           {status.key!=='cancelled' && (
             <View style={styles.tracker}>
               {STATUS_TIMELINE.map((step, idx)=> (
@@ -155,7 +157,7 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
         </View>
 
         <View style={styles.card}>
-          <View style={styles.cardHead}>{payment.method==='COD' ? <Ionicons name="cash-outline" size={15} color={APP_THEME.gold}/> : <Ionicons name="card-outline" size={15} color={APP_THEME.gold}/>} <Text style={styles.cardTitle}>Payment</Text></View>
+          <View style={styles.cardHead}>{payment.method==='COD' ? <Ionicons name="cash-outline" size={15} color={APP_THEME.gold}/> : <Ionicons name="card-outline" size={15} color={APP_THEME.gold}/>}<Text style={styles.cardTitle}>Payment</Text></View>
           {payment.method==='COD' ? (
             <View style={styles.paymentRow}><View style={[styles.statusPill, {borderColor: status.key==='delivered'? APP_THEME.gold : '#D4A45A'}]}><Text style={{color: status.key==='delivered'? APP_THEME.gold : '#D4A45A', fontSize: 10, fontWeight:'700'}}>{status.key==='delivered'? 'Collected on delivery':'Pay on delivery'}</Text></View><Text style={styles.paymentText}>Pay <Text style={{fontWeight:'800'}}>{formatCurrency(payment.amount)}</Text> in cash when order arrives.</Text></View>
           ) : (

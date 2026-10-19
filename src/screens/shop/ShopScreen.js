@@ -240,7 +240,9 @@ const ShopScreen = ({ navigation }) => {
   const priceLabel = PRICE_RANGES.find(p => p.id === priceRange)?.label || 'All prices';
 
   const renderProduct = ({ item }) => (
-    <ShopProductCard product={item} qty={qtyFor(item.id)} onAdd={handleAdd} onSetQty={handleSetQty} onOpen={openProduct} style={styles.gridCard} />
+    <View style={styles.gridCard}>
+      <ShopProductCard product={item} qty={qtyFor(item.id)} onAdd={handleAdd} onSetQty={handleSetQty} onOpen={openProduct} />
+    </View>
   );
 
   const hasActive = category !== 'all' || gender !== 'all' || priceRange !== 'all' || search.length > 0;

@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: APP_THEME.line,
     overflow: 'hidden',
-    flex: 1,
+    width: '100%',
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 6,
