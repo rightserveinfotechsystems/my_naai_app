@@ -12,7 +12,7 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication } from '../../services/communication';
 import { normalizeShopProduct, categoryLabel, applyShopFilters, SHOP_CATEGORIES, SHOP_GENDERS, PRICE_RANGES } from '../../shop/shopCatalog';
@@ -246,6 +246,10 @@ const ShopScreen = ({ navigation }) => {
   );
 
   const hasActive = category !== 'all' || gender !== 'all' || priceRange !== 'all' || search.length > 0;
+  const insets = useSafeAreaInsets();
+  // Tab bar in App.jsx = 50 + max(insets.bottom,5); cart bar should sit 12px above it and override it
+  const tabBarHeight = 50 + Math.max(insets.bottom, 5);
+  const cartOffset = tabBarHeight + 12;
 
   return (
     <View style={styles.overlay}>
@@ -330,7 +334,7 @@ const ShopScreen = ({ navigation }) => {
           </View>
         )}
 
-        <ShopCartBar totals={totals} onOpen={() => navigation.navigate('ShopCart')} offsetBottom={78} />
+        <ShopCartBar totals={totals} onOpen={() => navigation.navigate('ShopCart')} offsetBottom={cartOffset} />
       </SafeAreaView>
     </View>
   );
