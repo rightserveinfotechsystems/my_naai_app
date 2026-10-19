@@ -94,6 +94,9 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
   };
 
   const statusColor = status.key==='cancelled' ? APP_THEME.red : status.key==='delivered' ? APP_THEME.gold : '#D4A45A';
+  const _n = STATUS_TIMELINE.length;
+  const _lineStartPct = 100 / (_n * 2);
+  const _lineLenPct = 100 - 2 * _lineStartPct;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -119,8 +122,8 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
           ) : null}
           {status.key!=='cancelled' && (
             <View style={styles.tracker}>
-              <View style={styles.trackerLineBg} />
-              <View style={[styles.trackerProgress, { width: `${(status.stepIndex / Math.max(1, STATUS_TIMELINE.length - 1)) * 100}%` }]} />
+              <View style={[styles.trackerLineBg, { left: `${_lineStartPct}%`, right: `${_lineStartPct}%` }]} />
+              <View style={[styles.trackerProgress, { left: `${_lineStartPct}%`, width: `${Math.max(0, (status.stepIndex / Math.max(1, _n - 1)) * _lineLenPct)}%` }]} />
               {STATUS_TIMELINE.map((step, idx)=> (
                 <View key={step.key} style={styles.step}>
                   <View style={[styles.stepDot, idx <= status.stepIndex && styles.stepDotDone, idx===status.stepIndex && styles.stepDotCurrent]} />
@@ -200,8 +203,8 @@ const styles = StyleSheet.create({
   etaBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: APP_THEME.goldWash, padding: 8, borderRadius: 9, marginTop: 10, borderWidth: 1, borderColor: 'rgba(232,185,126,0.12)' },
   etaText: { color: APP_THEME.mutedLight, fontSize: 11, fontWeight: '500', flex: 1 },
   tracker: { flexDirection: 'row', marginTop: 16, justifyContent: 'space-between', paddingHorizontal: 4, position: 'relative' },
-  trackerLineBg: { position: 'absolute', top: 9, left: 24, right: 24, height: 2, backgroundColor: APP_THEME.line, borderRadius: 1 },
-  trackerProgress: { position: 'absolute', top: 9, left: 24, height: 2, backgroundColor: APP_THEME.gold, borderRadius: 1 },
+  trackerLineBg: { position: 'absolute', top: 9, height: 2, backgroundColor: APP_THEME.line, borderRadius: 1 },
+  trackerProgress: { position: 'absolute', top: 9, height: 2, backgroundColor: APP_THEME.gold, borderRadius: 1 },
   step: { flex: 1, alignItems: 'center', gap: 6 },
   stepDot: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: APP_THEME.line, backgroundColor: APP_THEME.card, zIndex: 1 },
   stepDotDone: { backgroundColor: APP_THEME.gold, borderColor: APP_THEME.gold },
