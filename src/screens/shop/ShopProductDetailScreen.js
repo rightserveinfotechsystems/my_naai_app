@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication, getFileUrl } from '../../services/communication';
 import { normalizeShopProduct, discountPercent, categoryLabel, SHOP_GENDERS } from '../../shop/shopCatalog';
@@ -123,6 +123,8 @@ const ShopProductDetailScreen = ({ route, navigation }) => {
 
   const off = discountPercent(product);
   const genderLabel = SHOP_GENDERS.find(g => g.id === product.gender)?.label || 'Unisex';
+  const insets = useSafeAreaInsets();
+  const cartBarOffset = 12 + Math.max(insets.bottom, 6);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -137,7 +139,7 @@ const ShopProductDetailScreen = ({ route, navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: 90 + Math.max(insets.bottom, 6) }]}>
         <View style={styles.hero}>
           {images.length ? (
             <Image source={{ uri: getFileUrl(images[Math.min(activeImage, images.length-1)] || '') }} style={styles.heroImage} resizeMode="contain" />
@@ -208,7 +210,7 @@ const ShopProductDetailScreen = ({ route, navigation }) => {
         )}
       </ScrollView>
 
-      <ShopCartBar totals={totals} onOpen={() => navigation.navigate('ShopCart')} offsetBottom={0} />
+      <ShopCartBar totals={totals} onOpen={() => navigation.navigate('ShopCart')} offsetBottom={cartBarOffset} />
     </SafeAreaView>
   );
 };

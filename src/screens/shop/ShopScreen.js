@@ -324,7 +324,7 @@ const ShopScreen = ({ navigation }) => {
             keyExtractor={item => String(item.id)}
             numColumns={2}
             columnWrapperStyle={styles.columnWrapper}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={[styles.listContent, { paddingBottom: cartOffset + 72 }]}
             showsVerticalScrollIndicator={false}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={APP_THEME.gold} colors={[APP_THEME.gold]} />}
           />

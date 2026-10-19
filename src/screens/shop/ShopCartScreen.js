@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getFileUrl, communication } from '../../services/communication';
 import { cartTotals, freeDeliveryGap, cartCount } from '../../shop/shopOrders';
@@ -64,10 +64,20 @@ const ShopCartScreen = ({ navigation }) => {
     ]);
   };
 
+  const insets = useSafeAreaInsets();
   const totals = cartTotals(lines, settings);
   const gap = freeDeliveryGap(lines, settings);
   const progress = settings?.freeDeliveryAbove ? Math.min(100, Math.round((totals.subtotal / settings.freeDeliveryAbove)*100)) : 100;
   const onRefresh = async () => { setRefreshing(true); await load(ownerId); setRefreshing(false); };
+
+  // Shop tab lives inside SalonTabs (Stack 'Salon' -> Tab 'Shop'), not as Stack screen
+  const goToShop = () => {
+    if (navigation.canGoBack && navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    try { navigation.navigate('Salon', { screen: 'Shop' }); } catch {}
+  };
 
   if (lines.length === 0) {
     return (
@@ -77,7 +87,7 @@ const ShopCartScreen = ({ navigation }) => {
           <Text style={styles.headerTitle}>Your cart</Text>
           <View style={{width:36}} />
         </View>
-        <EmptyState icon="bag-handle-outline" title="Your cart is empty" message="Fill it with shampoo, clippers and beard oil — delivered to your salon." actionLabel="Browse the shop" onAction={() => navigation.navigate('Shop')} />
+        <EmptyState icon="bag-handle-outline" title="Your cart is empty" message="Fill it with shampoo, clippers and beard oil — delivered to your salon." actionLabel="Browse the shop" onAction={goToShop} />
       </SafeAreaView>
     );
   }
@@ -93,7 +103,7 @@ const ShopCartScreen = ({ navigation }) => {
         <View style={{width:36}} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={APP_THEME.gold} />}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: 24 }]} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={APP_THEME.gold} />}>
         <View style={[styles.deliveryNote, gap===0 && styles.deliveryNoteUnlocked]}>
           <Ionicons name="car-outline" size={16} color={gap===0 ? APP_THEME.bg : APP_THEME.gold} />
           <View style={{flex:1}}>
@@ -133,7 +143,7 @@ const ShopCartScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: 12 + Math.max(insets.bottom, 6), paddingTop: 12 }]}>
         <View style={styles.footerAmount}>
           <Text style={styles.footerLabel}>To pay</Text>
           <Text style={styles.footerTotal}>₹{totals.total}</Text>

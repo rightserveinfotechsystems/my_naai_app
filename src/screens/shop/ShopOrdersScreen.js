@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getOrderStatus, readOrders, formatEta } from '../../shop/shopOrders';
 import { fetchAllServerOrders } from '../../shop/shopSync';
@@ -53,6 +53,14 @@ const ShopOrdersScreen = ({ navigation }) => {
     cancelled: orders.filter(o=> getOrderStatus(o).key==='cancelled'),
   }), [orders]);
   const visible = buckets[filter] || buckets.all;
+  const insets = useSafeAreaInsets();
+  const goToShop = () => {
+    if (navigation.canGoBack && navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    try { navigation.navigate('Salon', { screen: 'Shop' }); } catch {}
+  };
 
   const renderItem = ({ item }) => {
     const status = getOrderStatus(item);
@@ -104,11 +112,11 @@ const ShopOrdersScreen = ({ navigation }) => {
           data={visible}
           renderItem={renderItem}
           keyExtractor={item=>item.id}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: 12 + Math.max(insets.bottom, 8) }]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>load(true)} tintColor={APP_THEME.gold} />}
         />
       ) : (
-        <EmptyState icon="cube-outline" title={filter==='active'? 'No active orders' : 'No orders here yet'} message={filter==='active'? 'Order stock for your salon and it will appear here with live status.' : 'Order stock for your salon and it will appear here.'} actionLabel="Browse the shop" onAction={()=>navigation.navigate('Shop')} />
+        <EmptyState icon="cube-outline" title={filter==='active'? 'No active orders' : 'No orders here yet'} message={filter==='active'? 'Order stock for your salon and it will appear here with live status.' : 'Order stock for your salon and it will appear here.'} actionLabel="Browse the shop" onAction={goToShop} />
       )}
     </SafeAreaView>
   );

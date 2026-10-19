@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getFileUrl } from '../../services/communication';
 import { getOrderStatus, formatEta, STATUS_TIMELINE, canCancelOrder, cancelOrder } from '../../shop/shopOrders';
@@ -93,6 +93,7 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
   };
 
   const statusColor = status.key==='cancelled' ? APP_THEME.red : status.key==='delivered' ? APP_THEME.gold : '#D4A45A';
+  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -102,7 +103,7 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
         <View style={{width:34}} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: 20 + Math.max(insets.bottom, 8) }]}>
         <View style={[styles.trackerCard, status.key==='delivered' && styles.trackerDelivered, status.key==='cancelled' && styles.trackerCancelled]}>
           <View style={styles.trackerHead}>
             <View>

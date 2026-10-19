@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { cartTotals, cartCount, placeOrder } from '../../shop/shopOrders';
 import { fetchShopSettings } from '../../shop/shopSettings';
@@ -36,9 +36,22 @@ const ShopCheckoutScreen = ({ navigation }) => {
     })();
   }, []);
 
+  const insets = useSafeAreaInsets();
   const totals = useMemo(() => cartTotals(lines, settings, { method: payment === 'cod' ? 'COD' : 'ONLINE' }), [lines, settings, payment]);
   const codLocked = settings?.codThreshold > 0 && totals.itemTotal > settings.codThreshold;
   useEffect(() => { if (payment === 'cod' && codLocked) setPayment('online'); }, [payment, codLocked]);
+  const goToShop = () => {
+    // Valid nested route: Stack 'Salon' -> Tab 'Shop' (not 'Shop' directly)
+    try { navigation.navigate('Salon', { screen: 'Shop' }); return; } catch {}
+    if (navigation.canGoBack && navigation.canGoBack()) navigation.goBack();
+  };
+  const goToShopFromEmpty = () => {
+    if (navigation.canGoBack && navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    try { navigation.navigate('Salon', { screen: 'Shop' }); } catch {}
+  };
 
   const setField = (k, v) => setAddress(prev => ({ ...prev, [k]: v }));
   const validate = () => {
@@ -104,7 +117,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
     const etaText = 'the next working day';
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <ScrollView contentContainerStyle={styles.successWrap} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.successWrap, { paddingBottom: Math.max(insets.bottom, 8) + 16 }]} showsVerticalScrollIndicator={false}>
           <View style={styles.successIcon}><Ionicons name="checkmark-circle" size={52} color={APP_THEME.gold} /></View>
           <Text style={styles.successTitle}>Order placed</Text>
           <Text style={styles.successId}>Order {placed.id}</Text>
@@ -113,7 +126,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
           <Text style={styles.successPayment}>{placed.payment.method === 'ONLINE' ? `Paid ${formatCurrency(placed.payment.amount)} online${placed.payment.paymentId ? ` • ${placed.payment.paymentId}` : ''}` : `Pay ${formatCurrency(placed.payment.amount)} in cash on delivery`}</Text>
           <View style={styles.successActions}>
             <TouchableOpacity style={styles.primaryBtn} onPress={() => navigation.replace('ShopOrderDetail', { orderId: placed.id })}><Text style={styles.primaryBtnText}>Track order</Text><Ionicons name="chevron-forward" size={14} color={APP_THEME.bg}/></TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryBtn} onPress={() => navigation.navigate('Shop')}><Text style={styles.secondaryBtnText}>Continue shopping</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.secondaryBtn} onPress={goToShop}><Text style={styles.secondaryBtnText}>Continue shopping</Text></TouchableOpacity>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -124,7 +137,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}><TouchableOpacity onPress={()=>navigation.goBack()} style={styles.headerBtn}><Ionicons name="arrow-back" size={18} color={APP_THEME.white}/></TouchableOpacity><Text style={styles.headerTitle}>Checkout</Text><View style={{width:34}}/></View>
-        <View style={styles.empty}><Ionicons name="bag-outline" size={36} color={APP_THEME.muted}/><Text style={styles.emptyTitle}>Nothing to check out</Text><Text style={styles.emptySub}>Your cart is empty.</Text><TouchableOpacity style={styles.primaryBtn} onPress={()=>navigation.navigate('Shop')}><Text style={styles.primaryBtnText}>Browse the shop</Text></TouchableOpacity></View>
+        <View style={styles.empty}><Ionicons name="bag-outline" size={36} color={APP_THEME.muted}/><Text style={styles.emptyTitle}>Nothing to check out</Text><Text style={styles.emptySub}>Your cart is empty.</Text><TouchableOpacity style={styles.primaryBtn} onPress={goToShopFromEmpty}><Text style={styles.primaryBtnText}>Browse the shop</Text></TouchableOpacity></View>
       </SafeAreaView>
     );
   }
@@ -141,7 +154,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
         <View style={{width:34}} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: 20 + Math.max(insets.bottom, 8) }]}>
         <View style={styles.card}>
           <View style={styles.cardHead}><Ionicons name="location-outline" size={15} color={APP_THEME.gold} /><Text style={styles.cardHeadTitle}>Delivery address</Text></View>
 
