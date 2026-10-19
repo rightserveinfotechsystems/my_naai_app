@@ -1,17 +1,32 @@
+export const APP_THEME = {
+  bg: '#080A0A',
+  card: '#1C2121',
+  cardRaised: '#171B1B',
+  line: '#252B2B',
+  gold: '#E8B97E',
+  goldSoft: '#F3C992',
+  goldWash: 'rgba(232, 185, 126, 0.12)',
+  muted: '#899191',
+  mutedLight: '#B7BEBE',
+  white: '#FFFFFF',
+  red: '#F27B74',
+  green: '#6ED19E',
+};
+
 export const BLINKIT = {
-  green: '#0C831F',
-  greenLight: '#e8f5e9',
-  greenWash: 'rgba(12, 131, 31, 0.08)',
-  yellow: '#FFC141',
-  yellowLight: '#FFF8D6',
-  bg: '#f7f7f7',
-  lightBg: '#ffffff',
-  muted: '#999',
-  dark: '#1c1c1c',
-  line: '#e8e8e8',
-  red: '#ef4444',
+  green: APP_THEME.gold,
+  greenLight: APP_THEME.goldWash,
+  greenWash: APP_THEME.goldWash,
+  yellow: APP_THEME.goldSoft,
+  yellowLight: APP_THEME.goldWash,
+  bg: APP_THEME.bg,
+  lightBg: APP_THEME.card,
+  muted: APP_THEME.muted,
+  dark: APP_THEME.white,
+  line: APP_THEME.line,
+  red: APP_THEME.red,
 };
 
 export const SHOP_STYLES = {
-  green: BLINKIT.green,
+  green: APP_THEME.gold,
 };

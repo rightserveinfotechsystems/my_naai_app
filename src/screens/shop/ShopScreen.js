@@ -6,24 +6,22 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  ActivityIndicator,
   FlatList,
   RefreshControl,
-  Image,
   Alert,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { communication, getFileUrl } from '../../services/communication';
-import { normalizeShopProduct, categoryChipsFor, categoryLabel, applyShopFilters, SHOP_CATEGORIES, SHOP_GENDERS, PRICE_RANGES } from '../../shop/shopCatalog';
+import { communication } from '../../services/communication';
+import { normalizeShopProduct, categoryLabel, applyShopFilters, SHOP_CATEGORIES, SHOP_GENDERS, PRICE_RANGES } from '../../shop/shopCatalog';
 import { cartTotals } from '../../shop/shopOrders';
 import { fetchShopSettings } from '../../shop/shopSettings';
 import { ShopProductCard, ShopCartBar, EmptyState, SkeletonCard } from '../../shop/ShopComponents';
-import { BLINKIT } from '../../shop/shopTheme';
+import { APP_THEME } from '../../shop/shopTheme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getShopOwnerId } from '../../shop/shopHelper';
-
-const HEADER_BG = BLINKIT.green;
 
 function useShopCatalog() {
   const [products, setProducts] = useState([]);
@@ -70,10 +68,12 @@ function useShopCatalog() {
 
 function useSyncedCart(ownerId) {
   const [cart, setCart] = useState([]);
-  const ownerRef = useRef(ownerId);
-  ownerRef.current = ownerId;
 
-  // Minimal AsyncStorage cart implementation — we keep it simple for mobile
+  const persist = async (lines) => {
+    try { await AsyncStorage.setItem(`mynaaiShopCart:${ownerId}`, JSON.stringify(lines)); } catch {}
+    setCart(lines);
+  };
+
   const refresh = useCallback(async () => {
     if (!ownerId) return;
     try {
@@ -83,22 +83,13 @@ function useSyncedCart(ownerId) {
     } catch { setCart([]); }
   }, [ownerId]);
 
-  const persist = async (lines) => {
-    try {
-      await AsyncStorage.setItem(`mynaaiShopCart:${ownerId}`, JSON.stringify(lines));
-    } catch {}
-    setCart(lines);
-  };
-
   useEffect(() => {
     refresh();
-    // Try server cart if signed in
     (async () => {
       try {
         const res = await communication.shopCartGet();
         const lines = res?.data?.lines || [];
-        if (Array.isArray(lines) && lines.length >= 0) {
-          // Server is source of truth when it responds
+        if (Array.isArray(lines)) {
           const normalized = lines.map(l => ({
             productId: String(l.productId),
             name: l.name || 'Untitled',
@@ -157,9 +148,50 @@ function useSyncedCart(ownerId) {
   return { cart, add, setQty, refresh };
 }
 
+function ShopFilterSelect({ label, valueLabel, options, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <View style={styles.selectWrap}>
+        <Text style={styles.selectLabel}>{label}</Text>
+        <TouchableOpacity style={styles.selectBox} onPress={() => setOpen(true)} activeOpacity={0.85}>
+          <Text style={styles.selectValue} numberOfLines={1}>{valueLabel}</Text>
+          <Ionicons name="chevron-down" size={12} color={APP_THEME.muted} />
+        </TouchableOpacity>
+      </View>
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setOpen(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{label}</Text>
+              <TouchableOpacity onPress={() => setOpen(false)} hitSlop={8}>
+                <Ionicons name="close" size={18} color={APP_THEME.muted} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={{ maxHeight: 360 }} showsVerticalScrollIndicator={false}>
+              {options.map(opt => {
+                const active = opt.id === value;
+                return (
+                  <TouchableOpacity
+                    key={opt.id}
+                    style={[styles.modalOption, active && styles.modalOptionActive]}
+                    onPress={() => { onChange(opt.id); setOpen(false); }}
+                  >
+                    <Text style={[styles.modalOptionText, active && styles.modalOptionTextActive]}>{opt.label}</Text>
+                    {active && <Ionicons name="checkmark" size={16} color={APP_THEME.gold} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
+  );
+}
+
 const ShopScreen = ({ navigation }) => {
   const [ownerId, setOwnerId] = useState('guest');
-  const [salonCity, setSalonCity] = useState('');
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [gender, setGender] = useState('all');
@@ -172,18 +204,11 @@ const ShopScreen = ({ navigation }) => {
     (async () => {
       const id = await getShopOwnerId();
       setOwnerId(id);
-      try {
-        const raw = await AsyncStorage.getItem('mynaaiUser');
-        const parsed = raw ? JSON.parse(raw) : null;
-        const city = parsed?.salon?.city || parsed?.city || '';
-        setSalonCity(city);
-      } catch {}
     })();
     fetchShopSettings().then(setShopSettings).catch(() => {});
   }, []);
 
   const { cart, add, setQty } = useSyncedCart(ownerId);
-  const categories = useMemo(() => categoryChipsFor(products), [products]);
   const visible = useMemo(() => applyShopFilters(products, { search, category, gender, priceRange }), [products, search, category, gender, priceRange]);
   const totals = useMemo(() => cartTotals(cart, shopSettings), [cart, shopSettings]);
   const qtyFor = id => cart.find(l => l.productId === String(id))?.qty || 0;
@@ -192,116 +217,82 @@ const ShopScreen = ({ navigation }) => {
   const handleSetQty = (product, next) => setQty(product.id, next);
   const openProduct = product => navigation.navigate('ShopProductDetail', { productId: product.id });
 
-  const resetFilters = () => {
-    setSearch('');
-    setCategory('all');
-    setGender('all');
-    setPriceRange('all');
-  };
+  const resetFilters = () => { setSearch(''); setCategory('all'); setGender('all'); setPriceRange('all'); };
+
+  const categoryOptions = useMemo(() => [{ id: 'all', label: 'All categories' }, ...SHOP_CATEGORIES.map(c => ({ id: c.id, label: c.label }))], []);
+  const genderOptions = useMemo(() => [{ id: 'all', label: 'All' }, ...SHOP_GENDERS.map(g => ({ id: g.id, label: g.label }))], []);
+  const priceOptions = useMemo(() => PRICE_RANGES, []);
+
+  const catLabel = category === 'all' ? 'All categories' : categoryLabel(category);
+  const genLabel = gender === 'all' ? 'All' : (SHOP_GENDERS.find(g => g.id === gender)?.label || gender);
+  const priceLabel = PRICE_RANGES.find(p => p.id === priceRange)?.label || 'All prices';
 
   const renderProduct = ({ item }) => (
     <ShopProductCard product={item} qty={qtyFor(item.id)} onAdd={handleAdd} onSetQty={handleSetQty} onOpen={openProduct} style={styles.gridCard} />
   );
 
+  const hasActive = category !== 'all' || gender !== 'all' || priceRange !== 'all' || search.length > 0;
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Blinkit Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <View style={styles.headerLeft}>
-            <View style={styles.deliveryPill}>
-              <Ionicons name="flash" size={12} color={BLINKIT.yellow} />
-              <Text style={styles.deliveryPillText}>Delivery in 24 hours</Text>
-            </View>
-            <Text style={styles.headerLocation}>My Naai Salon Supply • {salonCity || 'Your salon'}</Text>
+          <View style={styles.headerTitleWrap}>
+            <Text style={styles.headerTitle}>Shop</Text>
+            <Text style={styles.headerSub}>Salon supplies for your store</Text>
           </View>
           <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('ShopOrders')}>
-              <Ionicons name="receipt-outline" size={19} color="#fff" />
+            <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.navigate('ShopOrders')} activeOpacity={0.85}>
+              <Ionicons name="receipt-outline" size={15} color={APP_THEME.white} />
+              <Text style={styles.headerBtnText}>My Orders</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.cartIconBtn} onPress={() => navigation.navigate('ShopCart')}>
-              <Ionicons name="bag-handle-outline" size={19} color="#fff" />
-              {totals.itemCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{totals.itemCount}</Text>
-                </View>
-              )}
+            <TouchableOpacity style={[styles.headerBtn, styles.headerBtnPrimary]} onPress={() => navigation.navigate('ShopCart')} activeOpacity={0.85}>
+              <Ionicons name="bag-handle-outline" size={15} color={APP_THEME.bg} />
+              <Text style={[styles.headerBtnText, styles.headerBtnTextDark]}>My Cart{totals.itemCount ? ` (${totals.itemCount})` : ''}</Text>
+              {totals.itemCount > 0 && <View style={styles.headerDot} />}
             </TouchableOpacity>
           </View>
         </View>
-        {/* Search Bar - Blinkit style white with rounded corners */}
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={16} color="#999" />
+          <Ionicons name="search" size={15} color={APP_THEME.muted} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search shampoo, clippers, beard oil…"
-            placeholderTextColor="#999"
+            placeholderTextColor={APP_THEME.muted}
             value={search}
             onChangeText={setSearch}
+            returnKeyType="search"
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
-              <Ionicons name="close-circle" size={16} color="#bbb" />
+              <Ionicons name="close-circle" size={16} color={APP_THEME.muted} />
             </TouchableOpacity>
           )}
         </View>
       </View>
 
-      {/* Filter chips - horizontal scroll Blinkit */}
-      <View style={styles.filterSection}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-          <TouchableOpacity style={[styles.filterChip, category === 'all' && styles.filterChipActive]} onPress={() => setCategory('all')}>
-            <Text style={[styles.filterChipText, category === 'all' && styles.filterChipTextActive]}>All</Text>
-          </TouchableOpacity>
-          {categories.map(c => (
-            <TouchableOpacity key={c.id} style={[styles.filterChip, category === c.id && styles.filterChipActive]} onPress={() => setCategory(c.id)}>
-              <Text style={[styles.filterChipText, category === c.id && styles.filterChipTextActive]}>{c.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        <View style={styles.secondaryFilters}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-            <View style={styles.dropdownPill}>
-              <Text style={styles.dropdownLabel}>For:</Text>
-              <TouchableOpacity style={styles.dropdownBtn} onPress={() => {}}>
-                <Text style={styles.dropdownValue}>{gender === 'all' ? 'All' : SHOP_GENDERS.find(g => g.id === gender)?.label || gender}</Text>
-                <Ionicons name="chevron-down" size={12} color="#666" />
-              </TouchableOpacity>
-            </View>
-            {/* Simple tappable gender chips instead of picker */}
-            {[{ id: 'all', label: 'All' }, ...SHOP_GENDERS].map(g => (
-              <TouchableOpacity key={`g-${g.id}`} style={[styles.miniChip, gender === g.id && styles.miniChipActive]} onPress={() => setGender(g.id)}>
-                <Text style={[styles.miniChipText, gender === g.id && styles.miniChipTextActive]}>{g.label}</Text>
-              </TouchableOpacity>
-            ))}
-            <View style={styles.divider} />
-            {PRICE_RANGES.map(p => (
-              <TouchableOpacity key={p.id} style={[styles.miniChip, priceRange === p.id && styles.miniChipActive]} onPress={() => setPriceRange(p.id)}>
-                <Text style={[styles.miniChipText, priceRange === p.id && styles.miniChipTextActive]}>{p.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+      <View style={styles.filtersSection}>
+        <View style={styles.filtersGrid}>
+          <ShopFilterSelect label="Category" valueLabel={catLabel} options={categoryOptions} value={category} onChange={setCategory} />
+          <ShopFilterSelect label="Gender" valueLabel={genLabel} options={genderOptions} value={gender} onChange={setGender} />
+          <ShopFilterSelect label="Price" valueLabel={priceLabel} options={priceOptions} value={priceRange} onChange={setPriceRange} />
         </View>
+        {(hasActive || visible.length) && (
+          <View style={styles.countRow}>
+            <Text style={styles.countText}><Text style={styles.countBold}>{visible.length}</Text> {visible.length === 1 ? 'product' : 'products'}</Text>
+            {hasActive && (
+              <TouchableOpacity onPress={resetFilters} style={styles.clearBtn}>
+                <Ionicons name="refresh" size={12} color={APP_THEME.gold} />
+                <Text style={styles.clearText}>Clear filters</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
 
-      {/* Count line */}
-      {!loading && !error && (
-        <View style={styles.countLine}>
-          <Text style={styles.countText}><Text style={styles.countBold}>{visible.length}</Text> {visible.length === 1 ? 'product' : 'products'}</Text>
-          {(category !== 'all' || gender !== 'all' || priceRange !== 'all' || search) && (
-            <TouchableOpacity onPress={resetFilters}>
-              <Text style={styles.clearFilters}>Clear filters</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-
-      {/* Grid */}
       {loading ? (
-        <View style={styles.grid}>
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <View key={i} style={styles.gridCard}><SkeletonCard /></View>
-          ))}
+        <View style={styles.gridSkeleton}>
+          {[1,2,3,4,5,6].map(i => (<View key={i} style={styles.gridCard}><SkeletonCard /></View>))}
         </View>
       ) : error ? (
         <View style={styles.centerWrap}>
@@ -316,7 +307,7 @@ const ShopScreen = ({ navigation }) => {
           columnWrapperStyle={styles.columnWrapper}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={BLINKIT.green} colors={[BLINKIT.green]} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={APP_THEME.gold} colors={[APP_THEME.gold]} />}
         />
       ) : (
         <View style={styles.centerWrap}>
@@ -332,75 +323,78 @@ const ShopScreen = ({ navigation }) => {
 export default ShopScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BLINKIT.bg },
+  container: { flex: 1, backgroundColor: APP_THEME.bg },
   header: {
-    backgroundColor: HEADER_BG,
+    backgroundColor: APP_THEME.bg,
     paddingHorizontal: 14,
-    paddingTop: 8,
-    paddingBottom: 12,
+    paddingTop: 6,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: APP_THEME.line,
   },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
-  headerLeft: { flex: 1 },
-  deliveryPill: {
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 10 },
+  headerTitleWrap: { flex: 1 },
+  headerTitle: { color: APP_THEME.white, fontSize: 18, fontWeight: '800', letterSpacing: 0.2 },
+  headerSub: { color: APP_THEME.muted, fontSize: 11, fontWeight: '500', marginTop: 2 },
+  headerActions: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  headerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-    gap: 4,
-    marginBottom: 4,
+    gap: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: APP_THEME.line,
+    backgroundColor: APP_THEME.card,
   },
-  deliveryPillText: { color: '#fff', fontSize: 11, fontWeight: '800', letterSpacing: 0.3 },
-  headerLocation: { color: 'rgba(255,255,255,0.9)', fontSize: 11, fontWeight: '600' },
-  headerActions: { flexDirection: 'row', gap: 8 },
-  iconBtn: { width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.18)', justifyContent: 'center', alignItems: 'center' },
-  cartIconBtn: { width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.18)', justifyContent: 'center', alignItems: 'center' },
-  badge: { position: 'absolute', top: -4, right: -4, backgroundColor: BLINKIT.yellow, minWidth: 16, height: 16, borderRadius: 8, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 3, borderWidth: 1, borderColor: HEADER_BG },
-  badgeText: { color: '#000', fontSize: 10, fontWeight: '800' },
+  headerBtnPrimary: { backgroundColor: APP_THEME.gold, borderColor: APP_THEME.gold },
+  headerBtnText: { color: APP_THEME.white, fontSize: 11, fontWeight: '700' },
+  headerBtnTextDark: { color: APP_THEME.bg },
+  headerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: APP_THEME.bg, marginLeft: 2 },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: APP_THEME.card,
+    borderWidth: 1,
+    borderColor: APP_THEME.line,
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 42,
     gap: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
   },
-  searchInput: { flex: 1, color: '#1a1a1a', fontSize: 13, fontWeight: '500', paddingVertical: 0 },
-  filterSection: { backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#eee', paddingVertical: 8 },
-  filterScroll: { paddingHorizontal: 12, gap: 8, alignItems: 'center' },
-  filterChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
+  searchInput: { flex: 1, color: APP_THEME.white, fontSize: 13, fontWeight: '500', paddingVertical: 0 },
+  filtersSection: { backgroundColor: APP_THEME.card, borderBottomWidth: 1, borderColor: APP_THEME.line, paddingHorizontal: 12, paddingVertical: 10 },
+  filtersGrid: { flexDirection: 'row', gap: 8 },
+  selectWrap: { flex: 1, gap: 4 },
+  selectLabel: { color: APP_THEME.muted, fontSize: 9, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase' },
+  selectBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: APP_THEME.bg,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    backgroundColor: '#fff',
+    borderColor: APP_THEME.line,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    gap: 6,
   },
-  filterChipActive: { backgroundColor: BLINKIT.green, borderColor: BLINKIT.green },
-  filterChipText: { color: '#555', fontSize: 12, fontWeight: '600' },
-  filterChipTextActive: { color: '#fff' },
-  secondaryFilters: { marginTop: 8, borderTopWidth: 1, borderColor: '#f0f0f0', paddingTop: 8 },
-  dropdownPill: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dropdownLabel: { color: '#999', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
-  dropdownBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: '#fafafa' },
-  dropdownValue: { color: '#333', fontSize: 11, fontWeight: '700' },
-  miniChip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16, backgroundColor: '#f5f5f5', borderWidth: 1, borderColor: '#eee' },
-  miniChipActive: { backgroundColor: '#e8f5e9', borderColor: BLINKIT.green },
-  miniChipText: { color: '#666', fontSize: 11, fontWeight: '600' },
-  miniChipTextActive: { color: BLINKIT.green },
-  divider: { width: 1, height: 20, backgroundColor: '#e0e0e0', marginHorizontal: 4 },
-  countLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#fff' },
-  countText: { color: '#888', fontSize: 11, fontWeight: '500' },
-  countBold: { color: '#1a1a1a', fontWeight: '800' },
-  clearFilters: { color: BLINKIT.green, fontWeight: '700', fontSize: 11 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', padding: 8, gap: 8 },
+  selectValue: { flex: 1, color: APP_THEME.white, fontSize: 11, fontWeight: '700' },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
+  modalCard: { backgroundColor: APP_THEME.card, borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 16, borderWidth: 1, borderColor: APP_THEME.line, maxHeight: '70%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: APP_THEME.line },
+  modalTitle: { color: APP_THEME.white, fontSize: 13, fontWeight: '800' },
+  modalOption: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 11, paddingHorizontal: 10, borderRadius: 9, marginBottom: 4 },
+  modalOptionActive: { backgroundColor: APP_THEME.goldWash, borderWidth: 1, borderColor: 'rgba(232,185,126,0.18)' },
+  modalOptionText: { color: APP_THEME.mutedLight, fontSize: 12, fontWeight: '600', flex: 1 },
+  modalOptionTextActive: { color: APP_THEME.white, fontWeight: '800' },
+  countRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: APP_THEME.line },
+  countText: { color: APP_THEME.muted, fontSize: 11, fontWeight: '500' },
+  countBold: { color: APP_THEME.white, fontWeight: '800' },
+  clearBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: APP_THEME.goldWash, borderWidth: 1, borderColor: 'rgba(232,185,126,0.18)' },
+  clearText: { color: APP_THEME.gold, fontWeight: '700', fontSize: 11 },
+  gridSkeleton: { flexDirection: 'row', flexWrap: 'wrap', padding: 8, gap: 8 },
   gridCard: { width: '48.5%', marginBottom: 8 },
   columnWrapper: { justifyContent: 'space-between', paddingHorizontal: 8, gap: 8 },
   listContent: { paddingBottom: 110, paddingTop: 8, paddingHorizontal: 4 },
