@@ -16,6 +16,7 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const insets = useSafeAreaInsets();
 
   useEffect(() => { const t = setInterval(()=> setNow(Date.now()), 30000); return () => clearInterval(t); }, []);
 
@@ -93,7 +94,6 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
   };
 
   const statusColor = status.key==='cancelled' ? APP_THEME.red : status.key==='delivered' ? APP_THEME.gold : '#D4A45A';
-  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -198,12 +198,12 @@ const styles = StyleSheet.create({
   pillText: { fontSize: 9, fontWeight: '800' },
   etaBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: APP_THEME.goldWash, padding: 8, borderRadius: 9, marginTop: 10, borderWidth: 1, borderColor: 'rgba(232,185,126,0.12)' },
   etaText: { color: APP_THEME.mutedLight, fontSize: 11, fontWeight: '500', flex: 1 },
-  tracker: { flexDirection: 'row', marginTop: 16, justifyContent: 'space-between' },
-  step: { flex: 1, alignItems: 'center', gap: 6 },
-  stepDot: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: APP_THEME.line, backgroundColor: APP_THEME.card },
+  tracker: { flexDirection: 'row', marginTop: 16, justifyContent: 'space-between', paddingHorizontal: 4 },
+  step: { flex: 1, alignItems: 'center', gap: 6, position: 'relative' },
+  stepDot: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: APP_THEME.line, backgroundColor: APP_THEME.card, zIndex: 1 },
   stepDotDone: { backgroundColor: APP_THEME.gold, borderColor: APP_THEME.gold },
   stepDotCurrent: { backgroundColor: APP_THEME.gold, borderColor: APP_THEME.gold, shadowColor: APP_THEME.gold, shadowOpacity: 0.25, shadowRadius: 6, elevation: 3 },
-  stepLine: { position: 'absolute', top: 9, left: -25, right: 25, height: 2, backgroundColor: APP_THEME.line, zIndex: -1 },
+  stepLine: { position: 'absolute', top: 9, left: '50%', right: '-50%', height: 2, backgroundColor: APP_THEME.line, zIndex: -1 },
   stepLineDone: { backgroundColor: APP_THEME.gold },
   stepLabel: { color: APP_THEME.muted, fontSize: 9, fontWeight: '700', textAlign: 'center' },
   stepLabelDone: { color: APP_THEME.mutedLight },

@@ -76,7 +76,7 @@ export function ShopProductCard({ product, qty, onAdd, onSetQty, onOpen, style }
           </View>
           {product.rating > 0 ? (
             <View style={styles.ratingBadge}>
-              <Ionicons name="star" size={9} color={APP_THEME.bg} />
+              <Ionicons name="star" size={9} color={APP_THEME.gold} />
               <Text style={styles.ratingText}>{Number(product.rating).toFixed(1)}</Text>
             </View>
           ) : null}

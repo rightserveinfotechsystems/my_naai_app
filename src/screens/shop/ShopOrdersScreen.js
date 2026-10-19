@@ -19,7 +19,7 @@ function mergeOrders(local, server) {
 const ShopOrdersScreen = ({ navigation }) => {
   const [ownerId, setOwnerId] = useState('guest');
   const [orders, setOrders] = useState([]);
-  const [filter, setFilter] = useState('active');
+  const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 

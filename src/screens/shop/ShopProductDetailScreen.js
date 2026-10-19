@@ -19,6 +19,7 @@ const ShopProductDetailScreen = ({ route, navigation }) => {
   const [cart, setCart] = useState([]);
   const [settings, setSettings] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     (async () => { const id = await getShopOwnerId(); setOwnerId(id); })();
@@ -123,7 +124,6 @@ const ShopProductDetailScreen = ({ route, navigation }) => {
 
   const off = discountPercent(product);
   const genderLabel = SHOP_GENDERS.find(g => g.id === product.gender)?.label || 'Unisex';
-  const insets = useSafeAreaInsets();
   const cartBarOffset = 12 + Math.max(insets.bottom, 6);
 
   return (
@@ -177,7 +177,7 @@ const ShopProductDetailScreen = ({ route, navigation }) => {
             {off > 0 && <View style={styles.offInline}><Text style={styles.offInlineText}>{off}% off</Text></View>}
           </View>
           {product.rating > 0 && (
-            <View style={styles.rating}><Ionicons name="star" size={10} color={APP_THEME.bg} /><Text style={styles.ratingText}>{Number(product.rating).toFixed(1)}</Text></View>
+            <View style={styles.rating}><Ionicons name="star" size={10} color={APP_THEME.gold} /><Text style={styles.ratingText}>{Number(product.rating).toFixed(1)}</Text></View>
           )}
         </View>
 
