@@ -119,10 +119,11 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
           ) : null}
           {status.key!=='cancelled' && (
             <View style={styles.tracker}>
+              <View style={styles.trackerLineBg} />
+              <View style={[styles.trackerProgress, { width: `${(status.stepIndex / Math.max(1, STATUS_TIMELINE.length - 1)) * 100}%` }]} />
               {STATUS_TIMELINE.map((step, idx)=> (
                 <View key={step.key} style={styles.step}>
                   <View style={[styles.stepDot, idx <= status.stepIndex && styles.stepDotDone, idx===status.stepIndex && styles.stepDotCurrent]} />
-                  {idx < STATUS_TIMELINE.length-1 && <View style={[styles.stepLine, idx < status.stepIndex && styles.stepLineDone]} />}
                   <Text style={[styles.stepLabel, idx <= status.stepIndex && styles.stepLabelDone, idx===status.stepIndex && styles.stepLabelCurrent]}>{step.label}</Text>
                 </View>
               ))}
@@ -198,13 +199,13 @@ const styles = StyleSheet.create({
   pillText: { fontSize: 9, fontWeight: '800' },
   etaBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: APP_THEME.goldWash, padding: 8, borderRadius: 9, marginTop: 10, borderWidth: 1, borderColor: 'rgba(232,185,126,0.12)' },
   etaText: { color: APP_THEME.mutedLight, fontSize: 11, fontWeight: '500', flex: 1 },
-  tracker: { flexDirection: 'row', marginTop: 16, justifyContent: 'space-between', paddingHorizontal: 4 },
-  step: { flex: 1, alignItems: 'center', gap: 6, position: 'relative' },
+  tracker: { flexDirection: 'row', marginTop: 16, justifyContent: 'space-between', paddingHorizontal: 4, position: 'relative' },
+  trackerLineBg: { position: 'absolute', top: 9, left: 24, right: 24, height: 2, backgroundColor: APP_THEME.line, borderRadius: 1 },
+  trackerProgress: { position: 'absolute', top: 9, left: 24, height: 2, backgroundColor: APP_THEME.gold, borderRadius: 1 },
+  step: { flex: 1, alignItems: 'center', gap: 6 },
   stepDot: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: APP_THEME.line, backgroundColor: APP_THEME.card, zIndex: 1 },
   stepDotDone: { backgroundColor: APP_THEME.gold, borderColor: APP_THEME.gold },
   stepDotCurrent: { backgroundColor: APP_THEME.gold, borderColor: APP_THEME.gold, shadowColor: APP_THEME.gold, shadowOpacity: 0.25, shadowRadius: 6, elevation: 3 },
-  stepLine: { position: 'absolute', top: 9, left: '50%', right: '-50%', height: 2, backgroundColor: APP_THEME.line, zIndex: -1 },
-  stepLineDone: { backgroundColor: APP_THEME.gold },
   stepLabel: { color: APP_THEME.muted, fontSize: 9, fontWeight: '700', textAlign: 'center' },
   stepLabelDone: { color: APP_THEME.mutedLight },
   stepLabelCurrent: { color: APP_THEME.gold },
