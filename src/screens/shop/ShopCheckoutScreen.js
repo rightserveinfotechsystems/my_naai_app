@@ -107,14 +107,34 @@ const ShopCheckoutScreen = ({ navigation }) => {
     }
   };
   const placeCod = async () => { await finalizeOrder({ method: 'COD', status: 'PENDING', paymentId: '', amount: totals.total }); };
+  const confirmCodOrder = () => {
+    const codExtra = settings?.codCharges > 0 ? ` (incl. ₹${settings.codCharges} COD fee)` : '';
+    Alert.alert(
+      'Confirm cash on delivery?',
+      `You will pay ${formatCurrency(totals.total)}${codExtra} in cash when order arrives.\n\nDeliver to: ${address.name}, ${address.line1}, ${address.city} — ${address.pincode}\n${cartCount(lines)} ${cartCount(lines)===1?'item':'items'} • Free cancellation until out for delivery.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: `Place order • ${formatCurrency(totals.total)}`,
+          style: 'default',
+          onPress: async () => {
+            if (busy) return;
+            setBusy(true);
+            try { await placeCod(); } finally { setBusy(false); }
+          },
+        },
+      ]
+    );
+  };
   const submit = async () => {
     if (busy) return;
     const problem = validate();
     if (problem) return Alert.alert('Check address', problem);
     if (lines.length === 0) return Alert.alert('Empty cart', 'Your cart is empty.');
     if (payment === 'cod' && codLocked) return Alert.alert('COD not available', `Cash on delivery is only available for orders up to ${formatCurrency(settings.codThreshold)} — please pay online.`);
+    if (payment === 'cod') return confirmCodOrder();
     setBusy(true);
-    try { if (payment === 'online') await payOnline(); else await placeCod(); } finally { setBusy(false); }
+    try { await payOnline(); } finally { setBusy(false); }
   };
 
   if (placed) {
