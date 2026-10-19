@@ -27,20 +27,28 @@ const ShopProductDetailScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     let cancelled = false;
+    function extractProducts(res) {
+      if (!res) return { rows: [], totalPages: 1 };
+      const body = res?.data?.products ? res.data : res?.products ? res : res?.data?.data?.products ? res.data.data : res;
+      const rows = Array.isArray(body?.products) ? body.products : Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+      const pages = body?.pagination?.totalPages || body?.data?.pagination?.totalPages || res?.pagination?.totalPages || res?.data?.pagination?.totalPages || 1;
+      return { rows, totalPages: pages };
+    }
+    function rowsFromRes(r) {
+      return extractProducts(r).rows;
+    }
     (async () => {
       setLoading(true);
       try {
         const first = await communication.shopProductList({ page: 1, searchString: '' });
-        const firstBody = first?.data || {};
-        const rows = firstBody.products || (Array.isArray(firstBody) ? firstBody : []);
-        const totalPages = firstBody.pagination?.totalPages || 1;
-        const pages = Math.min(totalPages, 10);
+        const { rows, totalPages } = extractProducts(first);
+        const pages = Math.min(Number(totalPages) || 1, 10);
         let restRows = [];
         if (pages > 1) {
           const rest = await Promise.all(
             Array.from({ length: pages - 1 }, (_, i) =>
               communication.shopProductList({ page: i + 2, searchString: '' })
-                .then(r => r?.data?.products || (Array.isArray(r?.data) ? r.data : []))
+                .then(r => rowsFromRes(r))
                 .catch(() => [])
             )
           );

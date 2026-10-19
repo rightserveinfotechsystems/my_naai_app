@@ -29,22 +29,32 @@ function useShopCatalog() {
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
+  function extractProducts(res) {
+    if (!res) return { rows: [], totalPages: 1 };
+    // backend may respond as {data:{products, pagination}} OR {products, pagination} OR {data:{data:{products}}}
+    const body = res?.data?.products ? res.data : res?.products ? res : res?.data?.data?.products ? res.data.data : res;
+    const rows = Array.isArray(body?.products) ? body.products : Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+    const pages = body?.pagination?.totalPages || body?.data?.pagination?.totalPages || res?.pagination?.totalPages || res?.data?.pagination?.totalPages || 1;
+    return { rows, totalPages: pages };
+  }
+  function rowsFromRes(r) {
+    const { rows } = extractProducts(r);
+    return rows;
+  }
   const load = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     else setRefreshing(true);
     setError('');
     try {
       const first = await communication.shopProductList({ page: 1, searchString: '' });
-      const firstBody = first?.data || {};
-      const rows = firstBody.products || (Array.isArray(firstBody) ? firstBody : []);
-      const totalPages = firstBody.pagination?.totalPages || 1;
-      const pages = Math.min(totalPages, 10);
+      const { rows, totalPages } = extractProducts(first);
+      const pages = Math.min(Number(totalPages) || 1, 10);
       let restRows = [];
       if (pages > 1) {
         const rest = await Promise.all(
           Array.from({ length: pages - 1 }, (_, i) =>
             communication.shopProductList({ page: i + 2, searchString: '' })
-              .then(r => r?.data?.products || (Array.isArray(r?.data) ? r.data : []))
+              .then(r => rowsFromRes(r))
               .catch(() => [])
           )
         );
@@ -88,9 +98,13 @@ function useSyncedCart(ownerId) {
     (async () => {
       try {
         const res = await communication.shopCartGet();
-        const lines = res?.data?.lines || [];
-        if (Array.isArray(lines)) {
-          const normalized = lines.map(l => ({
+        const serverLines =
+          Array.isArray(res?.data?.lines) ? res.data.lines :
+          Array.isArray(res?.lines) ? res.lines :
+          Array.isArray(res?.data?.data?.lines) ? res.data.data.lines :
+          Array.isArray(res?.data) ? res.data : [];
+        if (Array.isArray(serverLines)) {
+          const normalized = serverLines.map(l => ({
             productId: String(l.productId),
             name: l.name || 'Untitled',
             price: Number(l.price) || 0,
@@ -151,14 +165,12 @@ function useSyncedCart(ownerId) {
 function ShopFilterSelect({ label, valueLabel, options, value, onChange }) {
   const [open, setOpen] = useState(false);
   return (
-    <>
-      <View style={styles.selectWrap}>
-        <Text style={styles.selectLabel}>{label}</Text>
-        <TouchableOpacity style={styles.selectBox} onPress={() => setOpen(true)} activeOpacity={0.85}>
-          <Text style={styles.selectValue} numberOfLines={1}>{valueLabel}</Text>
-          <Ionicons name="chevron-down" size={12} color={APP_THEME.muted} />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.selectWrap}>
+      <Text style={styles.selectLabel}>{label}</Text>
+      <TouchableOpacity style={styles.selectBox} onPress={() => setOpen(true)} activeOpacity={0.85}>
+        <Text style={styles.selectValue} numberOfLines={1}>{valueLabel}</Text>
+        <Ionicons name="chevron-down" size={12} color={APP_THEME.muted} />
+      </TouchableOpacity>
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setOpen(false)}>
           <Pressable style={styles.modalCard} onPress={() => {}}>
@@ -178,7 +190,7 @@ function ShopFilterSelect({ label, valueLabel, options, value, onChange }) {
                     onPress={() => { onChange(opt.id); setOpen(false); }}
                   >
                     <Text style={[styles.modalOptionText, active && styles.modalOptionTextActive]}>{opt.label}</Text>
-                    {active && <Ionicons name="checkmark" size={16} color={APP_THEME.gold} />}
+                    {active ? <Ionicons name="checkmark" size={16} color={APP_THEME.gold} /> : null}
                   </TouchableOpacity>
                 );
               })}
@@ -186,7 +198,7 @@ function ShopFilterSelect({ label, valueLabel, options, value, onChange }) {
           </Pressable>
         </Pressable>
       </Modal>
-    </>
+    </View>
   );
 }
 
@@ -277,15 +289,18 @@ const ShopScreen = ({ navigation }) => {
           <ShopFilterSelect label="Gender" valueLabel={genLabel} options={genderOptions} value={gender} onChange={setGender} />
           <ShopFilterSelect label="Price" valueLabel={priceLabel} options={priceOptions} value={priceRange} onChange={setPriceRange} />
         </View>
-        {(hasActive || visible.length) && (
+        {!!(hasActive || visible.length) && (
           <View style={styles.countRow}>
-            <Text style={styles.countText}><Text style={styles.countBold}>{visible.length}</Text> {visible.length === 1 ? 'product' : 'products'}</Text>
-            {hasActive && (
+            <Text style={styles.countText}>
+              <Text style={styles.countBold}>{visible.length}</Text>
+              <Text style={styles.countText}> {visible.length === 1 ? 'product' : 'products'}</Text>
+            </Text>
+            {hasActive ? (
               <TouchableOpacity onPress={resetFilters} style={styles.clearBtn}>
                 <Ionicons name="refresh" size={12} color={APP_THEME.gold} />
                 <Text style={styles.clearText}>Clear filters</Text>
               </TouchableOpacity>
-            )}
+            ) : null}
           </View>
         )}
       </View>

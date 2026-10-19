@@ -8,9 +8,21 @@ export const CANCELLABLE_SERVER_STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING'
 async function hasSession() {
   try {
     const stored = await AsyncStorage.getItem('mynaai');
-    if (!stored) return false;
-    const parsed = JSON.parse(stored);
-    return Boolean(parsed?.token);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed?.token) return true;
+        if (typeof stored === 'string' && stored.length > 10) return true;
+      } catch {
+        if (stored && stored.length > 10) return true;
+      }
+    }
+    // fallback: salon may have mynaaiUser + userType
+    const userRaw = await AsyncStorage.getItem('mynaaiUser');
+    if (userRaw) return true;
+    const type = await AsyncStorage.getItem('userType');
+    if (type && String(type).toUpperCase() === 'SALON') return true;
+    return false;
   } catch {
     return false;
   }
@@ -87,7 +99,8 @@ export async function fetchServerCart() {
   if (!(await hasSession())) return null;
   try {
     const res = await communication.shopCartGet();
-    return mapServerCart(res?.data);
+    const payload = res?.data?.lines ? res.data : res?.lines ? res : res?.data?.data || res?.data || res;
+    return mapServerCart(payload);
   } catch { return null; }
 }
 
@@ -133,8 +146,14 @@ export async function fetchServerOrders(page = 1) {
   if (!(await hasSession())) return null;
   try {
     const res = await communication.shopOrderList({ page });
-    const orders = Array.isArray(res?.data?.orders) ? res.data.orders : [];
-    return orders.map(mapServerOrder).filter(o => o.id && o.items.length);
+    // backend may envelope as {data:{orders}} OR {orders} OR {data:{data:{orders}}}
+    const rawOrders =
+      Array.isArray(res?.data?.orders) ? res.data.orders :
+      Array.isArray(res?.orders) ? res.orders :
+      Array.isArray(res?.data?.data?.orders) ? res.data.data.orders :
+      Array.isArray(res?.data) ? res.data :
+      Array.isArray(res) ? res : [];
+    return rawOrders.map(mapServerOrder).filter(o => o.id && o.items.length);
   } catch { return null; }
 }
 
@@ -155,7 +174,8 @@ export async function fetchServerOrderById(orderId) {
   if (!(await hasSession()) || !orderId) return null;
   try {
     const res = await communication.shopOrderGetById({ orderId: String(orderId) });
-    const order = mapServerOrder(res?.data || {});
+    const payload = res?.data?.order || res?.order || res?.data?.data || res?.data || res || {};
+    const order = mapServerOrder(Array.isArray(payload) ? payload[0] : payload);
     return order.id ? order : null;
   } catch { return null; }
 }

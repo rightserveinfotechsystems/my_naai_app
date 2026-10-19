@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { APP_THEME, BLINKIT } from './shopTheme';
+import { APP_THEME } from './shopTheme';
 import { discountPercent } from './shopCatalog';
 import { getFileUrl } from '../services/communication';
 
@@ -36,6 +36,8 @@ export function ShopQuantityControl({ qty, onAdd, onSet, disabled = false, small
   );
 }
 
+// Vertical product card — 2 per row, image fits automatically (contain, no crop)
+// Attractive e-commerce styling matching dark theme #080A0A / #1C2121 / #E8B97E
 export function ShopProductCard({ product, qty, onAdd, onSetQty, onOpen, style }) {
   const off = discountPercent(product);
   const imageUri = product.image ? getFileUrl(product.image) : null;
@@ -46,35 +48,40 @@ export function ShopProductCard({ product, qty, onAdd, onSetQty, onOpen, style }
           <Text style={styles.offBadgeText}>{off}% OFF</Text>
         </View>
       )}
-      <TouchableOpacity style={styles.cardMedia} onPress={() => onOpen?.(product)} activeOpacity={0.9}>
+      <TouchableOpacity style={styles.cardMedia} onPress={() => onOpen?.(product)} activeOpacity={0.92}>
         {imageUri ? (
-          <Image source={{ uri: imageUri }} style={styles.cardImage} resizeMode="cover" />
+          <Image source={{ uri: imageUri }} style={styles.cardImage} resizeMode="contain" />
         ) : (
           <View style={styles.cardImagePlaceholder}>
-            <Ionicons name="image-outline" size={24} color={APP_THEME.muted} />
+            <Ionicons name="image-outline" size={28} color={APP_THEME.muted} />
           </View>
         )}
-        {!product.available && (
+        {!product.available ? (
           <View style={styles.stockVeil}>
             <Text style={styles.stockVeilText}>Out of stock</Text>
           </View>
-        )}
+        ) : null}
       </TouchableOpacity>
+
+      <View style={styles.cardDivider} />
+
       <View style={styles.cardBody}>
         <Text numberOfLines={2} style={styles.cardName}>{product.name}</Text>
-        <Text numberOfLines={1} style={styles.cardMeta}>{product.category.replace(/-/g, ' ')} {product.salonName ? `• ${product.salonName}` : ''}</Text>
+        <Text numberOfLines={1} style={styles.cardMeta}>{product.category.replace(/-/g, ' ')}{product.salonName ? ` • ${product.salonName}` : ''}</Text>
+
         <View style={styles.cardPriceRow}>
           <View style={styles.cardPriceLeft}>
             <Text style={styles.cardPrice}>₹{product.price}</Text>
-            {product.mrp > 0 && <Text style={styles.cardMrp}>₹{product.mrp}</Text>}
+            {product.mrp > 0 ? <Text style={styles.cardMrp}>₹{product.mrp}</Text> : null}
           </View>
-          {product.rating > 0 && (
+          {product.rating > 0 ? (
             <View style={styles.ratingBadge}>
               <Ionicons name="star" size={9} color={APP_THEME.bg} />
               <Text style={styles.ratingText}>{Number(product.rating).toFixed(1)}</Text>
             </View>
-          )}
+          ) : null}
         </View>
+
         <View style={styles.cardAction}>
           <ShopQuantityControl qty={qty} onAdd={() => onAdd(product)} onSet={next => onSetQty(product, next)} disabled={!product.available} />
         </View>
@@ -86,7 +93,7 @@ export function ShopProductCard({ product, qty, onAdd, onSetQty, onOpen, style }
 export function ShopCartBar({ totals, onOpen, offsetBottom }) {
   if (!totals.itemCount) return null;
   return (
-    <TouchableOpacity style={[styles.cartBar, offsetBottom !== undefined && { bottom: offsetBottom }]} onPress={onOpen} activeOpacity={0.9}>
+    <TouchableOpacity style={[styles.cartBar, offsetBottom !== undefined ? { bottom: offsetBottom } : null]} onPress={onOpen} activeOpacity={0.9}>
       <View style={styles.cartBarLeft}>
         <View style={styles.cartBarIcon}>
           <Ionicons name="bag-handle" size={16} color={APP_THEME.bg} />
@@ -112,18 +119,18 @@ export function ShopBillCard({ lines, totals }) {
         <Text style={styles.billLabel}>Item total</Text>
         <Text style={styles.billValue}>₹{totals.itemTotal}</Text>
       </View>
-      {totals.discount > 0 && (
+      {totals.discount > 0 ? (
         <View style={styles.billRow}>
           <Text style={[styles.billLabel, styles.billSaving]}>Order discount{totals.discountPercent ? ` (${totals.discountPercent}%)` : ''}</Text>
           <Text style={[styles.billValue, styles.billSaving]}>- ₹{totals.discount}</Text>
         </View>
-      )}
-      {totals.savings > 0 && (
+      ) : null}
+      {totals.savings > 0 ? (
         <View style={styles.billRow}>
           <Text style={[styles.billLabel, styles.billSaving]}>MRP savings</Text>
           <Text style={[styles.billValue, styles.billSaving]}>- ₹{totals.savings}</Text>
         </View>
-      )}
+      ) : null}
       <View style={styles.billRow}>
         <Text style={styles.billLabel}>Delivery fee</Text>
         {totals.deliveryFee === 0 && lines.length > 0 ? (
@@ -132,17 +139,17 @@ export function ShopBillCard({ lines, totals }) {
           <Text style={styles.billValue}>{totals.deliveryFee === 0 ? '—' : `₹${totals.deliveryFee}`}</Text>
         )}
       </View>
-      {totals.codFee > 0 && (
+      {totals.codFee > 0 ? (
         <View style={styles.billRow}>
           <Text style={styles.billLabel}>COD charges</Text>
           <Text style={styles.billValue}>₹{totals.codFee}</Text>
         </View>
-      )}
+      ) : null}
       <View style={[styles.billRow, styles.billTotalRow]}>
         <Text style={styles.billTotalLabel}>To pay</Text>
         <Text style={styles.billTotalValue}>₹{totals.total}</Text>
       </View>
-      {totals.savings > 0 && <Text style={styles.billSaved}>You saved ₹{totals.savings} on this order</Text>}
+      {totals.savings > 0 ? <Text style={styles.billSaved}>You saved ₹{totals.savings} on this order</Text> : null}
     </View>
   );
 }
@@ -151,16 +158,16 @@ export function EmptyState({ icon = 'bag-outline', title, message, actionLabel, 
   return (
     <View style={styles.empty}>
       <View style={styles.emptyIcon}>
-        <Ionicons name={icon} size={36} color={APP_THEME.gold} />
+        <Ionicons name={icon} size={34} color={APP_THEME.gold} />
       </View>
       <Text style={styles.emptyTitle}>{title}</Text>
       {message ? <Text style={styles.emptyMessage}>{message}</Text> : null}
-      {actionLabel && (
+      {actionLabel ? (
         <TouchableOpacity style={styles.emptyAction} onPress={onAction} activeOpacity={0.9}>
           <Text style={styles.emptyActionText}>{actionLabel}</Text>
           <Ionicons name="chevron-forward" size={15} color={APP_THEME.bg} />
         </TouchableOpacity>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -171,8 +178,8 @@ export function SkeletonCard() {
       <View style={styles.skeletonImage} />
       <View style={styles.skeletonLines}>
         <View style={styles.skeletonLine} />
-        <View style={[styles.skeletonLine, { width: '60%' }]} />
-        <View style={[styles.skeletonLine, { width: '40%' }]} />
+        <View style={[styles.skeletonLine, { width: '62%' }]} />
+        <View style={[styles.skeletonLine, { width: '42%' }]} />
       </View>
     </View>
   );
@@ -186,10 +193,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: APP_THEME.gold,
     backgroundColor: 'rgba(232,185,126,0.12)',
-    paddingVertical: 5,
+    paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 8,
-    minWidth: 72,
+    minWidth: 74,
     justifyContent: 'center',
   },
   addButtonSmall: { paddingVertical: 4, paddingHorizontal: 12, minWidth: 62, borderRadius: 7 },
@@ -221,6 +228,8 @@ const styles = StyleSheet.create({
   stepperBtn: { padding: 5, borderRadius: 6 },
   stepperQty: { color: APP_THEME.bg, fontWeight: '800', fontSize: 12, minWidth: 18, textAlign: 'center' },
   stepperQtyLarge: { fontSize: 14 },
+
+  // ---- Vertical card, 2 per row ----
   card: {
     backgroundColor: APP_THEME.card,
     borderRadius: 14,
@@ -228,34 +237,75 @@ const styles = StyleSheet.create({
     borderColor: APP_THEME.line,
     overflow: 'hidden',
     flex: 1,
+    // attractive elevation
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
   },
-  cardOutOfStock: { opacity: 0.6 },
+  cardOutOfStock: { opacity: 0.65 },
   offBadge: {
     position: 'absolute',
-    top: 7,
-    left: 7,
+    top: 8,
+    left: 8,
     zIndex: 2,
     backgroundColor: APP_THEME.gold,
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 6,
   },
-  offBadgeText: { color: APP_THEME.bg, fontSize: 9, fontWeight: '800' },
-  cardMedia: { height: 92, backgroundColor: '#0f1414', overflow: 'hidden' },
+  offBadgeText: { color: APP_THEME.bg, fontSize: 9, fontWeight: '800', letterSpacing: 0.2 },
+  // Image area — fits automatically, no crop
+  cardMedia: {
+    height: 118,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
+    overflow: 'hidden',
+  },
   cardImage: { width: '100%', height: '100%' },
-  cardImagePlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: APP_THEME.card },
-  stockVeil: { position: 'absolute', bottom: 6, left: 6, right: 6, backgroundColor: 'rgba(8,10,10,0.82)', paddingVertical: 3, borderRadius: 7, alignItems: 'center' },
+  cardImagePlaceholder: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  stockVeil: {
+    position: 'absolute',
+    bottom: 6,
+    left: 6,
+    right: 6,
+    backgroundColor: 'rgba(8,10,10,0.84)',
+    paddingVertical: 4,
+    borderRadius: 7,
+    alignItems: 'center',
+  },
   stockVeilText: { color: APP_THEME.white, fontSize: 9, fontWeight: '700' },
-  cardBody: { padding: 8, gap: 3 },
+  cardDivider: { height: 1, backgroundColor: APP_THEME.line, opacity: 0.9 },
+  cardBody: { padding: 9, gap: 4, backgroundColor: APP_THEME.card },
   cardName: { color: APP_THEME.white, fontSize: 11.5, fontWeight: '700', lineHeight: 14, minHeight: 28 },
   cardMeta: { color: APP_THEME.muted, fontSize: 9, fontWeight: '600', textTransform: 'capitalize' },
-  cardPriceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 3 },
-  cardPriceLeft: { flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 },
-  cardPrice: { color: APP_THEME.white, fontWeight: '800', fontSize: 12 },
+  cardPriceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+  cardPriceLeft: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+  cardPrice: { color: APP_THEME.white, fontWeight: '800', fontSize: 13 },
   cardMrp: { color: APP_THEME.muted, fontSize: 10, textDecorationLine: 'line-through', marginLeft: 4 },
-  ratingBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: APP_THEME.goldWash, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 6, gap: 2, borderWidth: 1, borderColor: 'rgba(232,185,126,0.2)' },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: APP_THEME.goldWash,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 6,
+    gap: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(232,185,126,0.22)',
+  },
   ratingText: { color: APP_THEME.gold, fontSize: 9, fontWeight: '800' },
-  cardAction: { marginTop: 6, alignItems: 'center' },
+  cardAction: { marginTop: 7, alignItems: 'center' },
+
   cartBar: {
     position: 'absolute',
     bottom: 12,
@@ -276,10 +326,11 @@ const styles = StyleSheet.create({
   },
   cartBarLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   cartBarIcon: { width: 32, height: 32, borderRadius: 9, backgroundColor: 'rgba(8,10,10,0.12)', justifyContent: 'center', alignItems: 'center' },
-  cartBarItems: { color: APP_THEME.bg, fontSize: 11, fontWeight: '700', opacity: 0.9 },
+  cartBarItems: { color: APP_THEME.bg, fontSize: 11, fontWeight: '700' },
   cartBarTotal: { color: APP_THEME.bg, fontSize: 14, fontWeight: '800' },
   cartBarCta: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: APP_THEME.bg, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8 },
   cartBarCtaText: { color: APP_THEME.white, fontWeight: '800', fontSize: 12 },
+
   billCard: {
     backgroundColor: APP_THEME.card,
     borderRadius: 12,
@@ -292,18 +343,20 @@ const styles = StyleSheet.create({
   billLabel: { color: APP_THEME.mutedLight, fontSize: 11, fontWeight: '500' },
   billValue: { color: APP_THEME.white, fontSize: 11, fontWeight: '700' },
   billSaving: { color: APP_THEME.green },
-  billTotalRow: { marginTop: 6, paddingTop: 8, borderTopWidth: 1, borderTopColor: APP_THEME.line, borderStyle: 'dashed' },
+  billTotalRow: { marginTop: 6, paddingTop: 8, borderTopWidth: 1, borderTopColor: APP_THEME.line },
   billTotalLabel: { color: APP_THEME.white, fontSize: 12, fontWeight: '800' },
   billTotalValue: { color: APP_THEME.white, fontSize: 14, fontWeight: '800' },
-  billSaved: { marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: APP_THEME.line, borderStyle: 'dashed', color: APP_THEME.green, fontSize: 10, fontWeight: '700' },
-  empty: { alignItems: 'center', padding: 28, marginTop: 16 },
+  billSaved: { marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: APP_THEME.line, color: APP_THEME.green, fontSize: 10, fontWeight: '700' },
+
+  empty: { alignItems: 'center', padding: 28, marginTop: 10 },
   emptyIcon: { width: 64, height: 64, borderRadius: 16, backgroundColor: APP_THEME.card, borderWidth: 1, borderColor: APP_THEME.line, justifyContent: 'center', alignItems: 'center', marginBottom: 14 },
   emptyTitle: { color: APP_THEME.white, fontSize: 15, fontWeight: '800', marginBottom: 6, textAlign: 'center' },
-  emptyMessage: { color: APP_THEME.muted, fontSize: 12, textAlign: 'center', lineHeight: 16, marginBottom: 14, paddingHorizontal: 20 },
+  emptyMessage: { color: APP_THEME.muted, fontSize: 12, textAlign: 'center', lineHeight: 16, marginBottom: 14, paddingHorizontal: 18 },
   emptyAction: { backgroundColor: APP_THEME.gold, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 9, flexDirection: 'row', alignItems: 'center', gap: 6 },
   emptyActionText: { color: APP_THEME.bg, fontWeight: '800', fontSize: 12 },
+
   skeleton: { borderColor: APP_THEME.line, backgroundColor: APP_THEME.card },
-  skeletonImage: { height: 92, backgroundColor: APP_THEME.line },
-  skeletonLines: { padding: 8, gap: 7 },
+  skeletonImage: { height: 118, backgroundColor: '#202525' },
+  skeletonLines: { padding: 9, gap: 7 },
   skeletonLine: { height: 9, backgroundColor: APP_THEME.line, borderRadius: 6 },
 });

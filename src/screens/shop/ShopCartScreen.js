@@ -28,8 +28,12 @@ const ShopCartScreen = ({ navigation }) => {
       fetchShopSettings().then(setSettings).catch(()=>{});
       try {
         const res = await communication.shopCartGet();
-        const serverLines = res?.data?.lines || [];
-        if (Array.isArray(serverLines)) {
+        const serverLines =
+          Array.isArray(res?.data?.lines) ? res.data.lines :
+          Array.isArray(res?.lines) ? res.lines :
+          Array.isArray(res?.data?.data?.lines) ? res.data.data.lines :
+          Array.isArray(res?.data) ? res.data : [];
+        if (Array.isArray(serverLines) && serverLines.length) {
           const normalized = serverLines.map(l => ({ productId: String(l.productId), name: l.name, price: Number(l.price)||0, mrp: Number(l.mrp)||0, image: l.image||'', category: l.category||'', gender: l.gender||'', salonName: l.salonName||'', qty: Number(l.qty)||1 }));
           await AsyncStorage.setItem(`mynaaiShopCart:${id}`, JSON.stringify(normalized));
           setLines(normalized);
