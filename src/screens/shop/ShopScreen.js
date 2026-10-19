@@ -409,9 +409,9 @@ const styles = StyleSheet.create({
   countBold: { color: APP_THEME.white, fontWeight: '800' },
   clearBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: APP_THEME.goldWash, borderWidth: 1, borderColor: 'rgba(232,185,126,0.18)' },
   clearText: { color: APP_THEME.gold, fontWeight: '700', fontSize: 11 },
-  gridSkeleton: { flexDirection: 'row', flexWrap: 'wrap', padding: 8, gap: 8 },
-  gridCard: { width: '48.5%', marginBottom: 8 },
-  columnWrapper: { justifyContent: 'space-between', paddingHorizontal: 8, gap: 8 },
-  listContent: { paddingBottom: 110, paddingTop: 8, paddingHorizontal: 4 },
+  gridSkeleton: { flexDirection: 'row', flexWrap: 'wrap', padding: 6, gap: 6 },
+  gridCard: { width: '48.5%', marginBottom: 6 },
+  columnWrapper: { justifyContent: 'space-between', paddingHorizontal: 6, gap: 6 },
+  listContent: { paddingBottom: 110, paddingTop: 6, paddingHorizontal: 3 },
   centerWrap: { flex: 1, justifyContent: 'center', paddingBottom: 80 },
 });
