@@ -74,6 +74,14 @@ import SalonAboutScreen from './src/screens/SalonAboutScreen';
 import SalonTermsScreen from './src/screens/SalonTermsScreen';
 import SalonFAQScreen from './src/screens/SalonFAQScreen';
 
+/* ---------- SHOP (Blinkit-style) ---------- */
+import ShopScreen from './src/screens/shop/ShopScreen';
+import ShopProductDetailScreen from './src/screens/shop/ShopProductDetailScreen';
+import ShopCartScreen from './src/screens/shop/ShopCartScreen';
+import ShopCheckoutScreen from './src/screens/shop/ShopCheckoutScreen';
+import ShopOrdersScreen from './src/screens/shop/ShopOrdersScreen';
+import ShopOrderDetailScreen from './src/screens/shop/ShopOrderDetailScreen';
+
 export const navigationRef = createNavigationContainerRef();
 
 const TextRender = Text.render;
@@ -122,12 +130,13 @@ const tabOptions = ({ route, insets }) => ({
       'Booked Salon': 'cut',
       'Products': 'storefront-outline',
       'Queue': 'list-circle',
-      'Queue History': 'cut',
+      'Queue History': 'time-outline',
+      'Shop': 'bag-handle-outline',
       'Product': 'storefront-outline',
       'Account': 'person',
     };
 
-    return <Ionicons name={icons[route.name]} size={28} color={color} />;
+    return <Ionicons name={icons[route.name] || 'ellipse-outline'} size={24} color={color} />;
   },
 });
 
@@ -152,6 +161,7 @@ function SalonTabs({ isNewSalon = false }) {
     >
       <Tab.Screen name="Queue" component={SalonDashboard} />
       <Tab.Screen name="Queue History" component={SalonBookingHistory} />
+      <Tab.Screen name="Shop" component={ShopScreen} />
       <Tab.Screen name="Product" component={SalonProduct} />
       <Tab.Screen name="Account" component={SalonAccountScreen} />
     </Tab.Navigator>
@@ -218,6 +228,12 @@ function AppStack({ userType, isNewSalon }) {
       <Stack.Screen name="BookingRequestScreen" component={BookingRequestScreen} />
       <Stack.Screen name="DelayRequestScreen" component={DelayRequestScreen} />
       <Stack.Screen name="EditSalonProfile" component={EditSalonProfileScreen} options={{ headerShown: false }} />
+      {/* Naai Shop (Blinkit) — cart & order flow sits above the tab bar */}
+      <Stack.Screen name="ShopProductDetail" component={ShopProductDetailScreen} />
+      <Stack.Screen name="ShopCart" component={ShopCartScreen} />
+      <Stack.Screen name="ShopCheckout" component={ShopCheckoutScreen} />
+      <Stack.Screen name="ShopOrders" component={ShopOrdersScreen} />
+      <Stack.Screen name="ShopOrderDetail" component={ShopOrderDetailScreen} />
     </Stack.Navigator>
   );
 }
