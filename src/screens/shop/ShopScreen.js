@@ -248,13 +248,10 @@ const ShopScreen = ({ navigation }) => {
   const hasActive = category !== 'all' || gender !== 'all' || priceRange !== 'all' || search.length > 0;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerTitleWrap}>
-            <Text style={styles.headerTitle}>Shop</Text>
-            <Text style={styles.headerSub}>Salon supplies for your store</Text>
-          </View>
+    <View style={styles.overlay}>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>Shop</Text>
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.navigate('ShopOrders')} activeOpacity={0.85}>
               <Ionicons name="receipt-outline" size={15} color={APP_THEME.white} />
@@ -267,6 +264,8 @@ const ShopScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
+        <Text style={styles.subtitle}>Salon supplies for your store</Text>
+
         <View style={styles.searchBar}>
           <Ionicons name="search" size={15} color={APP_THEME.muted} />
           <TextInput
@@ -283,77 +282,76 @@ const ShopScreen = ({ navigation }) => {
             </TouchableOpacity>
           )}
         </View>
-      </View>
 
-      <View style={styles.filtersSection}>
-        <View style={styles.filtersGrid}>
-          <ShopFilterSelect label="Category" valueLabel={catLabel} options={categoryOptions} value={category} onChange={setCategory} />
-          <ShopFilterSelect label="Gender" valueLabel={genLabel} options={genderOptions} value={gender} onChange={setGender} />
-          <ShopFilterSelect label="Price" valueLabel={priceLabel} options={priceOptions} value={priceRange} onChange={setPriceRange} />
+        <View style={styles.filtersSection}>
+          <View style={styles.filtersGrid}>
+            <ShopFilterSelect label="Category" valueLabel={catLabel} options={categoryOptions} value={category} onChange={setCategory} />
+            <ShopFilterSelect label="Gender" valueLabel={genLabel} options={genderOptions} value={gender} onChange={setGender} />
+            <ShopFilterSelect label="Price" valueLabel={priceLabel} options={priceOptions} value={priceRange} onChange={setPriceRange} />
+          </View>
+          {!!(hasActive || visible.length) && (
+            <View style={styles.countRow}>
+              <Text style={styles.countText}>
+                <Text style={styles.countBold}>{visible.length}</Text>
+                <Text style={styles.countText}> {visible.length === 1 ? 'product' : 'products'}</Text>
+              </Text>
+              {hasActive ? (
+                <TouchableOpacity onPress={resetFilters} style={styles.clearBtn}>
+                  <Ionicons name="refresh" size={12} color={APP_THEME.gold} />
+                  <Text style={styles.clearText}>Clear filters</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          )}
         </View>
-        {!!(hasActive || visible.length) && (
-          <View style={styles.countRow}>
-            <Text style={styles.countText}>
-              <Text style={styles.countBold}>{visible.length}</Text>
-              <Text style={styles.countText}> {visible.length === 1 ? 'product' : 'products'}</Text>
-            </Text>
-            {hasActive ? (
-              <TouchableOpacity onPress={resetFilters} style={styles.clearBtn}>
-                <Ionicons name="refresh" size={12} color={APP_THEME.gold} />
-                <Text style={styles.clearText}>Clear filters</Text>
-              </TouchableOpacity>
-            ) : null}
+
+        {loading ? (
+          <View style={styles.gridSkeleton}>
+            {[1,2,3,4,5,6].map(i => (<View key={i} style={styles.gridCard}><SkeletonCard /></View>))}
+          </View>
+        ) : error ? (
+          <View style={styles.centerWrap}>
+            <EmptyState icon="cloud-offline-outline" title="Shop is out of reach" message={error} actionLabel="Retry" onAction={() => load()} />
+          </View>
+        ) : visible.length ? (
+          <FlatList
+            data={visible}
+            renderItem={renderProduct}
+            keyExtractor={item => String(item.id)}
+            numColumns={2}
+            columnWrapperStyle={styles.columnWrapper}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={APP_THEME.gold} colors={[APP_THEME.gold]} />}
+          />
+        ) : (
+          <View style={styles.centerWrap}>
+            <EmptyState icon="search-outline" title="No products match" message="Try a different search, category or price range." actionLabel="Clear filters" onAction={resetFilters} />
           </View>
         )}
-      </View>
 
-      {loading ? (
-        <View style={styles.gridSkeleton}>
-          {[1,2,3,4,5,6].map(i => (<View key={i} style={styles.gridCard}><SkeletonCard /></View>))}
-        </View>
-      ) : error ? (
-        <View style={styles.centerWrap}>
-          <EmptyState icon="cloud-offline-outline" title="Shop is out of reach" message={error} actionLabel="Retry" onAction={() => load()} />
-        </View>
-      ) : visible.length ? (
-        <FlatList
-          data={visible}
-          renderItem={renderProduct}
-          keyExtractor={item => String(item.id)}
-          numColumns={2}
-          columnWrapperStyle={styles.columnWrapper}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={APP_THEME.gold} colors={[APP_THEME.gold]} />}
-        />
-      ) : (
-        <View style={styles.centerWrap}>
-          <EmptyState icon="search-outline" title="No products match" message="Try a different search, category or price range." actionLabel="Clear filters" onAction={resetFilters} />
-        </View>
-      )}
-
-      <ShopCartBar totals={totals} onOpen={() => navigation.navigate('ShopCart')} offsetBottom={70} />
-    </SafeAreaView>
+        <ShopCartBar totals={totals} onOpen={() => navigation.navigate('ShopCart')} offsetBottom={78} />
+      </SafeAreaView>
+    </View>
   );
 };
 
 export default ShopScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: APP_THEME.bg },
-  header: {
-    backgroundColor: APP_THEME.bg,
-    paddingHorizontal: 14,
-    paddingTop: 6,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: APP_THEME.line,
+  overlay: { flex: 1, backgroundColor: '#080A0A' },
+  container: { flex: 1, paddingHorizontal: 14 },
+  title: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 16,
+    marginTop: 10,
+    flex: 1,
   },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 10 },
-  headerTitleWrap: { flex: 1 },
-  headerTitle: { color: APP_THEME.white, fontSize: 18, fontWeight: '800', letterSpacing: 0.2 },
-  headerSub: { color: APP_THEME.muted, fontSize: 11, fontWeight: '500', marginTop: 2 },
-  headerActions: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  subtitle: { color: APP_THEME.muted, fontSize: 11, fontWeight: '500', marginTop: -12, marginBottom: 12 },
+  headerActions: { flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 16, marginTop: 10 },
   headerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -381,7 +379,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   searchInput: { flex: 1, color: APP_THEME.white, fontSize: 13, fontWeight: '500', paddingVertical: 0 },
-  filtersSection: { backgroundColor: APP_THEME.card, borderBottomWidth: 1, borderColor: APP_THEME.line, paddingHorizontal: 12, paddingVertical: 10 },
+  filtersSection: { backgroundColor: APP_THEME.card, borderBottomWidth: 1, borderColor: APP_THEME.line, paddingHorizontal: 14, paddingVertical: 10, marginHorizontal: -14, marginTop: 10 },
   filtersGrid: { flexDirection: 'row', gap: 8 },
   selectWrap: { flex: 1, gap: 4 },
   selectLabel: { color: APP_THEME.muted, fontSize: 9, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase' },
@@ -411,9 +409,9 @@ const styles = StyleSheet.create({
   countBold: { color: APP_THEME.white, fontWeight: '800' },
   clearBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: APP_THEME.goldWash, borderWidth: 1, borderColor: 'rgba(232,185,126,0.18)' },
   clearText: { color: APP_THEME.gold, fontWeight: '700', fontSize: 11 },
-  gridSkeleton: { flexDirection: 'row', flexWrap: 'wrap', padding: 6, gap: 6 },
+  gridSkeleton: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginHorizontal: -6, paddingTop: 6 },
   gridCard: { width: '48.5%', marginBottom: 6 },
-  columnWrapper: { justifyContent: 'space-between', paddingHorizontal: 6, gap: 6 },
-  listContent: { paddingBottom: 110, paddingTop: 6, paddingHorizontal: 3 },
+  columnWrapper: { justifyContent: 'space-between', gap: 6 },
+  listContent: { paddingBottom: 140, paddingTop: 6 },
   centerWrap: { flex: 1, justifyContent: 'center', paddingBottom: 80 },
 });
