@@ -77,7 +77,6 @@ const ShopOrdersScreen = ({ navigation }) => {
             <View style={[styles.pill, {backgroundColor: tone+ '14', borderColor: tone}]}><Text style={[styles.pillText, {color: tone}]}>{status.label}</Text></View>
           </View>
           <Text style={styles.meta}>{new Date(item.placedAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric'})} • {item.items.reduce((s,i)=>s+i.qty,0)} {item.items.reduce((s,i)=>s+i.qty,0)===1?'item':'items'} • {formatCurrency(item.amounts.total)}</Text>
-          {status.key!=='cancelled' && <View style={styles.etaRow}><Ionicons name="time-outline" size={11} color={APP_THEME.gold} /><Text style={styles.etaText}>{status.key==='delivered'? 'Delivered' : `Arriving by ${formatEta(status.eta)}`}</Text></View>}
         </View>
         <Ionicons name="chevron-forward" size={15} color={APP_THEME.muted} />
       </TouchableOpacity>

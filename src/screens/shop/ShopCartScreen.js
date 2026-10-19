@@ -9,6 +9,7 @@ import { ShopQuantityControl, ShopBillCard, EmptyState } from '../../shop/ShopCo
 import { APP_THEME } from '../../shop/shopTheme';
 import { getShopOwnerId } from '../../shop/shopHelper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DeviceEventEmitter } from 'react-native';
 
 const ShopCartScreen = ({ navigation }) => {
   const [ownerId, setOwnerId] = useState('guest');
@@ -41,8 +42,20 @@ const ShopCartScreen = ({ navigation }) => {
       } catch {}
     })();
   }, []);
+  // Auto-refresh when cart updated from Checkout/Shop or server
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('SHOP_CART_UPDATED', async () => {
+      const id = ownerId || await getShopOwnerId();
+      await load(id);
+    });
+    const focus = navigation.addListener ? navigation.addListener('focus', async () => {
+      const id = ownerId || await getShopOwnerId();
+      await load(id);
+    }) : () => {};
+    return () => { sub.remove(); if (focus && focus.remove) focus.remove(); };
+  }, [ownerId, navigation]);
 
-  const persist = async (next) => { try { await AsyncStorage.setItem(`mynaaiShopCart:${ownerId}`, JSON.stringify(next)); } catch {} setLines(next); };
+  const persist = async (next) => { try { await AsyncStorage.setItem(`mynaaiShopCart:${ownerId}`, JSON.stringify(next)); } catch {} setLines(next); DeviceEventEmitter.emit('SHOP_CART_UPDATED'); };
   const setQty = async (pid, next) => {
     let nextLines = [...lines];
     const n = Math.round(Number(next)||0);

@@ -21,6 +21,7 @@ import { fetchShopSettings } from '../../shop/shopSettings';
 import { ShopProductCard, ShopCartBar, EmptyState, SkeletonCard } from '../../shop/ShopComponents';
 import { APP_THEME } from '../../shop/shopTheme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DeviceEventEmitter } from 'react-native';
 import { getShopOwnerId } from '../../shop/shopHelper';
 
 function useShopCatalog() {
@@ -82,6 +83,7 @@ function useSyncedCart(ownerId) {
   const persist = async (lines) => {
     try { await AsyncStorage.setItem(`mynaaiShopCart:${ownerId}`, JSON.stringify(lines)); } catch {}
     setCart(lines);
+    DeviceEventEmitter.emit('SHOP_CART_UPDATED');
   };
 
   const refresh = useCallback(async () => {
@@ -120,6 +122,12 @@ function useSyncedCart(ownerId) {
       } catch {}
     })();
   }, [ownerId, refresh]);
+
+  // Auto-sync when cart cleared/updated from Checkout or other tabs
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('SHOP_CART_UPDATED', refresh);
+    return () => sub.remove();
+  }, [refresh]);
 
   const add = useCallback(async (product, qty = 1) => {
     const raw = await AsyncStorage.getItem(`mynaaiShopCart:${ownerId}`);

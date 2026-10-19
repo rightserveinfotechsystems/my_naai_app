@@ -10,6 +10,7 @@ import { ShopQuantityControl, ShopProductCard, ShopCartBar } from '../../shop/Sh
 import { APP_THEME } from '../../shop/shopTheme';
 import { getShopOwnerId } from '../../shop/shopHelper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DeviceEventEmitter } from 'react-native';
 
 const ShopProductDetailScreen = ({ route, navigation }) => {
   const productId = String(route.params?.productId || '');
@@ -67,8 +68,13 @@ const ShopProductDetailScreen = ({ route, navigation }) => {
     try { const raw = await AsyncStorage.getItem(`mynaaiShopCart:${oid}`); const lines = raw ? JSON.parse(raw) : []; setCart(Array.isArray(lines) ? lines : []); } catch { setCart([]); }
   };
   useEffect(() => { if (ownerId) refreshCart(ownerId); }, [ownerId]);
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('SHOP_CART_UPDATED', () => { if (ownerId) refreshCart(ownerId); });
+    const focus = navigation.addListener ? navigation.addListener('focus', () => { if (ownerId) refreshCart(ownerId); }) : () => {};
+    return () => { sub.remove(); if (focus && focus.remove) focus.remove(); };
+  }, [ownerId, navigation]);
 
-  const persist = async (lines) => { try { await AsyncStorage.setItem(`mynaaiShopCart:${ownerId}`, JSON.stringify(lines)); } catch {} setCart(lines); };
+  const persist = async (lines) => { try { await AsyncStorage.setItem(`mynaaiShopCart:${ownerId}`, JSON.stringify(lines)); } catch {} setCart(lines); DeviceEventEmitter.emit('SHOP_CART_UPDATED'); };
 
   const add = async (product, qty = 1) => {
     const raw = await AsyncStorage.getItem(`mynaaiShopCart:${ownerId}`);

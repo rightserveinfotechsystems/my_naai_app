@@ -8,6 +8,7 @@ import { ShopBillCard } from '../../shop/ShopComponents';
 import { APP_THEME } from '../../shop/shopTheme';
 import { getShopOwnerId, getShopSalonName, getShopAddressDefaults, formatCurrency } from '../../shop/shopHelper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DeviceEventEmitter } from 'react-native';
 import { rzp_key } from '../../services/communication';
 import RazorpayCheckout from 'react-native-razorpay';
 import { registerServerOrder, clearServerCart } from '../../shop/shopSync';
@@ -67,10 +68,13 @@ const ShopCheckoutScreen = ({ navigation }) => {
     const order = await placeOrder(ownerId, { items: lines, address, payment: paymentInfo, amounts: totals, salonName });
     try { await AsyncStorage.setItem(`mynaaiShopCart:${ownerId}`, JSON.stringify([])); } catch {}
     setLines([]);
+    // Notify all shop tabs instantly — cart empty without manual reload
+    DeviceEventEmitter.emit('SHOP_CART_UPDATED');
+    DeviceEventEmitter.emit('SHOP_ORDER_PLACED', order);
     setPlaced(order);
     setPayState('idle');
     Alert.alert('Order placed', `Order ${order.id} placed successfully.`);
-    registerServerOrder(order).then(registered => { if (registered) clearServerCart(); });
+    registerServerOrder(order).then(registered => { if (registered) clearServerCart().then(()=> DeviceEventEmitter.emit('SHOP_CART_UPDATED')); });
     return order;
   };
 
