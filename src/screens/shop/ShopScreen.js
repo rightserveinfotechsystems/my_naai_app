@@ -324,7 +324,7 @@ const ShopScreen = ({ navigation }) => {
         </View>
       )}
 
-      <ShopCartBar totals={totals} onOpen={() => navigation.navigate('ShopCart')} />
+      <ShopCartBar totals={totals} onOpen={() => navigation.navigate('ShopCart')} offsetBottom={70} />
     </SafeAreaView>
   );
 };
@@ -403,6 +403,6 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', padding: 8, gap: 8 },
   gridCard: { width: '48.5%', marginBottom: 8 },
   columnWrapper: { justifyContent: 'space-between', paddingHorizontal: 8, gap: 8 },
-  listContent: { paddingBottom: 90, paddingTop: 8, paddingHorizontal: 4 },
+  listContent: { paddingBottom: 110, paddingTop: 8, paddingHorizontal: 4 },
   centerWrap: { flex: 1, justifyContent: 'center', paddingBottom: 80 },
 });

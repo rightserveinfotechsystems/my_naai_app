@@ -83,10 +83,10 @@ export function ShopProductCard({ product, qty, onAdd, onSetQty, onOpen, style }
   );
 }
 
-export function ShopCartBar({ totals, onOpen }) {
+export function ShopCartBar({ totals, onOpen, offsetBottom }) {
   if (!totals.itemCount) return null;
   return (
-    <TouchableOpacity style={styles.cartBar} onPress={onOpen} activeOpacity={0.9}>
+    <TouchableOpacity style={[styles.cartBar, offsetBottom !== undefined && { bottom: offsetBottom }]} onPress={onOpen} activeOpacity={0.9}>
       <View style={styles.cartBarLeft}>
         <View style={styles.cartBarIcon}>
           <Ionicons name="bag-handle" size={18} color="#fff" />
