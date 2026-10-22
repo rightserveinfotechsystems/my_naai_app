@@ -12,18 +12,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   Linking,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { APP_THEME } from './shopTheme';
 import { toPoint, formatCoordinates, mapsUrl } from './geo';
-
-let WebView = null;
-try {
-  WebView = require('react-native-webview').WebView;
-} catch {
-  WebView = null;
-}
+import { WebView } from 'react-native-webview';
 
 const NAGPUR_FALLBACK = { latitude: 21.1458, longitude: 79.0882 };
 const DELHI_FALLBACK = { latitude: 28.6139, longitude: 77.209 };
@@ -120,6 +115,7 @@ export function ShopMapPinPicker({ visible, initial, onConfirm, onClose }) {
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const [webError, setWebError] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -128,6 +124,7 @@ export function ShopMapPinPicker({ visible, initial, onConfirm, onClose }) {
       setResults([]);
       setQuery('');
       setMapReady(false);
+      setWebError(false);
     }
   }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -182,11 +179,12 @@ export function ShopMapPinPicker({ visible, initial, onConfirm, onClose }) {
   };
 
   const handleConfirm = () => {
-    if (!toPoint(pending)) return Alert.alert('Pick a pin', 'Move the pin on the map to your home/office gate.');
+    if (!toPoint(pending)) return Alert.alert('Pick a pin', 'Move the pin on the map to exact spot.');
     onConfirm?.(pending);
     onClose?.();
   };
 
+  const staticMapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${pending.latitude},${pending.longitude}&zoom=16&size=600x400&markers=${pending.latitude},${pending.longitude},red-pushpin`;
   const html = leafletHtml(pending.latitude, pending.longitude, 15);
 
   return (
@@ -199,7 +197,7 @@ export function ShopMapPinPicker({ visible, initial, onConfirm, onClose }) {
           </TouchableOpacity>
           <View style={{ flex: 1, alignItems: 'center' }}>
             <Text style={styles.headerTitle}>Pin delivery location</Text>
-            <Text style={styles.headerSub}>At office? Search your home address and drop the pin — no need to be there</Text>
+            <Text style={styles.headerSub}>Search address and drag pin to exact spot</Text>
           </View>
           <View style={{ width: 36 }} />
         </View>
@@ -245,10 +243,19 @@ export function ShopMapPinPicker({ visible, initial, onConfirm, onClose }) {
 
         {/* Map */}
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.mapWrap}>
-          {!WebView ? (
-            <View style={styles.noWebView}>
-              <Ionicons name="map-outline" size={28} color={APP_THEME.muted} />
-              <Text style={styles.noWebText}>Map preview unavailable — update app to enable pin map, or use coord controls below.</Text>
+          {webError ? (
+            <View style={styles.webWrap}>
+              <Image source={{ uri: staticMapUrl }} style={styles.fallbackImage} resizeMode="cover" />
+              <View style={styles.fallbackPin} pointerEvents="none">
+                <Ionicons name="location" size={36} color={APP_THEME.gold} />
+                <View style={styles.fallbackPinShadow} />
+              </View>
+              <View style={styles.centerHint} pointerEvents="none">
+                <View style={styles.hintPill}>
+                  <Ionicons name="map-outline" size={10} color={APP_THEME.gold} />
+                  <Text style={styles.hintText}>Move pin with controls below</Text>
+                </View>
+              </View>
             </View>
           ) : (
             <View style={styles.webWrap}>
@@ -257,6 +264,8 @@ export function ShopMapPinPicker({ visible, initial, onConfirm, onClose }) {
                 source={{ html, baseUrl: 'https://unpkg.com' }}
                 onMessage={handleWebMessage}
                 onLoadEnd={() => setMapReady(true)}
+                onError={() => setWebError(true)}
+                onHttpError={() => setWebError(true)}
                 style={styles.webview}
                 originWhitelist={['*']}
                 mixedContentMode="always"
@@ -352,8 +361,9 @@ const styles = StyleSheet.create({
   centerHint: { position: 'absolute', top: 10, left: 0, right: 0, alignItems: 'center' },
   hintPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.72)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(232,185,126,0.3)' },
   hintText: { color: APP_THEME.white, fontSize: 10, fontWeight: '600' },
-  noWebView: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, gap: 10, backgroundColor: APP_THEME.card, margin: 12, borderRadius: 12, borderWidth: 1, borderColor: APP_THEME.line },
-  noWebText: { color: APP_THEME.muted, fontSize: 11, textAlign: 'center', lineHeight: 14 },
+  fallbackImage: { flex: 1, width: '100%', backgroundColor: '#0F1212' },
+  fallbackPin: { position: 'absolute', top: '50%', left: '50%', marginTop: -18, marginLeft: -14, alignItems: 'center' },
+  fallbackPinShadow: { width: 22, height: 6, borderRadius: 6, backgroundColor: 'rgba(0,0,0,0.45)', marginTop: -4 },
   controls: { backgroundColor: APP_THEME.card, borderTopWidth: 1, borderColor: APP_THEME.line, padding: 12, gap: 10 },
   coordsRow: { flexDirection: 'row', justifyContent: 'center' },
   coordsBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: APP_THEME.bg, borderWidth: 1, borderColor: APP_THEME.line, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 },

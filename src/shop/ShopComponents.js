@@ -276,11 +276,11 @@ export function LocationPreview({ value, title = 'Delivery location', caption = 
       {onPickMap ? (
         <TouchableOpacity style={styles.locationPickButton} onPress={onPickMap} activeOpacity={0.85}>
           <Ionicons name="map-outline" size={13} color={APP_THEME.gold} />
-          <Text style={styles.locationPickText}>{point ? 'Adjust pin on map' : 'Pin on map — order for home while at office'}</Text>
+          <Text style={styles.locationPickText}>{point ? 'Adjust pin on map' : 'Pin on map'}</Text>
           <Ionicons name="chevron-forward" size={12} color={APP_THEME.muted} />
         </TouchableOpacity>
       ) : null}
-      {point ? <Text style={styles.locationVerifyHint}>Tap “Verify on Maps” to see the pin on Google Maps — drag not needed, we use your GPS fix.</Text> : !onPickMap ? null : <Text style={styles.locationVerifyHint}>Office now? Use “Pin on map” to drop the pin at your home gate and deliver there.</Text>}
+      {point ? <Text style={styles.locationVerifyHint}>Tap “Verify on Maps” to check the pin in your maps app.</Text> : null}
     </View>
   );
 }
