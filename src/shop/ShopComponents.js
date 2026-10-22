@@ -215,7 +215,7 @@ export function SkeletonCard() {
 
 export function LocationPreview({ value, title = 'Delivery location', caption = '', onUseCurrent = null, locating = false }) {
   const point = toPoint(value);
-  const coords = point ? formatCoordinates(point) : 'No delivery pin yet';
+  const coords = point ? formatCoordinates(point) : '';
   const url = point ? mapsUrl(point) : '';
   return (
     <View style={styles.locationPreview}>
@@ -230,26 +230,50 @@ export function LocationPreview({ value, title = 'Delivery location', caption = 
           </TouchableOpacity>
         ) : null}
       </View>
-      <Text style={styles.locationCoords}>{coords}</Text>
+      {point ? (
+        <View style={styles.pinConfirmedBanner}>
+          <View style={styles.pinConfirmedDot}>
+            <Ionicons name="checkmark" size={10} color={APP_THEME.white} />
+          </View>
+          <Text style={styles.pinConfirmedText}>Pin confirmed</Text>
+          <Text style={styles.pinConfirmedCoords}>{coords}</Text>
+        </View>
+      ) : (
+        <Text style={styles.locationCoordsMuted}>No delivery pin yet — tap “Use my current location” or enter address</Text>
+      )}
       {caption ? <Text style={styles.locationCaption}>{caption}</Text> : null}
-      <View style={styles.locationMapPlaceholder}>
-        <Ionicons name="map-outline" size={22} color={APP_THEME.muted} />
-        <Text style={styles.locationMapText}>{point ? 'Delivery partner navigates to this pin' : 'Save the salon GPS location so delivery partners can find you.'}</Text>
+      <View style={[styles.locationMapPreview, point && styles.locationMapPreviewActive]}>
+        <View style={styles.mapGridH} />
+        <View style={styles.mapGridV} />
+        <View style={styles.mapPinWrap}>
+          <Ionicons name="location" size={34} color={APP_THEME.gold} />
+          <View style={styles.mapPinShadow} />
+        </View>
+        {point ? (
+          <View style={styles.mapCoordsPill}>
+            <Ionicons name="navigate" size={10} color={APP_THEME.gold} />
+            <Text style={styles.mapCoordsPillText}>{coords}</Text>
+          </View>
+        ) : (
+          <Text style={styles.locationMapText}>Save the salon GPS location so delivery partners can find you.</Text>
+        )}
+        {!point ? <Ionicons name="map-outline" size={18} color={APP_THEME.muted} style={{ position: 'absolute', top: 10, right: 10, opacity: 0.5 }} /> : null}
       </View>
       <View style={styles.locationActions}>
         {onUseCurrent ? (
-          <TouchableOpacity style={styles.locationButton} onPress={onUseCurrent} disabled={locating} activeOpacity={0.85}>
+          <TouchableOpacity style={[styles.locationButton, point && styles.locationButtonCompact]} onPress={onUseCurrent} disabled={locating} activeOpacity={0.85}>
             <Ionicons name="locate-outline" size={13} color={APP_THEME.white} />
-            <Text style={styles.locationButtonText}>{locating ? 'Locating…' : 'Use my current location'}</Text>
+            <Text style={styles.locationButtonText}>{locating ? 'Locating…' : point ? 'Update pin' : 'Use my current location'}</Text>
           </TouchableOpacity>
         ) : null}
         {url ? (
-          <TouchableOpacity style={styles.locationSecondary} onPress={() => Linking.openURL(url)} activeOpacity={0.85}>
-            <Text style={styles.locationSecondaryText}>Open in Maps</Text>
+          <TouchableOpacity style={[styles.locationSecondary, !point && { flex: 0 }]} onPress={() => Linking.openURL(url)} activeOpacity={0.85}>
+            <Text style={styles.locationSecondaryText}>Verify on Maps</Text>
             <Ionicons name="open-outline" size={12} color={APP_THEME.gold} />
           </TouchableOpacity>
         ) : null}
       </View>
+      {point ? <Text style={styles.locationVerifyHint}>Tap “Verify on Maps” to see the pin on Google Maps — drag not needed, we use your GPS fix.</Text> : null}
     </View>
   );
 }
@@ -423,13 +447,28 @@ const styles = StyleSheet.create({
   locationTitle: { color: APP_THEME.white, fontSize: 11, fontWeight: '800' },
   locationLink: { color: APP_THEME.gold, fontSize: 10, fontWeight: '700' },
   locationCoords: { color: APP_THEME.gold, fontSize: 11, fontWeight: '700' },
+  locationCoordsMuted: { color: APP_THEME.muted, fontSize: 11, fontWeight: '600' },
   locationCaption: { color: APP_THEME.muted, fontSize: 10, lineHeight: 13 },
+  pinConfirmedBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: 'rgba(34,197,94,0.35)', paddingHorizontal: 8, paddingVertical: 6, borderRadius: 8 },
+  pinConfirmedDot: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#22c55e', alignItems: 'center', justifyContent: 'center' },
+  pinConfirmedText: { color: '#22c55e', fontSize: 10, fontWeight: '800', letterSpacing: 0.3 },
+  pinConfirmedCoords: { color: APP_THEME.white, fontSize: 10, fontWeight: '700', flex: 1, textAlign: 'right' },
+  locationMapPreview: { backgroundColor: APP_THEME.bg, borderRadius: 10, borderWidth: 1, borderColor: APP_THEME.line, height: 110, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' },
+  locationMapPreviewActive: { borderColor: 'rgba(232,185,126,0.4)', backgroundColor: '#0F1212' },
+  mapGridH: { position: 'absolute', left: 0, right: 0, top: '50%', height: 1, backgroundColor: 'rgba(232,185,126,0.08)' },
+  mapGridV: { position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1, backgroundColor: 'rgba(232,185,126,0.08)' },
+  mapPinWrap: { alignItems: 'center', justifyContent: 'center' },
+  mapPinShadow: { width: 22, height: 6, borderRadius: 6, backgroundColor: 'rgba(0,0,0,0.45)', marginTop: -4 },
+  mapCoordsPill: { position: 'absolute', bottom: 8, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.72)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(232,185,126,0.3)' },
+  mapCoordsPillText: { color: APP_THEME.white, fontSize: 10, fontWeight: '700' },
   locationMapPlaceholder: { backgroundColor: APP_THEME.bg, borderRadius: 10, borderWidth: 1, borderColor: APP_THEME.line, padding: 14, alignItems: 'center', gap: 6, minHeight: 80, justifyContent: 'center' },
   locationMapText: { color: APP_THEME.muted, fontSize: 10, textAlign: 'center', lineHeight: 13 },
   locationActions: { flexDirection: 'row', gap: 8, marginTop: 4, alignItems: 'center' },
-  locationButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: APP_THEME.gold, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  locationButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: APP_THEME.gold, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, flex: 1, justifyContent: 'center' },
+  locationButtonCompact: { flex: 1 },
   locationButtonText: { color: APP_THEME.bg, fontWeight: '800', fontSize: 11 },
   locationSecondary: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: APP_THEME.line, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, backgroundColor: APP_THEME.bg },
+  locationVerifyHint: { color: APP_THEME.muted, fontSize: 9, lineHeight: 12, textAlign: 'center', marginTop: 2 },
   locationSecondaryText: { color: APP_THEME.gold, fontWeight: '700', fontSize: 11 },
 
   empty: { alignItems: 'center', padding: 28, marginTop: 10 },

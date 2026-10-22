@@ -64,12 +64,16 @@ const ShopCheckoutScreen = ({ navigation }) => {
   };
 
   const setField = (k, v) => setAddress(prev => ({ ...prev, [k]: v }));
+  const digitsOnly = (s) => String(s||'').replace(/\D/g,'');
   const validate = () => {
     if (!address.name.trim()) return 'Add the recipient’s name.';
-    if (!/^\\d{10}$/.test(address.phone.trim())) return 'Add a 10-digit contact number.';
+    const ph = digitsOnly(address.phone);
+    const ph10 = ph.length > 10 ? ph.slice(-10) : ph;
+    if (ph10.length !== 10) return 'Add a 10-digit contact number.';
     if (!address.line1.trim()) return 'Add the delivery address.';
     if (!address.city.trim()) return 'Add the city.';
-    if (!/^\\d{6}$/.test(address.pincode.trim())) return 'Add a 6-digit pincode.';
+    const pin = digitsOnly(address.pincode);
+    if (pin.length !== 6) return 'Add a 6-digit pincode.';
     return '';
   };
 
