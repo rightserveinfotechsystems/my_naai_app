@@ -995,5 +995,21 @@ export const communication = {
             throw error;
         }
     },
+    shopProductListPublic: async (payload) => {
+        try {
+            const response = await api.post(`/api/shop-public/products/list`, payload, {
+                headers: { "Content-Type": "application/json" },
+            });
+            return response.data;
+        } catch (error) { throw error; }
+    },
+    shopSettingsGetPublic: async () => {
+        try {
+            const response = await api.post(`/api/shop-public/settings/get`, {}, {
+                headers: { "Content-Type": "application/json" },
+            });
+            return response.data;
+        } catch (error) { throw error; }
+    },
 };
 

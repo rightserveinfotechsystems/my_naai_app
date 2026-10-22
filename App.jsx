@@ -146,7 +146,9 @@ function MainTabs() {
     <Tab.Navigator screenOptions={({ route }) => tabOptions({ route, insets })}>
       <Tab.Screen name="Salon Naai" component={NaaiDashboard} />
       <Tab.Screen name="Booked Salon" component={ServicesScreen} />
-      <Tab.Screen name="Products" component={UserProduct} />
+      {/* Products — retired: customers now browse Naai Shop (shopProductListPublic). Kept commented for reference */}
+      {/* <Tab.Screen name="Products" component={UserProduct} /> */}
+      <Tab.Screen name="Shop" component={ShopScreen} />
       <Tab.Screen name="Account" component={AccountScreen} />
     </Tab.Navigator>
   );
@@ -162,7 +164,8 @@ function SalonTabs({ isNewSalon = false }) {
       <Tab.Screen name="Queue" component={SalonDashboard} />
       <Tab.Screen name="Queue History" component={SalonBookingHistory} />
       <Tab.Screen name="Shop" component={ShopScreen} />
-      <Tab.Screen name="Product" component={SalonProduct} />
+      {/* Product — retired: partners now order stock from Shop (shop-products/list). */}
+      {/* <Tab.Screen name="Product" component={SalonProduct} /> */}
       <Tab.Screen name="Account" component={SalonAccountScreen} />
     </Tab.Navigator>
   );

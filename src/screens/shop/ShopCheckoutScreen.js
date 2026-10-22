@@ -9,6 +9,7 @@ import { APP_THEME } from '../../shop/shopTheme';
 import { getShopOwnerId, getShopSalonName, getShopAddressDefaults, formatCurrency } from '../../shop/shopHelper';
 import { toPoint, getCurrentLocation, getCurrentLocationDiagnostic, formatCoordinates } from '../../shop/geo';
 import { STATE_OPTIONS, stateOptionsWith, normalizeStateName } from '../../shop/stateOptions';
+import { shopCopy, getShopSession, isShopGuest } from '../../shop/shopBuyer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DeviceEventEmitter } from 'react-native';
 import { rzp_key } from '../../services/communication';
@@ -27,6 +28,8 @@ const ShopCheckoutScreen = ({ navigation }) => {
   const [placed, setPlaced] = useState(null);
   const [locating, setLocating] = useState(false);
   const [statePickerVisible, setStatePickerVisible] = useState(false);
+  const [copy, setCopy] = useState(shopCopy(null));
+  const [session, setSession] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -34,6 +37,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
       setOwnerId(id);
       const name = await getShopSalonName();
       setSalonName(name);
+      try { const s = await getShopSession(); setSession(s); setCopy(shopCopy(s)); } catch {}
       const defaults = await getShopAddressDefaults();
       if (defaults) setAddress(prev => ({ ...prev, ...defaults }));
       try { const raw = await AsyncStorage.getItem(`mynaaiShopCart:${id}`); const parsed = raw ? JSON.parse(raw) : []; setLines(Array.isArray(parsed) ? parsed : []); } catch {}
@@ -163,6 +167,12 @@ const ShopCheckoutScreen = ({ navigation }) => {
   };
   const submit = async () => {
     if (busy) return;
+    if (isShopGuest(session)) {
+      return Alert.alert(copy.guestCheckoutTitle, `${copy.guestCheckoutLead}\n\n• ${copy.guestCheckoutPoints.join('\n• ')}`, [
+        { text: copy.guestCheckoutBack, style: 'cancel' },
+        { text: copy.guestCheckoutCta, onPress: () => { try { navigation.navigate('UserLogin'); } catch { Alert.alert('Sign in', 'Please sign in from the Account tab to place the order.'); } } },
+      ]);
+    }
     const problem = validate();
     if (problem) return Alert.alert('Check address', problem);
     if (lines.length === 0) return Alert.alert('Empty cart', 'Your cart is empty.');
@@ -211,7 +221,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={()=>navigation.goBack()} style={styles.headerBtn}><Ionicons name="arrow-back" size={18} color={APP_THEME.white}/></TouchableOpacity>
-        <View><Text style={styles.headerTitle}>Checkout</Text><Text style={styles.headerSub}>Delivery to your salon</Text></View>
+        <View><Text style={styles.headerTitle}>Checkout</Text><Text style={styles.headerSub}>{copy.checkoutSubtitle}</Text></View>
         <View style={{width:34}} />
       </View>
 
@@ -225,7 +235,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
           <Text style={styles.label}>Contact number *</Text>
           <TextInput style={styles.input} value={address.phone} onChangeText={v=>setField('phone', v.replace(/\D/g,'').slice(0,10))} placeholder="10-digit mobile" placeholderTextColor={APP_THEME.muted} keyboardType="number-pad" maxLength={10} />
 
-          <Text style={styles.label}>Shop / salon address *</Text>
+          <Text style={styles.label}>{copy.addressFieldLabel} *</Text>
           <TextInput style={styles.input} value={address.line1} onChangeText={v=>setField('line1', v)} placeholder="Building, street, landmark" placeholderTextColor={APP_THEME.muted} />
 
           <View style={styles.row}>
@@ -249,7 +259,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
             <LocationPreview
               value={deliveryPoint}
               title="Delivery location"
-              caption="Our delivery partner navigates to this point. It is the salon GPS location unless you set it here."
+              caption={copy.locationCaption}
               onUseCurrent={useMyLocationForDelivery}
               locating={locating}
             />

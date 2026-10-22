@@ -23,6 +23,7 @@ import { APP_THEME } from '../../shop/shopTheme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DeviceEventEmitter } from 'react-native';
 import { getShopOwnerId } from '../../shop/shopHelper';
+import { shopCopy, getShopSession } from '../../shop/shopBuyer';
 
 function useShopCatalog() {
   const [products, setProducts] = useState([]);
@@ -42,19 +43,30 @@ function useShopCatalog() {
     const { rows } = extractProducts(r);
     return rows;
   }
+  const fetchProductsPage = async (page) => {
+    try {
+      return await communication.shopProductList({ page, searchString: '' });
+    } catch (e) {
+      const status = e?.response?.status;
+      if (status === 401 || status === 403 || String(e?.message || '').toLowerCase().includes('auth')) {
+        return await communication.shopProductListPublic({ page, searchString: '' });
+      }
+      throw e;
+    }
+  };
   const load = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     else setRefreshing(true);
     setError('');
     try {
-      const first = await communication.shopProductList({ page: 1, searchString: '' });
+      const first = await fetchProductsPage(1);
       const { rows, totalPages } = extractProducts(first);
       const pages = Math.min(Number(totalPages) || 1, 10);
       let restRows = [];
       if (pages > 1) {
         const rest = await Promise.all(
           Array.from({ length: pages - 1 }, (_, i) =>
-            communication.shopProductList({ page: i + 2, searchString: '' })
+            fetchProductsPage(i + 2)
               .then(r => rowsFromRes(r))
               .catch(() => [])
           )
@@ -64,8 +76,28 @@ function useShopCatalog() {
       const list = [...rows, ...restRows];
       setProducts(list.map((item, idx) => normalizeShopProduct(item, idx)));
     } catch (err) {
-      setError(err?.response?.data?.message || err?.message || 'Could not load shop products');
-      setProducts([]);
+      try {
+        const first = await communication.shopProductListPublic({ page: 1, searchString: '' });
+        const { rows, totalPages } = extractProducts(first);
+        const list = rows;
+        const pages = Math.min(Number(totalPages) || 1, 10);
+        let restRows = [];
+        if (pages > 1) {
+          const rest = await Promise.all(
+            Array.from({ length: pages - 1 }, (_, i) =>
+              communication.shopProductListPublic({ page: i + 2, searchString: '' })
+                .then(r => rowsFromRes(r))
+                .catch(() => [])
+            )
+          );
+          restRows = rest.flat();
+        }
+        setProducts([...list, ...restRows].map((item, idx) => normalizeShopProduct(item, idx)));
+        setError('');
+      } catch (e2) {
+        setError(err?.response?.data?.message || err?.message || 'Could not load shop products');
+        setProducts([]);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -217,6 +249,7 @@ const ShopScreen = ({ navigation }) => {
   const [gender, setGender] = useState('all');
   const [priceRange, setPriceRange] = useState('all');
   const [shopSettings, setShopSettings] = useState(null);
+  const [copy, setCopy] = useState(shopCopy(null));
 
   const { products, loading, error, load, refreshing } = useShopCatalog();
 
@@ -224,6 +257,7 @@ const ShopScreen = ({ navigation }) => {
     (async () => {
       const id = await getShopOwnerId();
       setOwnerId(id);
+      try { const session = await getShopSession(); setCopy(shopCopy(session)); } catch {}
     })();
     fetchShopSettings().then(setShopSettings).catch(() => {});
   }, []);
@@ -276,7 +310,7 @@ const ShopScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
-        <Text style={styles.subtitle}>Salon supplies for your store</Text>
+        <Text style={styles.subtitle}>{copy.subtitle}</Text>
 
         <View style={styles.searchBar}>
           <Ionicons name="search" size={15} color={APP_THEME.muted} />

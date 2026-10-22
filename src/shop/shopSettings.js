@@ -27,10 +27,15 @@ export function fetchShopSettings({ force = false } = {}) {
       cached = normalizeShopSettings(res?.data);
       return cached;
     })
-    .catch(() => {
-      cached = { ...DEFAULT_SHOP_SETTINGS };
-      return cached;
-    })
+    .catch(() => communication.shopSettingsGetPublic()
+      .then(res => {
+        cached = normalizeShopSettings(res?.data);
+        return cached;
+      })
+      .catch(() => {
+        cached = { ...DEFAULT_SHOP_SETTINGS };
+        return cached;
+      }))
     .finally(() => { inFlight = null; });
   return inFlight;
 }
