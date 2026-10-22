@@ -152,15 +152,15 @@ const ShopCartScreen = ({ navigation }) => {
         ))}
 
         <View style={{marginTop:12}}>
-          <ShopBillCard lines={lines} totals={totals} />
+          <ShopBillCard lines={lines} totals={totals} stage="cart" />
         </View>
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: 12 + Math.max(insets.bottom, 6), paddingTop: 12 }]}>
         <View style={styles.footerAmount}>
-          <Text style={styles.footerLabel}>To pay</Text>
-          <Text style={styles.footerTotal}>₹{totals.total}</Text>
-          <Text style={styles.footerItems}>{cartCount(lines)} {cartCount(lines)===1?'item':'items'}</Text>
+          <Text style={styles.footerLabel}>Items total</Text>
+          <Text style={styles.footerTotal}>₹{totals.subtotal}</Text>
+          <Text style={styles.footerItems}>{cartCount(lines)} {cartCount(lines)===1?'item':'items'} · delivery at checkout</Text>
         </View>
         <TouchableOpacity style={styles.proceedBtn} onPress={() => navigation.navigate('ShopCheckout')}>
           <Text style={styles.proceedText}>Proceed to checkout</Text>

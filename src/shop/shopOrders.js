@@ -202,7 +202,7 @@ export async function upsertLocalOrder(salonId, order) {
 }
 
 function normalizeAddress(address = {}) {
-  return {
+  const base = {
     name: String(address.name || '').trim(),
     phone: String(address.phone || '').trim(),
     line1: String(address.line1 || '').trim(),
@@ -210,6 +210,22 @@ function normalizeAddress(address = {}) {
     state: String(address.state || '').trim(),
     pincode: String(address.pincode || '').trim(),
   };
+  try {
+    const { toPoint } = require('./geo');
+    const pt = toPoint(address);
+    if (pt) {
+      base.latitude = pt.latitude;
+      base.longitude = pt.longitude;
+    }
+  } catch {}
+  return base;
+}
+
+function deliveryPointOfAddress(address) {
+  try {
+    const { toPoint } = require('./geo');
+    return toPoint(address) || null;
+  } catch { return null; }
 }
 
 export async function placeOrder(salonId, { items, address, payment, amounts, salonName = '' } = {}, { now = Date.now() } = {}) {
@@ -219,6 +235,7 @@ export async function placeOrder(salonId, { items, address, payment, amounts, sa
     salonName: String(salonName || ''),
     items: (items || []).map(l => normalizeCartLine(l)),
     address: normalizeAddress(address),
+    deliveryLocation: deliveryPointOfAddress(address),
     payment: {
       method: payment?.method === 'COD' ? 'COD' : 'ONLINE',
       status: payment?.status || 'PENDING',

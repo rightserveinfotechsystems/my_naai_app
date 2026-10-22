@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Modal, FlatList, Linking } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { cartTotals, cartCount, placeOrder } from '../../shop/shopOrders';
 import { fetchShopSettings } from '../../shop/shopSettings';
-import { ShopBillCard } from '../../shop/ShopComponents';
+import { ShopBillCard, LocationPreview } from '../../shop/ShopComponents';
 import { APP_THEME } from '../../shop/shopTheme';
 import { getShopOwnerId, getShopSalonName, getShopAddressDefaults, formatCurrency } from '../../shop/shopHelper';
+import { toPoint, getCurrentLocation, formatCoordinates } from '../../shop/geo';
+import { STATE_OPTIONS, stateOptionsWith, normalizeStateName } from '../../shop/stateOptions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DeviceEventEmitter } from 'react-native';
 import { rzp_key } from '../../services/communication';
@@ -18,11 +20,13 @@ const ShopCheckoutScreen = ({ navigation }) => {
   const [salonName, setSalonName] = useState('');
   const [lines, setLines] = useState([]);
   const [settings, setSettings] = useState(null);
-  const [address, setAddress] = useState({ name: '', phone: '', line1: '', city: '', state: '', pincode: '' });
+  const [address, setAddress] = useState({ name: '', phone: '', line1: '', city: '', state: '', pincode: '', latitude: null, longitude: null });
   const [payment, setPayment] = useState('online');
   const [busy, setBusy] = useState(false);
   const [payState, setPayState] = useState('idle');
   const [placed, setPlaced] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const [statePickerVisible, setStatePickerVisible] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -31,7 +35,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
       const name = await getShopSalonName();
       setSalonName(name);
       const defaults = await getShopAddressDefaults();
-      if (defaults) setAddress(defaults);
+      if (defaults) setAddress(prev => ({ ...prev, ...defaults }));
       try { const raw = await AsyncStorage.getItem(`mynaaiShopCart:${id}`); const parsed = raw ? JSON.parse(raw) : []; setLines(Array.isArray(parsed) ? parsed : []); } catch {}
       fetchShopSettings().then(setSettings).catch(()=>{});
     })();
@@ -41,8 +45,9 @@ const ShopCheckoutScreen = ({ navigation }) => {
   const totals = useMemo(() => cartTotals(lines, settings, { method: payment === 'cod' ? 'COD' : 'ONLINE' }), [lines, settings, payment]);
   const codLocked = settings?.codThreshold > 0 && totals.itemTotal > settings.codThreshold;
   useEffect(() => { if (payment === 'cod' && codLocked) setPayment('online'); }, [payment, codLocked]);
+  const deliveryPoint = useMemo(() => toPoint(address), [address]);
+
   const goToShop = () => {
-    // Valid nested route: Stack 'Salon' -> Tab 'Shop' (not 'Shop' directly)
     try { navigation.navigate('Salon', { screen: 'Shop' }); return; } catch {}
     if (navigation.canGoBack && navigation.canGoBack()) navigation.goBack();
   };
@@ -57,18 +62,31 @@ const ShopCheckoutScreen = ({ navigation }) => {
   const setField = (k, v) => setAddress(prev => ({ ...prev, [k]: v }));
   const validate = () => {
     if (!address.name.trim()) return 'Add the recipient’s name.';
-    if (!/^\d{10}$/.test(address.phone.trim())) return 'Add a 10-digit contact number.';
+    if (!/^\\d{10}$/.test(address.phone.trim())) return 'Add a 10-digit contact number.';
     if (!address.line1.trim()) return 'Add the delivery address.';
     if (!address.city.trim()) return 'Add the city.';
-    if (!/^\d{6}$/.test(address.pincode.trim())) return 'Add a 6-digit pincode.';
+    if (!/^\\d{6}$/.test(address.pincode.trim())) return 'Add a 6-digit pincode.';
     return '';
+  };
+
+  const useMyLocationForDelivery = async () => {
+    setLocating(true);
+    try {
+      const fix = await getCurrentLocation();
+      if (!fix) {
+        Alert.alert('Location unavailable', 'Could not read this device’s location. Allow location access and try again.');
+        return;
+      }
+      setAddress(current => ({ ...current, latitude: fix.latitude, longitude: fix.longitude }));
+    } finally {
+      setLocating(false);
+    }
   };
 
   const finalizeOrder = async (paymentInfo) => {
     const order = await placeOrder(ownerId, { items: lines, address, payment: paymentInfo, amounts: totals, salonName });
     try { await AsyncStorage.setItem(`mynaaiShopCart:${ownerId}`, JSON.stringify([])); } catch {}
     setLines([]);
-    // Notify all shop tabs instantly — cart empty without manual reload
     DeviceEventEmitter.emit('SHOP_CART_UPDATED');
     DeviceEventEmitter.emit('SHOP_ORDER_PLACED', order);
     setPlaced(order);
@@ -109,9 +127,10 @@ const ShopCheckoutScreen = ({ navigation }) => {
   const placeCod = async () => { await finalizeOrder({ method: 'COD', status: 'PENDING', paymentId: '', amount: totals.total }); };
   const confirmCodOrder = () => {
     const codExtra = settings?.codCharges > 0 ? ` (incl. ₹${settings.codCharges} COD fee)` : '';
+    const locNote = deliveryPoint ? `\nPin: ${formatCoordinates(deliveryPoint)}` : '';
     Alert.alert(
       'Confirm cash on delivery?',
-      `You will pay ${formatCurrency(totals.total)}${codExtra} in cash when order arrives.\n\nDeliver to: ${address.name}, ${address.line1}, ${address.city} — ${address.pincode}\n${cartCount(lines)} ${cartCount(lines)===1?'item':'items'} • Free cancellation until out for delivery.`,
+      `You will pay ${formatCurrency(totals.total)}${codExtra} in cash when order arrives.\n\nDeliver to: ${address.name}, ${address.line1}, ${address.city} — ${address.pincode}${locNote}\n${cartCount(lines)} ${cartCount(lines)===1?'item':'items'} • Free cancellation until out for delivery.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -170,6 +189,8 @@ const ShopCheckoutScreen = ({ navigation }) => {
     : payState === 'confirming' ? 'Confirming your payment…'
     : payment === 'online' ? `Pay ${formatCurrency(totals.total)} online` : `Place order • pay ${formatCurrency(totals.total)} on delivery`;
 
+  const stateOptions = stateOptionsWith(address.state);
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
@@ -188,8 +209,8 @@ const ShopCheckoutScreen = ({ navigation }) => {
           <Text style={styles.label}>Contact number *</Text>
           <TextInput style={styles.input} value={address.phone} onChangeText={v=>setField('phone', v.replace(/\D/g,'').slice(0,10))} placeholder="10-digit mobile" placeholderTextColor={APP_THEME.muted} keyboardType="number-pad" maxLength={10} />
 
-          <Text style={styles.label}>Address *</Text>
-          <TextInput style={styles.input} value={address.line1} onChangeText={v=>setField('line1', v)} placeholder="Shop / salon address" placeholderTextColor={APP_THEME.muted} />
+          <Text style={styles.label}>Shop / salon address *</Text>
+          <TextInput style={styles.input} value={address.line1} onChangeText={v=>setField('line1', v)} placeholder="Building, street, landmark" placeholderTextColor={APP_THEME.muted} />
 
           <View style={styles.row}>
             <View style={{flex:1}}>
@@ -198,11 +219,25 @@ const ShopCheckoutScreen = ({ navigation }) => {
             </View>
             <View style={{flex:1}}>
               <Text style={styles.label}>State</Text>
-              <TextInput style={styles.input} value={address.state} onChangeText={v=>setField('state', v)} placeholder="State" placeholderTextColor={APP_THEME.muted} />
+              <TouchableOpacity style={styles.selectInput} onPress={()=>setStatePickerVisible(true)} activeOpacity={0.8}>
+                <Text style={[styles.selectText, !address.state && { color: APP_THEME.muted }]}>{address.state || 'Select state'}</Text>
+                <Ionicons name="chevron-down" size={13} color={APP_THEME.muted} />
+              </TouchableOpacity>
             </View>
           </View>
           <Text style={styles.label}>Pincode *</Text>
           <TextInput style={styles.input} value={address.pincode} onChangeText={v=>setField('pincode', v.replace(/\D/g,'').slice(0,6))} placeholder="6-digit pincode" placeholderTextColor={APP_THEME.muted} keyboardType="number-pad" maxLength={6} />
+
+          <View style={styles.locationSection}>
+            <View style={styles.locationSectionHead}><Ionicons name="location-outline" size={14} color={APP_THEME.gold} /><Text style={styles.locationSectionTitle}>Delivery location</Text></View>
+            <LocationPreview
+              value={deliveryPoint}
+              title="Delivery location"
+              caption="Our delivery partner navigates to this point. It is the salon GPS location unless you set it here."
+              onUseCurrent={useMyLocationForDelivery}
+              locating={locating}
+            />
+          </View>
 
           <View style={{marginTop:12}}>
             <ShopBillCard lines={lines} totals={totals} />
@@ -239,6 +274,31 @@ const ShopCheckoutScreen = ({ navigation }) => {
           <View style={styles.terms}><Ionicons name="shield-checkmark-outline" size={12} color={APP_THEME.gold} /><Text style={styles.termsText}>Orders can be cancelled free until they go out for delivery. Online refunds return to source in 5-7 days.</Text></View>
         </View>
       </ScrollView>
+
+      <Modal visible={statePickerVisible} transparent animationType="fade" onRequestClose={()=>setStatePickerVisible(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={()=>setStatePickerVisible(false)}>
+          <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 12) + 12 }]}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Select state</Text>
+            <FlatList
+              data={stateOptions}
+              keyExtractor={item => item.value}
+              showsVerticalScrollIndicator={false}
+              style={{ maxHeight: 360 }}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[styles.modalOption, address.state === item.value && styles.modalOptionActive]}
+                  onPress={() => { setField('state', item.value); setStatePickerVisible(false); }}
+                  activeOpacity={0.85}
+                >
+                  <Text style={[styles.modalOptionText, address.state === item.value && styles.modalOptionTextActive]}>{item.label}</Text>
+                  {address.state === item.value ? <Ionicons name="checkmark" size={16} color={APP_THEME.gold} /> : null}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -257,7 +317,12 @@ const styles = StyleSheet.create({
   cardHeadTitle: { color: APP_THEME.white, fontSize: 12, fontWeight: '800' },
   label: { color: APP_THEME.mutedLight, fontSize: 10, fontWeight: '700', marginTop: 10, marginBottom: 4 },
   input: { borderWidth: 1, borderColor: APP_THEME.line, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: APP_THEME.white, fontSize: 12, backgroundColor: APP_THEME.bg },
+  selectInput: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: APP_THEME.line, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: APP_THEME.bg },
+  selectText: { color: APP_THEME.white, fontSize: 12, flex: 1 },
   row: { flexDirection: 'row', gap: 10 },
+  locationSection: { marginTop: 14, gap: 8 },
+  locationSectionHead: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  locationSectionTitle: { color: APP_THEME.white, fontSize: 11, fontWeight: '800' },
   payTitle: { color: APP_THEME.white, fontSize: 12, fontWeight: '800', marginTop: 16, marginBottom: 8 },
   payOption: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderColor: APP_THEME.line, borderRadius: 12, padding: 11, marginBottom: 8, backgroundColor: APP_THEME.bg },
   payOptionActive: { borderColor: APP_THEME.gold, backgroundColor: APP_THEME.goldWash },
@@ -291,4 +356,12 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', padding: 40, gap: 10, flex: 1, justifyContent: 'center', backgroundColor: APP_THEME.bg },
   emptyTitle: { color: APP_THEME.white, fontSize: 13, fontWeight: '800' },
   emptySub: { color: APP_THEME.muted, fontSize: 11, textAlign: 'center' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: APP_THEME.card, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, borderWidth: 1, borderColor: APP_THEME.line, maxHeight: '72%' },
+  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: APP_THEME.line, alignSelf: 'center', marginBottom: 12 },
+  modalTitle: { color: APP_THEME.white, fontSize: 13, fontWeight: '800', marginBottom: 10 },
+  modalOption: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 11, paddingHorizontal: 10, borderRadius: 9, marginBottom: 4 },
+  modalOptionActive: { backgroundColor: APP_THEME.goldWash, borderWidth: 1, borderColor: 'rgba(232,185,126,0.22)' },
+  modalOptionText: { color: APP_THEME.white, fontSize: 12, flex: 1 },
+  modalOptionTextActive: { color: APP_THEME.gold, fontWeight: '700' },
 });

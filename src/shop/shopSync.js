@@ -1,5 +1,6 @@
 import { communication } from '../services/communication';
 import { normalizeCartLine, customerStatusToTrackerKey, SERVER_STATUS_TO_STEP_INDEX } from './shopOrders';
+import { toPoint } from './geo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export { customerStatusToTrackerKey, SERVER_STATUS_TO_STEP_INDEX };
@@ -61,6 +62,8 @@ export function mapServerOrder(order = {}) {
     qty: Math.max(1, Math.min(99, Math.round(Number(item.qty) || 1))),
   }));
   const amounts = order.amounts || {};
+  const addrPt = toPoint({ latitude: order.address?.latitude, longitude: order.address?.longitude });
+  const dlPt = toPoint(order.deliveryLocation);
   return {
     id: String(order.orderId || order.id || ''),
     salonId: String(order.salonId || ''),
@@ -73,7 +76,9 @@ export function mapServerOrder(order = {}) {
       city: String(order.address?.city || ''),
       state: String(order.address?.state || ''),
       pincode: String(order.address?.pincode || ''),
+      ...(addrPt ? { latitude: addrPt.latitude, longitude: addrPt.longitude } : {}),
     },
+    deliveryLocation: dlPt || null,
     payment: {
       method: order.payment?.method === 'COD' ? 'COD' : 'ONLINE',
       status: String(order.payment?.status || 'PENDING'),
@@ -124,22 +129,54 @@ export async function clearServerCart() {
   try { await communication.shopCartClear(); return true; } catch { return false; }
 }
 
+let coordinatesSupported = true;
+function digitsOnly(v, len) { return String(v || '').replace(/\D/g, '').slice(0, len); }
+function orderLinePayload(line) {
+  return { productId: String(line.productId || line.id || ''), qty: Math.max(1, Math.min(99, Math.round(Number(line.qty) || 1))) };
+}
+function looksLikeUnknownField(error) {
+  const msg = String(error?.message || error?.response?.data?.message || '').toLowerCase();
+  return msg.includes('unknown') || msg.includes('latitude') || msg.includes('longitude') || msg.includes('unexpected');
+}
+export function buildOrderPayload(order = {}, { withCoordinates = true } = {}) {
+  const source = order.address || {};
+  const address = {
+    name: String(source.name || '').trim().slice(0, 150),
+    phone: digitsOnly(source.phone, 10),
+    line1: String(source.line1 || '').trim().slice(0, 255),
+    city: String(source.city || '').trim().slice(0, 100),
+    state: String(source.state || '').trim().slice(0, 100),
+    pincode: digitsOnly(source.pincode, 6),
+  };
+  const body = {
+    orderId: String(order.id || ''),
+    items: (order.items || []).map(orderLinePayload),
+    address,
+    payment: {
+      method: order.payment?.method === 'ONLINE' ? 'ONLINE' : 'COD',
+      status: order.payment?.status === 'PAID' ? 'PAID' : 'PENDING',
+      paymentId: order.payment?.paymentId || '',
+      amount: Number(order.payment?.amount) || Number(order.amounts?.total) || 0,
+    },
+  };
+  const pt = withCoordinates ? toPoint(source) : null;
+  if (pt) { body.address.latitude = pt.latitude; body.address.longitude = pt.longitude; }
+  return body;
+}
+
 export async function registerServerOrder(order) {
   if (!(await hasSession()) || !order?.id) return false;
+  const attempt = async (withCoordinates) => communication.shopOrderCreate(buildOrderPayload(order, { withCoordinates }));
   try {
-    await communication.shopOrderCreate({
-      orderId: order.id,
-      items: order.items,
-      address: order.address,
-      payment: {
-        method: order.payment?.method === 'COD' ? 'COD' : 'ONLINE',
-        status: order.payment?.status === 'PAID' ? 'PAID' : 'PENDING',
-        paymentId: order.payment?.paymentId || '',
-        amount: Number(order.payment?.amount) || Number(order.amounts?.total) || 0,
-      },
-    });
+    await attempt(coordinatesSupported);
     return true;
-  } catch { return false; }
+  } catch (error) {
+    if (coordinatesSupported && toPoint(order.address) && looksLikeUnknownField(error)) {
+      coordinatesSupported = false;
+      try { await attempt(false); return true; } catch { return false; }
+    }
+    return false;
+  }
 }
 
 export async function fetchServerOrders(page = 1) {

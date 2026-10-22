@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { normalizeStateName } from './stateOptions';
+import { toPoint } from './geo';
 
 export async function getShopOwnerId() {
   try {
@@ -29,13 +31,15 @@ export async function getShopAddressDefaults() {
     const parsed = JSON.parse(raw);
     const user = parsed?.salon ? parsed.salon : parsed;
     const merged = { ...parsed, ...user, ...(user?.salon || {}) };
+    const pt = toPoint(merged) || toPoint(merged?.salon) || toPoint(parsed?.salon);
     return {
       name: merged.ownerName || merged.fullName || merged.name || '',
       phone: merged.phoneNumber || merged.phone || '',
       line1: merged.addressLine1 || merged.address || `${merged.salonName || 'Salon'}, ` + [merged.addressLine1, merged.city].filter(Boolean).join(', '),
       city: merged.city || '',
-      state: merged.state || '',
+      state: normalizeStateName(merged.state || ''),
       pincode: merged.pincode || '',
+      ...(pt ? { latitude: pt.latitude, longitude: pt.longitude } : { latitude: null, longitude: null }),
     };
   } catch {
     return null;

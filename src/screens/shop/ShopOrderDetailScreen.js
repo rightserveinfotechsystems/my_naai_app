@@ -6,6 +6,8 @@ import { getFileUrl } from '../../services/communication';
 import { getOrderStatus, formatEta, STATUS_TIMELINE, canCancelOrder, cancelOrder } from '../../shop/shopOrders';
 import { APP_THEME } from '../../shop/shopTheme';
 import { getShopOwnerId, formatCurrency } from '../../shop/shopHelper';
+import { deliveryPointOf } from '../../shop/geo';
+import { LocationPreview } from '../../shop/ShopComponents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchServerOrderById, cancelServerOrder } from '../../shop/shopSync';
 
@@ -160,6 +162,12 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
           <Text style={styles.addrName}>{order.address.name} • {order.address.phone}</Text>
           <Text style={styles.addrLine}>{order.address.line1}{order.address.city ? `, ${order.address.city}`:''}{order.address.state? `, ${order.address.state}`:''} — {order.address.pincode}</Text>
         </View>
+
+        <LocationPreview
+          value={deliveryPointOf(order) || deliveryPointOf(order.address)}
+          title="Delivery location"
+          caption={deliveryPointOf(order) ? 'Our delivery partner navigates to this point. Ask support to update it if the gate or building is wrong.' : 'No pin saved yet — update the salon GPS location so the delivery partner can find you.'}
+        />
 
         <View style={styles.card}>
           <View style={styles.cardHead}>{payment.method==='COD' ? <Ionicons name="cash-outline" size={15} color={APP_THEME.gold}/> : <Ionicons name="card-outline" size={15} color={APP_THEME.gold}/>}<Text style={styles.cardTitle}>Payment</Text></View>

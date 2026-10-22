@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Linking } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { APP_THEME } from './shopTheme';
 import { discountPercent } from './shopCatalog';
 import { getFileUrl } from '../services/communication';
+import { formatCoordinates, mapsUrl, toPoint } from './geo';
 
 export const ProductPlaceholder = require('../assets/my_naai.png');
 
@@ -92,6 +93,7 @@ export function ShopProductCard({ product, qty, onAdd, onSetQty, onOpen, style }
 
 export function ShopCartBar({ totals, onOpen, offsetBottom }) {
   if (!totals.itemCount) return null;
+  const displayTotal = totals.subtotal ?? totals.total;
   return (
     <TouchableOpacity style={[styles.cartBar, offsetBottom !== undefined ? { bottom: offsetBottom } : null]} onPress={onOpen} activeOpacity={0.9}>
       <View style={styles.cartBarLeft}>
@@ -99,8 +101,8 @@ export function ShopCartBar({ totals, onOpen, offsetBottom }) {
           <Ionicons name="bag-handle" size={16} color={APP_THEME.bg} />
         </View>
         <View>
-          <Text style={styles.cartBarItems}>{totals.itemCount} {totals.itemCount === 1 ? 'item' : 'items'} in cart</Text>
-          <Text style={styles.cartBarTotal}>₹{totals.total}</Text>
+          <Text style={styles.cartBarItems}>{totals.itemCount} {totals.itemCount === 1 ? 'item' : 'items'} · delivery at checkout</Text>
+          <Text style={styles.cartBarTotal}>₹{displayTotal}</Text>
         </View>
       </View>
       <View style={styles.cartBarCta}>
@@ -111,45 +113,71 @@ export function ShopCartBar({ totals, onOpen, offsetBottom }) {
   );
 }
 
-export function ShopBillCard({ lines, totals }) {
+export function ShopBillCard({ lines, totals, stage = 'checkout', settings, method }) {
+  let t = totals;
+  if (!t && settings) {
+    try {
+      const { cartTotals } = require('./shopOrders');
+      t = cartTotals(lines, settings, { method });
+    } catch {}
+  }
+  if (!t) return null;
+  const totalsData = t;
+  const atCheckout = stage === 'checkout';
   return (
     <View style={styles.billCard}>
       <Text style={styles.billTitle}>Bill details</Text>
       <View style={styles.billRow}>
         <Text style={styles.billLabel}>Item total</Text>
-        <Text style={styles.billValue}>₹{totals.itemTotal}</Text>
+        <Text style={styles.billValue}>₹{totalsData.itemTotal}</Text>
       </View>
-      {totals.discount > 0 ? (
+      {totalsData.discount > 0 ? (
         <View style={styles.billRow}>
-          <Text style={[styles.billLabel, styles.billSaving]}>Order discount{totals.discountPercent ? ` (${totals.discountPercent}%)` : ''}</Text>
-          <Text style={[styles.billValue, styles.billSaving]}>- ₹{totals.discount}</Text>
+          <Text style={[styles.billLabel, styles.billSaving]}>Order discount{totalsData.discountPercent ? ` (${totalsData.discountPercent}%)` : ''}</Text>
+          <Text style={[styles.billValue, styles.billSaving]}>- ₹{totalsData.discount}</Text>
         </View>
       ) : null}
-      {totals.savings > 0 ? (
+      {totalsData.savings > 0 ? (
         <View style={styles.billRow}>
           <Text style={[styles.billLabel, styles.billSaving]}>MRP savings</Text>
-          <Text style={[styles.billValue, styles.billSaving]}>- ₹{totals.savings}</Text>
+          <Text style={[styles.billValue, styles.billSaving]}>- ₹{totalsData.savings}</Text>
         </View>
       ) : null}
-      <View style={styles.billRow}>
-        <Text style={styles.billLabel}>Delivery fee</Text>
-        {totals.deliveryFee === 0 && lines.length > 0 ? (
-          <Text style={[styles.billValue, styles.billSaving]}>FREE</Text>
-        ) : (
-          <Text style={styles.billValue}>{totals.deliveryFee === 0 ? '—' : `₹${totals.deliveryFee}`}</Text>
-        )}
-      </View>
-      {totals.codFee > 0 ? (
-        <View style={styles.billRow}>
-          <Text style={styles.billLabel}>COD charges</Text>
-          <Text style={styles.billValue}>₹{totals.codFee}</Text>
-        </View>
-      ) : null}
-      <View style={[styles.billRow, styles.billTotalRow]}>
-        <Text style={styles.billTotalLabel}>To pay</Text>
-        <Text style={styles.billTotalValue}>₹{totals.total}</Text>
-      </View>
-      {totals.savings > 0 ? <Text style={styles.billSaved}>You saved ₹{totals.savings} on this order</Text> : null}
+      {atCheckout ? (
+        <>
+          <View style={styles.billRow}>
+            <Text style={styles.billLabel}>Delivery fee</Text>
+            {totalsData.deliveryFee === 0 && lines.length > 0 ? (
+              <Text style={[styles.billValue, styles.billSaving]}>FREE</Text>
+            ) : (
+              <Text style={styles.billValue}>{totalsData.deliveryFee === 0 ? '—' : `₹${totalsData.deliveryFee}`}</Text>
+            )}
+          </View>
+          {totalsData.codFee > 0 ? (
+            <View style={styles.billRow}>
+              <Text style={styles.billLabel}>COD charges</Text>
+              <Text style={styles.billValue}>₹{totalsData.codFee}</Text>
+            </View>
+          ) : null}
+          <View style={[styles.billRow, styles.billTotalRow]}>
+            <Text style={styles.billTotalLabel}>To pay</Text>
+            <Text style={styles.billTotalValue}>₹{totalsData.total}</Text>
+          </View>
+        </>
+      ) : (
+        <>
+          <View style={styles.billRow}>
+            <Text style={styles.billLabel}>Delivery fee</Text>
+            <Text style={styles.billValue}>At checkout</Text>
+          </View>
+          <View style={[styles.billRow, styles.billTotalRow]}>
+            <Text style={styles.billTotalLabel}>Items total</Text>
+            <Text style={styles.billTotalValue}>₹{totalsData.subtotal}</Text>
+          </View>
+          <Text style={styles.billNote}>Product value only — delivery is calculated on the next step, once your address is confirmed.{totalsData.freeDeliveryAbove > 0 && totalsData.deliveryFee > 0 ? ` Free delivery above ₹${totalsData.freeDeliveryAbove}.` : ''}</Text>
+        </>
+      )}
+      {totalsData.savings > 0 ? <Text style={styles.billSaved}>You saved ₹{totalsData.savings} on this order</Text> : null}
     </View>
   );
 }
@@ -180,6 +208,47 @@ export function SkeletonCard() {
         <View style={styles.skeletonLine} />
         <View style={[styles.skeletonLine, { width: '62%' }]} />
         <View style={[styles.skeletonLine, { width: '42%' }]} />
+      </View>
+    </View>
+  );
+}
+
+export function LocationPreview({ value, title = 'Delivery location', caption = '', onUseCurrent = null, locating = false }) {
+  const point = toPoint(value);
+  const coords = point ? formatCoordinates(point) : 'No delivery pin yet';
+  const url = point ? mapsUrl(point) : '';
+  return (
+    <View style={styles.locationPreview}>
+      <View style={styles.locationHead}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Ionicons name="location-outline" size={14} color={APP_THEME.gold} />
+          <Text style={styles.locationTitle}>{title}</Text>
+        </View>
+        {url ? (
+          <TouchableOpacity onPress={() => Linking.openURL(url)} hitSlop={8}>
+            <Text style={styles.locationLink}>Open in Maps</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+      <Text style={styles.locationCoords}>{coords}</Text>
+      {caption ? <Text style={styles.locationCaption}>{caption}</Text> : null}
+      <View style={styles.locationMapPlaceholder}>
+        <Ionicons name="map-outline" size={22} color={APP_THEME.muted} />
+        <Text style={styles.locationMapText}>{point ? 'Delivery partner navigates to this pin' : 'Save the salon GPS location so delivery partners can find you.'}</Text>
+      </View>
+      <View style={styles.locationActions}>
+        {onUseCurrent ? (
+          <TouchableOpacity style={styles.locationButton} onPress={onUseCurrent} disabled={locating} activeOpacity={0.85}>
+            <Ionicons name="locate-outline" size={13} color={APP_THEME.white} />
+            <Text style={styles.locationButtonText}>{locating ? 'Locating…' : 'Use my current location'}</Text>
+          </TouchableOpacity>
+        ) : null}
+        {url ? (
+          <TouchableOpacity style={styles.locationSecondary} onPress={() => Linking.openURL(url)} activeOpacity={0.85}>
+            <Text style={styles.locationSecondaryText}>Open in Maps</Text>
+            <Ionicons name="open-outline" size={12} color={APP_THEME.gold} />
+          </TouchableOpacity>
+        ) : null}
       </View>
     </View>
   );
@@ -347,6 +416,21 @@ const styles = StyleSheet.create({
   billTotalLabel: { color: APP_THEME.white, fontSize: 12, fontWeight: '800' },
   billTotalValue: { color: APP_THEME.white, fontSize: 14, fontWeight: '800' },
   billSaved: { marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: APP_THEME.line, color: APP_THEME.green, fontSize: 10, fontWeight: '700' },
+  billNote: { marginTop: 8, color: APP_THEME.muted, fontSize: 10, lineHeight: 14 },
+
+  locationPreview: { backgroundColor: APP_THEME.card, borderRadius: 12, borderWidth: 1, borderColor: APP_THEME.line, padding: 12, gap: 6 },
+  locationHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  locationTitle: { color: APP_THEME.white, fontSize: 11, fontWeight: '800' },
+  locationLink: { color: APP_THEME.gold, fontSize: 10, fontWeight: '700' },
+  locationCoords: { color: APP_THEME.gold, fontSize: 11, fontWeight: '700' },
+  locationCaption: { color: APP_THEME.muted, fontSize: 10, lineHeight: 13 },
+  locationMapPlaceholder: { backgroundColor: APP_THEME.bg, borderRadius: 10, borderWidth: 1, borderColor: APP_THEME.line, padding: 14, alignItems: 'center', gap: 6, minHeight: 80, justifyContent: 'center' },
+  locationMapText: { color: APP_THEME.muted, fontSize: 10, textAlign: 'center', lineHeight: 13 },
+  locationActions: { flexDirection: 'row', gap: 8, marginTop: 4, alignItems: 'center' },
+  locationButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: APP_THEME.gold, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  locationButtonText: { color: APP_THEME.bg, fontWeight: '800', fontSize: 11 },
+  locationSecondary: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: APP_THEME.line, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, backgroundColor: APP_THEME.bg },
+  locationSecondaryText: { color: APP_THEME.gold, fontWeight: '700', fontSize: 11 },
 
   empty: { alignItems: 'center', padding: 28, marginTop: 10 },
   emptyIcon: { width: 64, height: 64, borderRadius: 16, backgroundColor: APP_THEME.card, borderWidth: 1, borderColor: APP_THEME.line, justifyContent: 'center', alignItems: 'center', marginBottom: 14 },
