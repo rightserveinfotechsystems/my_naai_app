@@ -18,7 +18,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { APP_THEME } from './shopTheme';
 import { toPoint, formatCoordinates, mapsUrl } from './geo';
-import { WebView } from 'react-native-webview';
+
+// Optional WebView — may be unavailable if native rebuild hasn't run yet;
+// gracefully fall back to static map image instead of crashing checkout.
+let WebView = null;
+try {
+  // eslint-disable-next-line global-require
+  const mod = require('react-native-webview');
+  WebView = mod.WebView || mod.default || null;
+} catch (e) {
+  WebView = null;
+}
 
 const NAGPUR_FALLBACK = { latitude: 21.1458, longitude: 79.0882 };
 const DELHI_FALLBACK = { latitude: 28.6139, longitude: 77.209 };
@@ -241,9 +251,9 @@ export function ShopMapPinPicker({ visible, initial, onConfirm, onClose }) {
           </View>
         ) : null}
 
-        {/* Map */}
+        {/* Map — WebView if available, otherwise static image fallback (no crash if native module not rebuilt) */}
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.mapWrap}>
-          {webError ? (
+          {!WebView || webError ? (
             <View style={styles.webWrap}>
               <Image source={{ uri: staticMapUrl }} style={styles.fallbackImage} resizeMode="cover" />
               <View style={styles.fallbackPin} pointerEvents="none">
