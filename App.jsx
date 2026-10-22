@@ -74,6 +74,14 @@ import SalonAboutScreen from './src/screens/SalonAboutScreen';
 import SalonTermsScreen from './src/screens/SalonTermsScreen';
 import SalonFAQScreen from './src/screens/SalonFAQScreen';
 
+/* ---------- SHOP (Blinkit-style) ---------- */
+import ShopScreen from './src/screens/shop/ShopScreen';
+import ShopProductDetailScreen from './src/screens/shop/ShopProductDetailScreen';
+import ShopCartScreen from './src/screens/shop/ShopCartScreen';
+import ShopCheckoutScreen from './src/screens/shop/ShopCheckoutScreen';
+import ShopOrdersScreen from './src/screens/shop/ShopOrdersScreen';
+import ShopOrderDetailScreen from './src/screens/shop/ShopOrderDetailScreen';
+
 export const navigationRef = createNavigationContainerRef();
 
 const TextRender = Text.render;
@@ -108,9 +116,11 @@ const tabOptions = ({ route, insets }) => ({
     borderTopWidth: 0,
     position: 'absolute',
     elevation: 10,
-    height: 50 + Math.max(insets.bottom, 5),
-    paddingBottom: Math.max(insets.bottom, 5),
-    paddingTop: 4,
+    // Use safe-area bottom inset so tab bar never sits behind gesture / 3-button nav.
+    // Fallback 10px ensures visible on Android edge-to-edge where insets.bottom can be 0.
+    height: 52 + Math.max(insets.bottom, 10),
+    paddingBottom: Math.max(insets.bottom, 10),
+    paddingTop: 6,
   },
   tabBarLabelStyle: {
     fontSize: 13,
@@ -122,12 +132,13 @@ const tabOptions = ({ route, insets }) => ({
       'Booked Salon': 'cut',
       'Products': 'storefront-outline',
       'Queue': 'list-circle',
-      'Queue History': 'cut',
+      'Queue History': 'time-outline',
+      'Shop': 'bag-handle-outline',
       'Product': 'storefront-outline',
       'Account': 'person',
     };
 
-    return <Ionicons name={icons[route.name]} size={28} color={color} />;
+    return <Ionicons name={icons[route.name] || 'ellipse-outline'} size={24} color={color} />;
   },
 });
 
@@ -137,7 +148,9 @@ function MainTabs() {
     <Tab.Navigator screenOptions={({ route }) => tabOptions({ route, insets })}>
       <Tab.Screen name="Salon Naai" component={NaaiDashboard} />
       <Tab.Screen name="Booked Salon" component={ServicesScreen} />
-      <Tab.Screen name="Products" component={UserProduct} />
+      {/* Products — retired: customers now browse Naai Shop (shopProductListPublic). Kept commented for reference */}
+      {/* <Tab.Screen name="Products" component={UserProduct} /> */}
+      <Tab.Screen name="Shop" component={ShopScreen} />
       <Tab.Screen name="Account" component={AccountScreen} />
     </Tab.Navigator>
   );
@@ -152,7 +165,9 @@ function SalonTabs({ isNewSalon = false }) {
     >
       <Tab.Screen name="Queue" component={SalonDashboard} />
       <Tab.Screen name="Queue History" component={SalonBookingHistory} />
-      <Tab.Screen name="Product" component={SalonProduct} />
+      <Tab.Screen name="Shop" component={ShopScreen} />
+      {/* Product — retired: partners now order stock from Shop (shop-products/list). */}
+      {/* <Tab.Screen name="Product" component={SalonProduct} /> */}
       <Tab.Screen name="Account" component={SalonAccountScreen} />
     </Tab.Navigator>
   );
@@ -218,6 +233,12 @@ function AppStack({ userType, isNewSalon }) {
       <Stack.Screen name="BookingRequestScreen" component={BookingRequestScreen} />
       <Stack.Screen name="DelayRequestScreen" component={DelayRequestScreen} />
       <Stack.Screen name="EditSalonProfile" component={EditSalonProfileScreen} options={{ headerShown: false }} />
+      {/* Naai Shop (Blinkit) — cart & order flow sits above the tab bar */}
+      <Stack.Screen name="ShopProductDetail" component={ShopProductDetailScreen} />
+      <Stack.Screen name="ShopCart" component={ShopCartScreen} />
+      <Stack.Screen name="ShopCheckout" component={ShopCheckoutScreen} />
+      <Stack.Screen name="ShopOrders" component={ShopOrdersScreen} />
+      <Stack.Screen name="ShopOrderDetail" component={ShopOrderDetailScreen} />
     </Stack.Navigator>
   );
 }

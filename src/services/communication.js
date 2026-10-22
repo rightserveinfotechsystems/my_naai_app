@@ -18,6 +18,36 @@ export function getServerUrl() {
     return "https://backend.mynaai.in";
 }
 
+export const FILES_ROUTE_PREFIX = '/getFiles';
+const BACKEND_HOST = /(?:^|\.)mynaai\.in$/i;
+
+function withFilesPrefix(relativePath) {
+    const relative = relativePath.replace(/^\/+/, '').replace(/^getfiles\/+/i, '');
+    if (!relative) return '';
+    return `${getServerUrl()}${FILES_ROUTE_PREFIX}/${relative}`;
+}
+
+function repairBackendFileUrl(value) {
+    try {
+        const url = new URL(value);
+        if (!BACKEND_HOST.test(url.hostname)) return value;
+        if (url.pathname.toLowerCase().startsWith(`${FILES_ROUTE_PREFIX.toLowerCase()}/`)) return value;
+        return `${url.origin}${FILES_ROUTE_PREFIX}/${url.pathname.replace(/^\/+/, '')}${url.search}${url.hash}`;
+    } catch {
+        return value;
+    }
+}
+
+export function getFileUrl(path) {
+    if (!path) return '';
+    if (typeof path !== 'string') return '';
+    const value = path.trim();
+    if (!value) return '';
+    if (/^(https?:|data:|blob:)/i.test(value)) return repairBackendFileUrl(value);
+    if (value.startsWith('/assets/')) return value;
+    return withFilesPrefix(value);
+}
+
 const api = axios.create({
     // baseURL: "http://192.168.1.6:5000",
     // baseURL: "https://backend.mynaai.in",
@@ -819,6 +849,167 @@ export const communication = {
         } catch (error) {
             throw error;
         }
+    },
+    // ================= Naai Shop (Salon B2B) =================
+    // Company catalog, cart and order record — same contract as web (my-naai-web/src/lib/api.js)
+    shopProductList: async (payload) => {
+        try {
+            const response = await api.post(`/api/shop-products/list`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    shopCartGet: async () => {
+        try {
+            const response = await api.post(`/api/shop-cart/get`, {}, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    shopCartAdd: async (payload) => {
+        try {
+            const response = await api.post(`/api/shop-cart/add`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    shopCartSetQty: async (payload) => {
+        try {
+            const response = await api.post(`/api/shop-cart/set-qty`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    shopCartRemove: async (payload) => {
+        try {
+            const response = await api.post(`/api/shop-cart/remove`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    shopCartClear: async () => {
+        try {
+            const response = await api.post(`/api/shop-cart/clear`, {}, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    shopOrderCreate: async (payload) => {
+        try {
+            const response = await api.post(`/api/shop-orders/create`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    shopOrderList: async (payload) => {
+        try {
+            const response = await api.post(`/api/shop-orders/list`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    shopOrderGetById: async (payload) => {
+        try {
+            const response = await api.post(`/api/shop-orders/get-by-id`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    shopOrderCancel: async (payload) => {
+        try {
+            const response = await api.post(`/api/shop-orders/cancel`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    shopSettingsGet: async () => {
+        try {
+            const response = await api.post(`/api/shop-settings/get`, {}, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${await getCookie()}`
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    shopProductListPublic: async (payload) => {
+        try {
+            const response = await api.post(`/api/shop-public/products/list`, payload, {
+                headers: { "Content-Type": "application/json" },
+            });
+            return response.data;
+        } catch (error) { throw error; }
+    },
+    shopSettingsGetPublic: async () => {
+        try {
+            const response = await api.post(`/api/shop-public/settings/get`, {}, {
+                headers: { "Content-Type": "application/json" },
+            });
+            return response.data;
+        } catch (error) { throw error; }
     },
 };
 
