@@ -7,7 +7,7 @@ import { fetchShopSettings } from '../../shop/shopSettings';
 import { ShopBillCard, LocationPreview } from '../../shop/ShopComponents';
 import { APP_THEME } from '../../shop/shopTheme';
 import { getShopOwnerId, getShopSalonName, getShopAddressDefaults, formatCurrency } from '../../shop/shopHelper';
-import { toPoint, getCurrentLocation, formatCoordinates } from '../../shop/geo';
+import { toPoint, getCurrentLocation, getCurrentLocationDiagnostic, formatCoordinates } from '../../shop/geo';
 import { STATE_OPTIONS, stateOptionsWith, normalizeStateName } from '../../shop/stateOptions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DeviceEventEmitter } from 'react-native';
@@ -72,12 +72,28 @@ const ShopCheckoutScreen = ({ navigation }) => {
   const useMyLocationForDelivery = async () => {
     setLocating(true);
     try {
-      const fix = await getCurrentLocation();
-      if (!fix) {
-        Alert.alert('Location unavailable', 'Could not read this device’s location. Allow location access and try again.');
+      const result = await getCurrentLocationDiagnostic();
+      if (!result.value) {
+        const code = result.code;
+        if (code === 1) {
+          if (result.neverAsk) {
+            Alert.alert('Location blocked', 'Location permission is blocked. Please enable it in Settings > Apps > My Naai > Permissions.', [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Open Settings', onPress: () => Linking.openSettings?.() ?? Linking.openURL('app-settings:') },
+            ]);
+          } else {
+            Alert.alert('Permission needed', 'My Naai needs location permission to set the delivery pin. Please allow it when prompted.');
+          }
+        } else if (code === 2) {
+          Alert.alert('GPS disabled?', 'Could not get a position. Make sure GPS / Location is turned on, step outside or near a window, and try again. If it keeps failing, enter your pin manually — delivery can still be made to your address.');
+        } else if (code === 3) {
+          Alert.alert('Location timeout', 'Took too long to get a GPS fix. Try again in an open area with better signal. You can still place the order with your typed address.');
+        } else {
+          Alert.alert('Location unavailable', result.message || 'Could not read this device’s location. Allow location access and try again.');
+        }
         return;
       }
-      setAddress(current => ({ ...current, latitude: fix.latitude, longitude: fix.longitude }));
+      setAddress(current => ({ ...current, latitude: result.value.latitude, longitude: result.value.longitude }));
     } finally {
       setLocating(false);
     }

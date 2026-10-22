@@ -114,40 +114,109 @@ import Geolocation from 'react-native-geolocation-service';
 async function requestLocationPermission() {
   if (Platform.OS === 'android') {
     try {
-      const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {
+      // Already granted? Avoid second prompt
+      const hasFine = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+      if (hasFine) return { granted: true };
+      const hasCoarse = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION);
+      if (hasCoarse) return { granted: true };
+      const fineResult = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {
         title: 'Location permission',
         message: 'My Naai needs your location to set the delivery pin.',
         buttonPositive: 'Allow',
         buttonNegative: 'Deny',
       });
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
+      if (fineResult === PermissionsAndroid.RESULTS.GRANTED) return { granted: true };
+      if (fineResult === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) return { granted: false, neverAsk: true, code: 1 };
+      if (fineResult === PermissionsAndroid.RESULTS.DENIED) return { granted: false, code: 1 };
+      // Fallback to coarse (Android 12+ may offer approximate only)
+      try {
+        const coarseResult = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION);
+        if (coarseResult === PermissionsAndroid.RESULTS.GRANTED) return { granted: true };
+        if (coarseResult === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) return { granted: false, neverAsk: true, code: 1 };
+      } catch {}
+      return { granted: false, code: 1 };
     } catch {
-      return false;
+      return { granted: false, code: 1 };
     }
   }
-  // iOS: the library will prompt automatically on getCurrentPosition, but we can try via react-native-permissions if available
+  // iOS: try react-native-permissions for precise status, otherwise let OS prompt
   try {
     const { check, request, PERMISSIONS, RESULTS } = require('react-native-permissions');
     const status = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-    if (status === RESULTS.GRANTED || status === RESULTS.LIMITED) return true;
+    if (status === RESULTS.GRANTED || status === RESULTS.LIMITED) return { granted: true };
+    if (status === RESULTS.BLOCKED) return { granted: false, neverAsk: true, code: 1 };
     const req = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-    return req === RESULTS.GRANTED || req === RESULTS.LIMITED;
+    if (req === RESULTS.GRANTED || req === RESULTS.LIMITED) return { granted: true };
+    return { granted: false, code: 1 };
   } catch {
-    return true; // fall through to system prompt
+    return { granted: true }; // fall through to system prompt — unknown, let Geolocation decide
   }
 }
 
-export function getCurrentLocation(options = {}) {
-  return new Promise(async resolve => {
-    const hasPermission = await requestLocationPermission();
-    if (!hasPermission) return resolve(null);
+// Internal helper that mirrors web's getBrowserLocation contract: { value, code }
+// code: 0 success, 1 permission denied, 2 position unavailable, 3 timeout
+function locateOnce(requestOptions) {
+  return new Promise(resolve => {
     Geolocation.getCurrentPosition(
-      pos => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-      err => resolve(null),
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000, forceRequestLocation: true, ...options },
+      pos => resolve({ value: { latitude: pos.coords.latitude, longitude: pos.coords.longitude }, code: 0, message: '' }),
+      err => resolve({ value: null, code: err?.code || 0, message: err?.message || '' }),
+      requestOptions,
     );
   });
 }
 
+export async function getCurrentLocationDiagnostic(options = {}) {
+  const perm = await requestLocationPermission();
+  if (!perm.granted) {
+    return { value: null, code: perm.code || 1, message: perm.neverAsk ? 'Permission blocked — enable in Settings' : 'Permission denied', neverAsk: !!perm.neverAsk };
+  }
+  // First attempt: high accuracy with system dialog to enable GPS if disabled
+  const firstOpts = {
+    enableHighAccuracy: true,
+    timeout: options.timeout || 15000,
+    maximumAge: 10000,
+    forceRequestLocation: true,
+    showLocationDialog: true,
+    forceLocationManager: false,
+    ...options,
+  };
+  let res = await locateOnce(firstOpts);
+  if (res.value) return res;
+  // Retry on timeout only (code 3) — like web's cold Android fix; never retry on permission denial (code 1)
+  if (res.code === 3 && !options.timeout) {
+    const retryOpts = {
+      enableHighAccuracy: false,
+      timeout: 25000,
+      maximumAge: 10000,
+      forceRequestLocation: true,
+      showLocationDialog: true,
+      ...options,
+    };
+    const second = await locateOnce(retryOpts);
+    if (second.value) return second;
+    // If second also timed out, keep its code
+    res = second;
+  }
+  // If position unavailable (code 2) try opposite accuracy mode once — some OEMs need network provider
+  if (res.code === 2) {
+    const altOpts = {
+      enableHighAccuracy: !firstOpts.enableHighAccuracy,
+      timeout: 20000,
+      maximumAge: 10000,
+      forceRequestLocation: true,
+      showLocationDialog: true,
+      ...options,
+    };
+    const alt = await locateOnce(altOpts);
+    if (alt.value) return alt;
+  }
+  return res;
+}
+
+export function getCurrentLocation(options = {}) {
+  return getCurrentLocationDiagnostic(options).then(r => r.value);
+}
+
 // Alias for web parity: getBrowserLocation
 export const getBrowserLocation = getCurrentLocation;
+export const getBrowserLocationDiagnostic = getCurrentLocationDiagnostic;
