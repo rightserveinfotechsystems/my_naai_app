@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   billSaved: { marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: APP_THEME.line, color: APP_THEME.green, fontSize: 10, fontWeight: '700' },
   billNote: { marginTop: 8, color: APP_THEME.muted, fontSize: 10, lineHeight: 14 },
 
-  locationPreview: { backgroundColor: APP_THEME.card, borderRadius: 12, borderWidth: 1, borderColor: APP_THEME.line, padding: 12, gap: 6 },
+  locationPreview: { backgroundColor: APP_THEME.card, borderRadius: 12, borderWidth: 1, borderColor: APP_THEME.line, padding: 12, gap: 6, marginBottom: 10 },
   locationHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   locationTitle: { color: APP_THEME.white, fontSize: 11, fontWeight: '800' },
   locationLink: { color: APP_THEME.gold, fontSize: 10, fontWeight: '700' },
