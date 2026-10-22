@@ -213,7 +213,7 @@ export function SkeletonCard() {
   );
 }
 
-export function LocationPreview({ value, title = 'Delivery location', caption = '', onUseCurrent = null, locating = false }) {
+export function LocationPreview({ value, title = 'Delivery location', caption = '', onUseCurrent = null, onPickMap = null, locating = false }) {
   const point = toPoint(value);
   const coords = point ? formatCoordinates(point) : '';
   const url = point ? mapsUrl(point) : '';
@@ -273,7 +273,14 @@ export function LocationPreview({ value, title = 'Delivery location', caption = 
           </TouchableOpacity>
         ) : null}
       </View>
-      {point ? <Text style={styles.locationVerifyHint}>Tap “Verify on Maps” to see the pin on Google Maps — drag not needed, we use your GPS fix.</Text> : null}
+      {onPickMap ? (
+        <TouchableOpacity style={styles.locationPickButton} onPress={onPickMap} activeOpacity={0.85}>
+          <Ionicons name="map-outline" size={13} color={APP_THEME.gold} />
+          <Text style={styles.locationPickText}>{point ? 'Adjust pin on map' : 'Pin on map — order for home while at office'}</Text>
+          <Ionicons name="chevron-forward" size={12} color={APP_THEME.muted} />
+        </TouchableOpacity>
+      ) : null}
+      {point ? <Text style={styles.locationVerifyHint}>Tap “Verify on Maps” to see the pin on Google Maps — drag not needed, we use your GPS fix.</Text> : !onPickMap ? null : <Text style={styles.locationVerifyHint}>Office now? Use “Pin on map” to drop the pin at your home gate and deliver there.</Text>}
     </View>
   );
 }
@@ -470,6 +477,8 @@ const styles = StyleSheet.create({
   locationSecondary: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: APP_THEME.line, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, backgroundColor: APP_THEME.bg },
   locationVerifyHint: { color: APP_THEME.muted, fontSize: 9, lineHeight: 12, textAlign: 'center', marginTop: 2 },
   locationSecondaryText: { color: APP_THEME.gold, fontWeight: '700', fontSize: 11 },
+  locationPickButton: { flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 1, borderColor: 'rgba(232,185,126,0.35)', backgroundColor: 'rgba(232,185,126,0.10)', paddingHorizontal: 11, paddingVertical: 9, borderRadius: 10, marginTop: 4 },
+  locationPickText: { flex: 1, color: APP_THEME.white, fontSize: 11, fontWeight: '700' },
 
   empty: { alignItems: 'center', padding: 28, marginTop: 10 },
   emptyIcon: { width: 64, height: 64, borderRadius: 16, backgroundColor: APP_THEME.card, borderWidth: 1, borderColor: APP_THEME.line, justifyContent: 'center', alignItems: 'center', marginBottom: 14 },

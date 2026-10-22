@@ -116,9 +116,11 @@ const tabOptions = ({ route, insets }) => ({
     borderTopWidth: 0,
     position: 'absolute',
     elevation: 10,
-    height: 50 + Math.max(insets.bottom, 5),
-    paddingBottom: Math.max(insets.bottom, 5),
-    paddingTop: 4,
+    // Use safe-area bottom inset so tab bar never sits behind gesture / 3-button nav.
+    // Fallback 10px ensures visible on Android edge-to-edge where insets.bottom can be 0.
+    height: 52 + Math.max(insets.bottom, 10),
+    paddingBottom: Math.max(insets.bottom, 10),
+    paddingTop: 6,
   },
   tabBarLabelStyle: {
     fontSize: 13,

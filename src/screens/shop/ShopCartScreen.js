@@ -116,7 +116,7 @@ const ShopCartScreen = ({ navigation }) => {
         <View style={{width:36}} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: 24 }]} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={APP_THEME.gold} />}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: 24 + Math.max(insets.bottom, 8) + 84 }]} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={APP_THEME.gold} />}>
         <View style={[styles.deliveryNote, gap===0 && styles.deliveryNoteUnlocked]}>
           <Ionicons name="car-outline" size={16} color={gap===0 ? APP_THEME.bg : APP_THEME.gold} />
           <View style={{flex:1}}>

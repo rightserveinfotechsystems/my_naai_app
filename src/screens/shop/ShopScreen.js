@@ -289,8 +289,8 @@ const ShopScreen = ({ navigation }) => {
 
   const hasActive = category !== 'all' || gender !== 'all' || priceRange !== 'all' || search.length > 0;
   const insets = useSafeAreaInsets();
-  // Tab bar in App.jsx = 50 + max(insets.bottom,5); cart bar should sit 12px above it and override it
-  const tabBarHeight = 50 + Math.max(insets.bottom, 5);
+  // Sync with App.jsx tabBarStyle: 52 + max(insets.bottom,10)
+  const tabBarHeight = 52 + Math.max(insets.bottom, 10);
   const cartOffset = tabBarHeight + 12;
 
   return (

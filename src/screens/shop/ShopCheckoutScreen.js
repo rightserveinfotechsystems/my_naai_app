@@ -9,6 +9,7 @@ import { APP_THEME } from '../../shop/shopTheme';
 import { getShopOwnerId, getShopSalonName, getShopAddressDefaults, formatCurrency } from '../../shop/shopHelper';
 import { toPoint, getCurrentLocation, getCurrentLocationDiagnostic, formatCoordinates } from '../../shop/geo';
 import { STATE_OPTIONS, stateOptionsWith, normalizeStateName } from '../../shop/stateOptions';
+import { ShopMapPinPicker } from '../../shop/MapPinPicker';
 import { shopCopy, getShopSession, isShopGuest } from '../../shop/shopBuyer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DeviceEventEmitter } from 'react-native';
@@ -28,6 +29,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
   const [placed, setPlaced] = useState(null);
   const [locating, setLocating] = useState(false);
   const [statePickerVisible, setStatePickerVisible] = useState(false);
+  const [pickerVisible, setPickerVisible] = useState(false);
   const [copy, setCopy] = useState(shopCopy(null));
   const [session, setSession] = useState(null);
 
@@ -190,7 +192,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
     const etaText = 'the next working day';
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <ScrollView contentContainerStyle={[styles.successWrap, { paddingBottom: Math.max(insets.bottom, 8) + 16 }]} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.successWrap, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]} showsVerticalScrollIndicator={false}>
           <View style={styles.successIcon}><Ionicons name="checkmark-circle" size={52} color={APP_THEME.gold} /></View>
           <Text style={styles.successTitle}>Order placed</Text>
           <Text style={styles.successId}>Order {placed.id}</Text>
@@ -229,7 +231,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
         <View style={{width:34}} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: 20 + Math.max(insets.bottom, 8) }]}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: 28 + Math.max(insets.bottom, 12) }]}>
         <View style={styles.card}>
           <View style={styles.cardHead}><Ionicons name="location-outline" size={15} color={APP_THEME.gold} /><Text style={styles.cardHeadTitle}>Delivery address</Text></View>
 
@@ -265,6 +267,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
               title="Delivery location"
               caption={copy.locationCaption}
               onUseCurrent={useMyLocationForDelivery}
+              onPickMap={() => setPickerVisible(true)}
               locating={locating}
             />
           </View>
@@ -329,6 +332,13 @@ const ShopCheckoutScreen = ({ navigation }) => {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      <ShopMapPinPicker
+        visible={pickerVisible}
+        initial={deliveryPoint || address}
+        onClose={() => setPickerVisible(false)}
+        onConfirm={(pt) => setAddress(prev => ({ ...prev, latitude: pt.latitude, longitude: pt.longitude }))}
+      />
     </SafeAreaView>
   );
 };
