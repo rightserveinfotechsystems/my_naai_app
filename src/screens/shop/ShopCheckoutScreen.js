@@ -212,7 +212,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
       buttons: [
         { text: 'Cancel', style: 'ghost' },
         {
-          text: `Place order • ${formatCurrency(totals.total)}`,
+          text: 'Place order',
           style: 'primary',
           icon: 'checkmark-circle',
           onPress: async () => {

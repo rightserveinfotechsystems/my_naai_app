@@ -28,6 +28,7 @@ import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-
 
 /* ---------- CONTEXT / UTILS ---------- */
 import { NotificationProvider } from './src/components/NotificationContext';
+import { GlobalAlertProvider } from './src/components/GlobalAlertProvider';
 import { requestNotificationPermission } from './src/utilities/notificationPermission';
 import { initTTS } from './src/utilities/tts';
 import { communication } from './src/services/communication';
@@ -636,19 +637,21 @@ export default function App() {
 
   return (
     <NotificationProvider userId={userId} userType={userType}>
-      <SafeAreaProvider>
-        <NavigationContainer 
-          key={isLoggedIn ? 'app' : 'auth'} 
-          ref={navigationRef}
-          onReady={onNavigationReady}
-        >
-          {isLoggedIn ? (
-            <AppStack userType={userType} isNewSalon={isNewSalon} />
-          ) : (
-            <AuthStack onLoginSuccess={type => { setUserType(type); setIsLoggedIn(true); }} />
-          )}
-        </NavigationContainer>
-      </SafeAreaProvider>
+      <GlobalAlertProvider>
+        <SafeAreaProvider>
+          <NavigationContainer 
+            key={isLoggedIn ? 'app' : 'auth'} 
+            ref={navigationRef}
+            onReady={onNavigationReady}
+          >
+            {isLoggedIn ? (
+              <AppStack userType={userType} isNewSalon={isNewSalon} />
+            ) : (
+              <AuthStack onLoginSuccess={type => { setUserType(type); setIsLoggedIn(true); }} />
+            )}
+          </NavigationContainer>
+        </SafeAreaProvider>
+      </GlobalAlertProvider>
     </NotificationProvider>
   );
 }

@@ -7,7 +7,6 @@ import {
   ScrollView,
   Modal,
   TextInput,
-  Alert,
   Image,
   ActivityIndicator,
   RefreshControl,
@@ -15,6 +14,7 @@ import {
   Linking,
   PermissionsAndroid,
 } from 'react-native';
+import { AppAlertModal, useAppAlertState } from '../components/AppAlertModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -64,6 +64,7 @@ const SalonAccountScreen = ({ navigation }) => {
   const [salonId, setsalonId] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [alertState, showAlert, hideAlert, alertProps] = useAppAlertState();
 
 
   const address = `${profileData?.addressLine1}`
@@ -510,14 +511,17 @@ const SalonAccountScreen = ({ navigation }) => {
 
   /* ---------------- LOGOUT ---------------- */
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
+    showAlert({
+      title: 'Logout',
+      message: 'Are you sure you want to logout?',
+      variant: 'warning',
+      icon: 'log-out-outline',
+      buttons: [
+        { text: 'Cancel', style: 'ghost' },
         {
           text: 'Logout',
           style: 'destructive',
+          icon: 'log-out-outline',
           onPress: async () => {
             await AsyncStorage.removeItem('mynaai');
             await AsyncStorage.removeItem('mynaaiUser');
@@ -525,17 +529,11 @@ const SalonAccountScreen = ({ navigation }) => {
             await AsyncStorage.removeItem('userType');
             await AsyncStorage.removeItem('token');
             await AsyncStorage.removeItem('isNewSalon');
-
-            // navigation.reset({
-            //   index: 0,
-            //   routes: [{ name: 'UserLogin' }],
-            // });
             DeviceEventEmitter.emit('AUTH_CHANGED');
           },
         },
       ],
-      { cancelable: true }
-    );
+    });
   };
 
 
@@ -1227,7 +1225,7 @@ const SalonAccountScreen = ({ navigation }) => {
         />
       )}
 
-
+      <AppAlertModal {...alertProps} />
     </SafeAreaView>
   );
 };

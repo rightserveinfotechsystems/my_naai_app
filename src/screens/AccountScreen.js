@@ -8,11 +8,11 @@ import {
   ScrollView,
   Modal,
   TextInput,
-  Alert,
   ActivityIndicator,
   DeviceEventEmitter,
   Linking,
 } from 'react-native';
+import { AppAlertModal, useAppAlertState } from '../components/AppAlertModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { communication } from '../services/communication';
@@ -36,6 +36,7 @@ const AccountScreen = ({ navigation }) => {
   const [profileData, setProfileData] = useState({});
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [alertState, showAlert, hideAlert, alertProps] = useAppAlertState();
 
 
   /* ---------------- GET USER FROM STORAGE ---------------- */
@@ -49,7 +50,7 @@ const AccountScreen = ({ navigation }) => {
         setUserId(parsed.userId);
       }
     } catch {
-      Alert.alert('Error', 'Unable to load user');
+      showAlert({ title: 'Error', message: 'Unable to load user', variant: 'error' });
     }
   };
 
@@ -64,10 +65,7 @@ const AccountScreen = ({ navigation }) => {
         setProfileData(response.data);
       }
     } catch (error) {
-      Alert.alert(
-        'Error',
-        error?.response?.data?.message || 'Failed to fetch profile'
-      );
+      showAlert({ title: 'Error', message: error?.response?.data?.message || 'Failed to fetch profile', variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -76,7 +74,7 @@ const AccountScreen = ({ navigation }) => {
   /* ---------------- UPDATE PROFILE ---------------- */
   const updateProfile = async () => {
     if (!name.trim()) {
-      Alert.alert('Validation', 'Name cannot be empty');
+      showAlert({ title: 'Validation', message: 'Name cannot be empty', variant: 'warning' });
       return;
     }
 
@@ -91,15 +89,12 @@ const AccountScreen = ({ navigation }) => {
       if (response?.status === 'SUCCESS') {
         setEditVisible(false);
         await userProfile(userId);
-        Alert.alert('Success', 'Profile updated successfully');
+        showAlert({ title: 'Success', message: 'Profile updated successfully', variant: 'success' });
       } else {
-        Alert.alert('Error', response?.message || 'Update failed');
+        showAlert({ title: 'Error', message: response?.message || 'Update failed', variant: 'error' });
       }
     } catch (error) {
-      Alert.alert(
-        'Error',
-        error?.response?.data?.message || 'Failed to update profile'
-      );
+      showAlert({ title: 'Error', message: error?.response?.data?.message || 'Failed to update profile', variant: 'error' });
     }
   };
 
@@ -118,14 +113,17 @@ const AccountScreen = ({ navigation }) => {
   /* ---------------- LOGOUT ---------------- */
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
+    showAlert({
+      title: 'Logout',
+      message: 'Are you sure you want to logout?',
+      variant: 'warning',
+      icon: 'log-out-outline',
+      buttons: [
+        { text: 'Cancel', style: 'ghost' },
         {
           text: 'Logout',
           style: 'destructive',
+          icon: 'log-out-outline',
           onPress: async () => {
             await AsyncStorage.multiRemove([
               'mynaai',
@@ -134,14 +132,11 @@ const AccountScreen = ({ navigation }) => {
               'userType',
               'token',
             ]);
-
-            // 🔥 Notify App.js immediately
             DeviceEventEmitter.emit('AUTH_CHANGED');
           },
         },
       ],
-      { cancelable: true }
-    );
+    });
   };
 
   /* ---------------- OPEN EDIT MODAL ---------------- */
@@ -249,6 +244,7 @@ const AccountScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+      <AppAlertModal {...alertProps} />
     </SafeAreaView>
 
   );
