@@ -25,6 +25,7 @@ import {
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { wp, hp } from '../utils/AppScreen';
+import { BookingConfirmModal } from '../components/BookingConfirmModal';
 const BookingSchedule = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
 
@@ -37,6 +38,7 @@ const BookingSchedule = ({ route, navigation }) => {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -210,6 +212,7 @@ const BookingSchedule = ({ route, navigation }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, salon]);
 
+  // Show checkout modal instead of direct API call
   const handleConfirm = async () => {
     if (loading) return;
 
@@ -218,7 +221,6 @@ const BookingSchedule = ({ route, navigation }) => {
         'Select Time',
         'Please select a time slot.'
       );
-
       return;
     }
 
@@ -227,40 +229,38 @@ const BookingSchedule = ({ route, navigation }) => {
         'Select Service',
         'Please select at least one service.'
       );
-
       return;
     }
 
-    setLoading(true);
+    // Open checkout review modal
+    setShowConfirm(true);
+  };
 
+  const handleExecuteBooking = async () => {
+    if (loading) return;
+    setLoading(true);
     try {
       const payload = {
         salonId: salon?.salonId,
-
         barberId:
           selectedBarber?.barberId?.toString() ||
           '',
-
         bookingDate,
-
         bookingTime: selectedTime,
-
         services: selectedServices.map(
           s => s.serviceId
         ),
       };
-
       const res =
         await communication.createBookingRequest(
           payload
         );
-
       if (res?.status === 'SUCCESS') {
+        setShowConfirm(false);
         Alert.alert(
           'Request Sent',
           'Wait for Salon Response'
         );
-
         navigation.navigate('Main', {
           screen: 'Booked Salon',
         });
@@ -284,6 +284,11 @@ const BookingSchedule = ({ route, navigation }) => {
 
   const getStatusColor = isAvailable =>
     isAvailable ? '#6ED19E' : '#F27B74';
+
+  const dateLabels = ['Today', 'Tomorrow', 'Day After'];
+  const dateLabel = dateLabels[selectedDate] || `Day ${selectedDate + 1}`;
+  const dateFull = selectedDateObj.toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+  const timeLabel = timeSlots.find(s => s.value === selectedTime)?.label || selectedTime || '';
 
   return (
     <SafeAreaView
@@ -568,7 +573,6 @@ const BookingSchedule = ({ route, navigation }) => {
               insets.bottom,
               12
             ),
-            // bottom: Math.max(insets.bottom, 8),
             bottom: 0,
           },
         ]}
@@ -594,6 +598,21 @@ const BookingSchedule = ({ route, navigation }) => {
           )}
         </TouchableOpacity>
       </View>
+
+      <BookingConfirmModal
+        visible={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handleExecuteBooking}
+        salon={salon}
+        services={selectedServices}
+        barber={selectedBarber}
+        bookingDate={bookingDate}
+        dateLabel={dateLabel}
+        dateFull={dateFull}
+        timeLabel={timeLabel}
+        timeValue={selectedTime}
+        loading={loading}
+      />
     </SafeAreaView>
   );
 };
@@ -754,14 +773,11 @@ const styles = StyleSheet.create({
 
   bottomBar: {
     position: 'absolute',
-    // bottom: 0,
     left: 0,
     right: 0,
     paddingHorizontal: wp(4),
     paddingTop: hp(1.5),
     backgroundColor: '#080A0A',
-    // borderTopWidth: 1,
-    // borderTopColor: '#1C2121',
     elevation: 20,
     zIndex: 100,
   },
