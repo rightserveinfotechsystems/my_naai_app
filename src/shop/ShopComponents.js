@@ -11,7 +11,7 @@ export const ProductPlaceholder = require('../assets/my_naai.png');
 export function ShopQuantityControl({ qty, onAdd, onSet, disabled = false, small = false, large = false }) {
   if (disabled) {
     return (
-      <View style={[styles.stockChip, small && styles.stockChipSmall]}>
+      <View style={[styles.stockChip, small && styles.stockChipSmall, large && styles.stockChipLarge]}>
         <Text style={styles.stockChipText}>Out of stock</Text>
       </View>
     );
@@ -20,41 +20,50 @@ export function ShopQuantityControl({ qty, onAdd, onSet, disabled = false, small
     return (
       <View style={[styles.stepper, small && styles.stepperSmall, large && styles.stepperLarge]}>
         <TouchableOpacity style={styles.stepperBtn} onPress={() => onSet(qty - 1)} hitSlop={8}>
-          <Ionicons name="remove" size={large ? 16 : small ? 12 : 13} color={APP_THEME.bg} />
+          <Ionicons name="remove" size={large ? 16 : small ? 12 : 13} color={APP_THEME.gold} />
         </TouchableOpacity>
         <Text style={[styles.stepperQty, large && styles.stepperQtyLarge]}>{qty}</Text>
         <TouchableOpacity style={styles.stepperBtn} onPress={() => onSet(qty + 1)} hitSlop={8}>
-          <Ionicons name="add" size={large ? 16 : small ? 12 : 13} color={APP_THEME.bg} />
+          <Ionicons name="add" size={large ? 16 : small ? 12 : 13} color={APP_THEME.gold} />
         </TouchableOpacity>
       </View>
     );
   }
   return (
     <TouchableOpacity style={[styles.addButton, small && styles.addButtonSmall, large && styles.addButtonLarge]} onPress={onAdd} activeOpacity={0.85}>
-      <Text style={[styles.addButtonText, large && styles.addButtonTextLarge]}>ADD</Text>
-      <Ionicons name="add" size={12} color={APP_THEME.gold} />
+      <Text style={[styles.addButtonText, large && styles.addButtonTextLarge]}>Add</Text>
     </TouchableOpacity>
   );
 }
 
-// Vertical product card — 2 per row, image fits automatically (contain, no crop)
-// Attractive e-commerce styling matching dark theme #080A0A / #1C2121 / #E8B97E
+// ── Product card — exact web parity (ShopScreen.jsx) ──
+// Photo (25/22 but slightly taller 1:1 per request), name 2-lines, salon, price+MRP, full-width ADD ↔ stepper.
+// Rating rides on the photo as translucent pill; discount badge top-left; shade behind badges.
+// Image uses cover (not contain) on dark #101414 so product fills frame like web.
 export function ShopProductCard({ product, qty, onAdd, onSetQty, onOpen, style }) {
   const off = discountPercent(product);
   const imageUri = product.image ? getFileUrl(product.image) : null;
   return (
     <View style={[styles.card, !product.available && styles.cardOutOfStock, style]}>
-      {off > 0 && (
-        <View style={styles.offBadge}>
-          <Text style={styles.offBadgeText}>{off}% OFF</Text>
-        </View>
-      )}
       <TouchableOpacity style={styles.cardMedia} onPress={() => onOpen?.(product)} activeOpacity={0.92}>
         {imageUri ? (
-          <Image source={{ uri: imageUri }} style={styles.cardImage} resizeMode="contain" />
+          <Image source={{ uri: imageUri }} style={styles.cardImage} resizeMode="cover" />
         ) : (
           <View style={styles.cardImagePlaceholder}>
             <Ionicons name="image-outline" size={28} color={APP_THEME.muted} />
+          </View>
+        )}
+        {/* soft shade behind badges so % off & rating legible on white & dark shots */}
+        <View style={styles.cardShade} pointerEvents="none" />
+        {off > 0 && (
+          <View style={styles.offBadge}>
+            <Text style={styles.offBadgeText}>{off}% off</Text>
+          </View>
+        )}
+        {product.rating > 0 && (
+          <View style={styles.cardRating}>
+            <Ionicons name="star" size={9} color="#f7c948" style={{ marginRight: 2 }} />
+            <Text style={styles.cardRatingText}>{Number(product.rating).toFixed(1)}</Text>
           </View>
         )}
         {!product.available ? (
@@ -64,23 +73,13 @@ export function ShopProductCard({ product, qty, onAdd, onSetQty, onOpen, style }
         ) : null}
       </TouchableOpacity>
 
-      <View style={styles.cardDivider} />
-
       <View style={styles.cardBody}>
-        <Text numberOfLines={2} style={styles.cardName}>{product.name}</Text>
-        <Text numberOfLines={1} style={styles.cardMeta}>{product.category.replace(/-/g, ' ')}{product.salonName ? ` • ${product.salonName}` : ''}</Text>
+        <Text numberOfLines={2} style={styles.cardName} onPress={() => onOpen?.(product)}>{product.name}</Text>
+        <Text numberOfLines={1} style={styles.cardMeta}>{product.category.replace(/-/g, ' ')}{product.salonName ? ` · ${product.salonName}` : ''}</Text>
 
         <View style={styles.cardPriceRow}>
-          <View style={styles.cardPriceLeft}>
-            <Text style={styles.cardPrice}>₹{product.price}</Text>
-            {product.mrp > 0 ? <Text style={styles.cardMrp}>₹{product.mrp}</Text> : null}
-          </View>
-          {product.rating > 0 ? (
-            <View style={styles.ratingBadge}>
-              <Ionicons name="star" size={9} color={APP_THEME.gold} />
-              <Text style={styles.ratingText}>{Number(product.rating).toFixed(1)}</Text>
-            </View>
-          ) : null}
+          <Text style={styles.cardPrice}>₹{product.price}</Text>
+          {product.mrp > 0 ? <Text style={styles.cardMrp}>₹{product.mrp}</Text> : null}
         </View>
 
         <View style={styles.cardAction}>
@@ -286,83 +285,85 @@ export function LocationPreview({ value, title = 'Delivery location', caption = 
 }
 
 const styles = StyleSheet.create({
+  // ── Quantity control — web parity: full-width ADD ↔ bordered stepper ──
   addButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    justifyContent: 'center',
+    minHeight: 32,
+    borderWidth: 1.5,
+    borderColor: APP_THEME.gold,
+    backgroundColor: 'rgba(232,185,126,0.14)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+  },
+  addButtonSmall: { minHeight: 29, borderRadius: 9, paddingHorizontal: 8 },
+  addButtonLarge: { minHeight: 44, borderRadius: 10, paddingHorizontal: 16, borderWidth: 1.5 },
+  addButtonText: { color: '#eafff2', fontWeight: '800', fontSize: 12, letterSpacing: 0.9, textTransform: 'uppercase' },
+  addButtonTextLarge: { fontSize: 13, letterSpacing: 0.8 },
+  stockChip: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 9,
     borderWidth: 1,
+    borderColor: APP_THEME.line,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 32,
+  },
+  stockChipSmall: { paddingHorizontal: 8, paddingVertical: 5, minHeight: 29 },
+  stockChipLarge: { paddingHorizontal: 12, paddingVertical: 9, minHeight: 44 },
+  stockChipText: { color: APP_THEME.muted, fontSize: 10.5, fontWeight: '700', textAlign: 'center' },
+  stepper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    borderWidth: 1.5,
     borderColor: APP_THEME.gold,
     backgroundColor: 'rgba(232,185,126,0.12)',
-    paddingVertical: 4.5,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-    minWidth: 60,
-    justifyContent: 'center',
-  },
-  addButtonSmall: { paddingVertical: 3, paddingHorizontal: 9, minWidth: 54, borderRadius: 6 },
-  addButtonLarge: { paddingVertical: 7, paddingHorizontal: 16, minWidth: 84, borderRadius: 8, borderWidth: 1.2 },
-  addButtonText: { color: APP_THEME.gold, fontWeight: '800', fontSize: 9.5, letterSpacing: 0.5 },
-  addButtonTextLarge: { fontSize: 13 },
-  stockChip: {
-    backgroundColor: APP_THEME.card,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: APP_THEME.line,
-  },
-  stockChipSmall: { paddingHorizontal: 8, paddingVertical: 4 },
-  stockChipText: { color: APP_THEME.muted, fontSize: 10, fontWeight: '700' },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: APP_THEME.gold,
-    borderRadius: 6,
-    paddingHorizontal: 1.5,
-    paddingVertical: 1.5,
-    minWidth: 62,
-    justifyContent: 'space-between',
-  },
-  stepperSmall: { minWidth: 54, borderRadius: 6, paddingVertical: 1 },
-  stepperLarge: { minWidth: 84, borderRadius: 8, paddingVertical: 2, paddingHorizontal: 2 },
-  stepperBtn: { padding: 4, borderRadius: 5 },
-  stepperQty: { color: APP_THEME.bg, fontWeight: '800', fontSize: 11, minWidth: 16, textAlign: 'center' },
-  stepperQtyLarge: { fontSize: 12 },
-
-  // ---- Vertical card, 2 per row — compact minimized ----
-  card: {
-    backgroundColor: APP_THEME.card,
     borderRadius: 10,
+    minHeight: 32,
+    overflow: 'hidden',
+  },
+  stepperSmall: { minHeight: 29, borderRadius: 9 },
+  stepperLarge: { minHeight: 44, borderRadius: 10 },
+  stepperBtn: { width: 34, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' },
+  stepperQty: { flex: 1, color: APP_THEME.white, fontWeight: '800', fontSize: 13, textAlign: 'center', textAlignVertical: 'center', lineHeight: 32 },
+  stepperQtyLarge: { fontSize: 15, lineHeight: 44 },
+
+  // ---- Product card — exact web parity (16px radius, 25/22 → 1:1 slightly taller) ----
+  card: {
+    backgroundColor: '#171b1b', // web --card
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: APP_THEME.line,
+    borderColor: 'rgba(255,255,255,0.08)', // web --line
     overflow: 'hidden',
     width: '100%',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    flexDirection: 'column',
   },
-  cardOutOfStock: { opacity: 0.65 },
+  cardOutOfStock: { opacity: 0.6 },
   offBadge: {
     position: 'absolute',
-    top: 6,
-    left: 6,
+    top: 9,
+    left: 9,
     zIndex: 2,
-    backgroundColor: APP_THEME.gold,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 5,
+    backgroundColor: '#23b45c', // web --shop-green kept for badge legibility; gold alternative: APP_THEME.gold
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
-  offBadgeText: { color: APP_THEME.bg, fontSize: 7.5, fontWeight: '800', letterSpacing: 0.2 },
-  // Image area — fits automatically, no crop — minimized
+  offBadgeText: { color: '#04160b', fontSize: 9.5, fontWeight: '800', letterSpacing: 0.3 },
+  // Media — slightly taller than web's 25/22 (1.136) → use 1.05 (~5% taller) per request
   cardMedia: {
-    height: 96,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 6,
+    width: '100%',
+    aspectRatio: 1.05,
+    backgroundColor: '#101414',
     overflow: 'hidden',
+    position: 'relative',
   },
   cardImage: { width: '100%', height: '100%' },
   cardImagePlaceholder: {
@@ -370,40 +371,47 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#101414',
   },
-  stockVeil: {
+  cardShade: {
     position: 'absolute',
-    bottom: 6,
-    left: 6,
-    right: 6,
-    backgroundColor: 'rgba(8,10,10,0.84)',
-    paddingVertical: 4,
-    borderRadius: 7,
-    alignItems: 'center',
+    left: 0, right: 0, bottom: 0,
+    height: '46%',
+    backgroundColor: 'rgba(6,9,8,0.55)',
   },
-  stockVeilText: { color: APP_THEME.white, fontSize: 9, fontWeight: '700' },
-  cardDivider: { height: 1, backgroundColor: APP_THEME.line, opacity: 0.9 },
-  cardBody: { padding: 7, gap: 2, backgroundColor: APP_THEME.card },
-  cardName: { color: APP_THEME.white, fontSize: 10.5, fontWeight: '700', lineHeight: 13, minHeight: 26 },
-  cardMeta: { color: APP_THEME.muted, fontSize: 8, fontWeight: '600', textTransform: 'capitalize' },
-  cardPriceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 3 },
-  cardPriceLeft: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 },
-  cardPrice: { color: APP_THEME.white, fontWeight: '800', fontSize: 11 },
-  cardMrp: { color: APP_THEME.muted, fontSize: 9, textDecorationLine: 'line-through', marginLeft: 3 },
-  ratingBadge: {
+  cardRating: {
+    position: 'absolute',
+    right: 9,
+    bottom: 9,
+    zIndex: 2,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: APP_THEME.goldWash,
-    paddingHorizontal: 4,
-    paddingVertical: 1.5,
-    borderRadius: 5,
-    gap: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(232,185,126,0.22)',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 8,
+    backgroundColor: 'rgba(8,12,11,0.66)',
+    gap: 3,
   },
-  ratingText: { color: APP_THEME.gold, fontSize: 8, fontWeight: '800' },
-  cardAction: { marginTop: 5, alignItems: 'center' },
+  cardRatingText: { color: '#eafff2', fontSize: 10, fontWeight: '800' },
+  stockVeil: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    right: 8,
+    backgroundColor: 'rgba(8,10,10,0.84)',
+    paddingVertical: 4,
+    paddingHorizontal: 9,
+    borderRadius: 9,
+    alignItems: 'center',
+  },
+  stockVeilText: { color: '#B7BEBE', fontSize: 10, fontWeight: '700' },
+  cardBody: { paddingTop: 10, paddingHorizontal: 11, paddingBottom: 11, gap: 3, backgroundColor: '#171b1b', flex: 1, flexDirection: 'column' },
+  cardName: { color: APP_THEME.white, fontSize: 13, fontWeight: '650', lineHeight: 17.5, minHeight: 35, letterSpacing: -0.1 },
+  cardMeta: { color: APP_THEME.muted, fontSize: 9.5, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase' },
+  cardPriceRow: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: 6, marginTop: 'auto', paddingTop: 7 },
+  cardPrice: { color: APP_THEME.white, fontWeight: '800', fontSize: 15 },
+  cardMrp: { color: APP_THEME.muted, fontSize: 11, textDecorationLine: 'line-through' },
+  cardAction: { marginTop: 7, flexDirection: 'row' },
 
   cartBar: {
     position: 'absolute',
@@ -488,7 +496,7 @@ const styles = StyleSheet.create({
   emptyActionText: { color: APP_THEME.bg, fontWeight: '800', fontSize: 12 },
 
   skeleton: { borderColor: APP_THEME.line, backgroundColor: APP_THEME.card },
-  skeletonImage: { height: 96, backgroundColor: '#202525' },
-  skeletonLines: { padding: 7, gap: 6 },
+  skeletonImage: { height: 132, aspectRatio: 1.05, backgroundColor: '#202525' },
+  skeletonLines: { padding: 11, gap: 6 },
   skeletonLine: { height: 8, backgroundColor: APP_THEME.line, borderRadius: 5 },
 });
