@@ -148,12 +148,12 @@ const ShopProductDetailScreen = ({ route, navigation }) => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: 90 + Math.max(insets.bottom, 6) }]}>
         <View style={styles.hero}>
           {images.length ? (
-            <Image source={{ uri: getFileUrl(images[Math.min(activeImage, images.length-1)] || '') }} style={styles.heroImage} resizeMode="contain" />
+            <Image source={{ uri: getFileUrl(images[Math.min(activeImage, images.length-1)] || '') }} style={styles.heroImage} resizeMode="cover" />
           ) : (
             <View style={styles.heroPlaceholder}><Ionicons name="image-outline" size={48} color={APP_THEME.muted} /></View>
           )}
           {!product.available && <View style={styles.veil}><Text style={styles.veilText}>Out of stock</Text></View>}
-          {off > 0 && <View style={styles.heroOff}><Text style={styles.heroOffText}>{off}% OFF</Text></View>}
+          {off > 0 && <View style={styles.heroOff}><Text style={styles.heroOffText}>{off}% off</Text></View>}
         </View>
         {images.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbs}>
@@ -237,9 +237,9 @@ const styles = StyleSheet.create({
   backBtn: { marginTop: 14, backgroundColor: APP_THEME.gold, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10 },
   backBtnText: { color: APP_THEME.bg, fontWeight: '800' },
   scroll: { paddingBottom: 90 },
-  hero: { aspectRatio: 1, backgroundColor: APP_THEME.card, justifyContent: 'center', alignItems: 'center', overflow: 'hidden', borderBottomWidth: 1, borderColor: APP_THEME.line },
-  heroImage: { width: '85%', height: '85%' },
-  heroPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  hero: { aspectRatio: 4/3, backgroundColor: '#101414', overflow: 'hidden', borderWidth: 1, borderColor: APP_THEME.line, borderRadius: 18, marginHorizontal: 12, marginTop: 8 },
+  heroImage: { width: '100%', height: '100%' },
+  heroPlaceholder: { flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#101414' },
   veil: { position: 'absolute', bottom: 12, left: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.7)', paddingVertical: 6, borderRadius: 10, alignItems: 'center' },
   veilText: { color: '#fff', fontWeight: '700', fontSize: 12 },
   heroOff: { position: 'absolute', top: 12, left: 12, backgroundColor: APP_THEME.gold, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
