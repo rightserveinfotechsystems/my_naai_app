@@ -71,7 +71,7 @@ const ShopProductDetailScreen = ({ route, navigation }) => {
   useEffect(() => {
     const sub = DeviceEventEmitter.addListener('SHOP_CART_UPDATED', () => { if (ownerId) refreshCart(ownerId); });
     const focus = navigation.addListener ? navigation.addListener('focus', () => { if (ownerId) refreshCart(ownerId); }) : () => {};
-    return () => { sub.remove(); if (focus && focus.remove) focus.remove(); };
+    return () => { sub.remove(); if (focus && focus.remove) focus.remove(); }
   }, [ownerId, navigation]);
 
   const persist = async (lines) => { try { await AsyncStorage.setItem(`mynaaiShopCart:${ownerId}`, JSON.stringify(lines)); } catch {} setCart(lines); DeviceEventEmitter.emit('SHOP_CART_UPDATED'); };
@@ -131,6 +131,7 @@ const ShopProductDetailScreen = ({ route, navigation }) => {
   const off = discountPercent(product);
   const genderLabel = SHOP_GENDERS.find(g => g.id === product.gender)?.label || 'Unisex';
   const cartBarOffset = 12 + Math.max(insets.bottom, 6);
+  const heroUri = images.length ? getFileUrl(images[Math.min(activeImage, images.length-1)] || '') : null;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -146,14 +147,20 @@ const ShopProductDetailScreen = ({ route, navigation }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: 90 + Math.max(insets.bottom, 6) }]}>
+        {/* hero — web parity: bg #101414, backdrop blur20 inset -18%, image contain + 8-10px padding, radius18 */}
         <View style={styles.hero}>
-          {images.length ? (
-            <Image source={{ uri: getFileUrl(images[Math.min(activeImage, images.length-1)] || '') }} style={styles.heroImage} resizeMode="contain" />
+          {heroUri ? (
+            <>
+              <Image source={{ uri: heroUri }} style={styles.heroBackdrop} blurRadius={20} />
+              <View style={styles.heroImageWrap}>
+                <Image source={{ uri: heroUri }} style={styles.heroImage} resizeMode="contain" />
+              </View>
+            </>
           ) : (
             <View style={styles.heroPlaceholder}><Ionicons name="image-outline" size={48} color={APP_THEME.muted} /></View>
           )}
           {!product.available && <View style={styles.veil}><Text style={styles.veilText}>Out of stock</Text></View>}
-          {off > 0 && <View style={styles.heroOff}><Text style={styles.heroOffText}>{off}% OFF</Text></View>}
+          {off > 0 && <View style={styles.heroOff}><Text style={styles.heroOffText}>{off}% off</Text></View>}
         </View>
         {images.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbs}>
@@ -237,13 +244,17 @@ const styles = StyleSheet.create({
   backBtn: { marginTop: 14, backgroundColor: APP_THEME.gold, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10 },
   backBtnText: { color: APP_THEME.bg, fontWeight: '800' },
   scroll: { paddingBottom: 90 },
-  hero: { aspectRatio: 1, backgroundColor: APP_THEME.card, justifyContent: 'center', alignItems: 'center', overflow: 'hidden', borderBottomWidth: 1, borderColor: APP_THEME.line },
-  heroImage: { width: '85%', height: '85%' },
-  heroPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  veil: { position: 'absolute', bottom: 12, left: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.7)', paddingVertical: 6, borderRadius: 10, alignItems: 'center' },
+  // Web `shop-detail-hero`: mobile aspect 1/1, bg #101414, border line, radius18, max-h none, overflow hidden
+  // + backdrop absolute inset -18% blur20 opacity .95 saturate 1.15 behind
+  hero: { aspectRatio: 1, backgroundColor: '#101414', overflow: 'hidden', borderWidth: 1, borderColor: APP_THEME.line, borderRadius: 18, marginHorizontal: 12, marginTop: 8, position: 'relative', justifyContent: 'center', alignItems: 'center' },
+  heroBackdrop: { position: 'absolute', top: '-18%', left: '-18%', right: '-18%', bottom: '-18%', opacity: 0.95 },
+  heroImageWrap: { position: 'absolute', top: 8, left: 8, right: 8, bottom: 8, justifyContent: 'center', alignItems: 'center' },
+  heroImage: { width: '100%', height: '100%' },
+  heroPlaceholder: { flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#101414' },
+  veil: { position: 'absolute', bottom: 12, left: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.7)', paddingVertical: 6, borderRadius: 10, alignItems: 'center', zIndex: 2 },
   veilText: { color: '#fff', fontWeight: '700', fontSize: 12 },
-  heroOff: { position: 'absolute', top: 12, left: 12, backgroundColor: APP_THEME.gold, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  heroOffText: { color: APP_THEME.bg, fontWeight: '800', fontSize: 11 },
+  heroOff: { position: 'absolute', top: 10, right: 10, backgroundColor: '#23b45c', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, zIndex: 2 },
+  heroOffText: { color: '#04160b', fontWeight: '800', fontSize: 11 },
   thumbs: { padding: 12, gap: 8 },
   thumb: { width: 52, height: 52, borderRadius: 10, borderWidth: 1.5, borderColor: APP_THEME.line, overflow: 'hidden', backgroundColor: APP_THEME.card },
   thumbActive: { borderColor: APP_THEME.gold, backgroundColor: APP_THEME.card },

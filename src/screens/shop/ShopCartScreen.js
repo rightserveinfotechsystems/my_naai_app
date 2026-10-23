@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, RefreshControl } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getFileUrl, communication } from '../../services/communication';
@@ -8,6 +8,7 @@ import { fetchShopSettings } from '../../shop/shopSettings';
 import { ShopQuantityControl, ShopBillCard, EmptyState } from '../../shop/ShopComponents';
 import { APP_THEME } from '../../shop/shopTheme';
 import { getShopOwnerId } from '../../shop/shopHelper';
+import { AppAlertModal, useAppAlertState } from '../../components/AppAlertModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DeviceEventEmitter } from 'react-native';
 
@@ -16,6 +17,7 @@ const ShopCartScreen = ({ navigation }) => {
   const [lines, setLines] = useState([]);
   const [settings, setSettings] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [alertState, showAlert, hideAlert, alertProps] = useAppAlertState();
 
   const load = async (oid) => {
     try { const raw = await AsyncStorage.getItem(`mynaaiShopCart:${oid}`); const parsed = raw ? JSON.parse(raw) : []; setLines(Array.isArray(parsed) ? parsed : []); } catch { setLines([]); }
@@ -71,10 +73,16 @@ const ShopCartScreen = ({ navigation }) => {
     try { await communication.shopCartRemove({ productId: pid }); } catch {}
   };
   const clearAll = () => {
-    Alert.alert('Clear your cart?', 'Every item will be removed from this cart.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Clear cart', style: 'destructive', onPress: async () => { await persist([]); try { await communication.shopCartClear(); } catch {} }},
-    ]);
+    showAlert({
+      title: 'Clear your cart?',
+      message: 'Every item will be removed from this cart.',
+      variant: 'warning',
+      icon: 'trash-outline',
+      buttons: [
+        { text: 'Keep items', style: 'ghost' },
+        { text: 'Clear cart', style: 'destructive', icon: 'trash-outline', onPress: async () => { await persist([]); try { await communication.shopCartClear(); } catch {} }},
+      ],
+    });
   };
 
   const insets = useSafeAreaInsets();
@@ -101,6 +109,7 @@ const ShopCartScreen = ({ navigation }) => {
           <View style={{width:36}} />
         </View>
         <EmptyState icon="bag-handle-outline" title="Your cart is empty" message="Fill it with shampoo, clippers and beard oil — delivered to your salon." actionLabel="Browse the shop" onAction={goToShop} />
+        <AppAlertModal {...alertProps} />
       </SafeAreaView>
     );
   }
@@ -167,6 +176,7 @@ const ShopCartScreen = ({ navigation }) => {
           <Ionicons name="chevron-forward" size={14} color={APP_THEME.bg} />
         </TouchableOpacity>
       </View>
+      <AppAlertModal {...alertProps} />
     </SafeAreaView>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getFileUrl } from '../../services/communication';
@@ -8,6 +8,7 @@ import { APP_THEME } from '../../shop/shopTheme';
 import { getShopOwnerId, formatCurrency } from '../../shop/shopHelper';
 import { deliveryPointOf } from '../../shop/geo';
 import { LocationPreview } from '../../shop/ShopComponents';
+import { AppAlertModal, useAppAlertState } from '../../components/AppAlertModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchServerOrderById, cancelServerOrder } from '../../shop/shopSync';
 
@@ -19,6 +20,7 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
   const [cancelling, setCancelling] = useState(false);
   const [now, setNow] = useState(Date.now());
   const insets = useSafeAreaInsets();
+  const [alertState, showAlert, hideAlert, alertProps] = useAppAlertState();
 
   useEffect(() => { const t = setInterval(()=> setNow(Date.now()), 30000); return () => clearInterval(t); }, []);
 
@@ -46,13 +48,14 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
   useEffect(()=>{ load(); }, [load]);
 
   if (loading) {
-    return <SafeAreaView style={styles.loadingWrap} edges={['top']}><ActivityIndicator color={APP_THEME.gold} /><Text style={styles.loadingText}>Loading order…</Text></SafeAreaView>;
+    return <SafeAreaView style={styles.loadingWrap} edges={['top']}><ActivityIndicator color={APP_THEME.gold} /><Text style={styles.loadingText}>Loading order…</Text><AppAlertModal {...alertProps} /></SafeAreaView>;
   }
   if (!order) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}><TouchableOpacity onPress={()=>navigation.goBack()} style={styles.headerBtn}><Ionicons name="arrow-back" size={18} color={APP_THEME.white}/></TouchableOpacity><Text style={styles.headerTitle}>Order details</Text><View style={{width:34}}/></View>
         <View style={styles.center}><Ionicons name="cube-outline" size={36} color={APP_THEME.muted}/><Text style={styles.emptyTitle}>Order not found</Text><Text style={styles.emptySub}>This order may belong to a different salon account on this device.</Text><TouchableOpacity style={styles.primaryBtn} onPress={()=>navigation.goBack()}><Text style={styles.primaryBtnText}>Back to my orders</Text></TouchableOpacity></View>
+        <AppAlertModal {...alertProps} />
       </SafeAreaView>
     );
   }
@@ -62,9 +65,14 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
   const payment = order.payment || {};
 
   const handleCancel = async () => {
-    Alert.alert('Cancel this order?', payment.method==='ONLINE' && payment.status==='PAID' ? 'The amount paid will be refunded to original source in 5–7 days.' : 'No payment will be collected. This cannot be undone once order goes out for delivery.', [
-      { text: 'Keep order', style: 'cancel' },
-      { text: 'Cancel order', style: 'destructive', onPress: async () => {
+    showAlert({
+      title: 'Cancel this order?',
+      message: payment.method==='ONLINE' && payment.status==='PAID' ? 'The amount paid will be refunded to original source in 5–7 days.' : 'No payment will be collected. This cannot be undone once order goes out for delivery.',
+      variant: 'warning',
+      icon: 'warning-outline',
+      buttons: [
+        { text: 'Keep order', style: 'ghost' },
+        { text: 'Cancel order', style: 'destructive', icon: 'trash-outline', onPress: async () => {
         setCancelling(true);
         try {
           if (order.serverStatus) {
@@ -79,20 +87,21 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
                 if (idx>=0) orders[idx]=patched;
                 await AsyncStorage.setItem(`mynaaiShopOrders:${ownerId}`, JSON.stringify(orders));
                 setOrder(patched);
-                Alert.alert('Order cancelled', 'Your order has been cancelled.');
+                showAlert({ title: 'Order cancelled', message: 'Your order has been cancelled.', variant: 'success', icon: 'checkmark-circle', buttons: [{ text: 'OK', style: 'primary' }] });
               }
             } else {
               await load();
-              Alert.alert('Cannot cancel', 'This order can no longer be cancelled — it has already gone out for delivery. Call support if something is wrong.');
+              showAlert({ title: 'Cannot cancel', message: 'This order can no longer be cancelled — it has already gone out for delivery. Call support if something is wrong.', variant: 'error', icon: 'close-circle-outline', buttons: [{ text: 'OK', style: 'primary' }] });
             }
           } else {
             const updated = await cancelOrder(ownerId, order.id, { now, reason: 'Cancelled by salon from mobile app' });
-            if (updated?.cancelledAt) { setOrder(updated); Alert.alert('Order cancelled', 'Your order has been cancelled.'); }
-            else Alert.alert('Cannot cancel', 'This order has already been dispatched and can no longer be cancelled. Call support if something is wrong.');
+            if (updated?.cancelledAt) { setOrder(updated); showAlert({ title: 'Order cancelled', message: 'Your order has been cancelled.', variant: 'success', buttons: [{ text: 'OK', style: 'primary' }] }); }
+            else showAlert({ title: 'Cannot cancel', message: 'This order has already been dispatched and can no longer be cancelled. Call support if something is wrong.', variant: 'error', buttons: [{ text: 'OK', style: 'primary' }] });
           }
-        } catch (e) { Alert.alert('Error', e?.message || 'Could not cancel this order.'); } finally { setCancelling(false); }
+        } catch (e) { showAlert({ title: 'Error', message: e?.message || 'Could not cancel this order.', variant: 'error', buttons: [{ text: 'OK', style: 'primary' }] }); } finally { setCancelling(false); }
       }},
-    ]);
+      ],
+    });
   };
 
   const statusColor = status.key==='cancelled' ? APP_THEME.red : status.key==='delivered' ? APP_THEME.gold : '#D4A45A';
@@ -181,6 +190,7 @@ const ShopOrderDetailScreen = ({ route, navigation }) => {
         {cancellable && <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel} disabled={cancelling}>{cancelling ? <ActivityIndicator color="#fff"/> : <><Ionicons name="close-circle-outline" size={15} color="#fff"/><Text style={styles.cancelText}>Cancel order</Text></>}</TouchableOpacity>}
         {!cancellable && status.key!=='delivered' && status.key!=='cancelled' && <View style={styles.supportNote}><Ionicons name="shield-checkmark-outline" size={13} color={APP_THEME.gold}/><Text style={styles.supportText}>This order is already out for delivery. If anything looks wrong, call <Text style={{color: APP_THEME.gold, fontWeight:'800'}} onPress={()=>{}}>8380017393</Text>.</Text></View>}
       </ScrollView>
+      <AppAlertModal {...alertProps} />
     </SafeAreaView>
   );
 };

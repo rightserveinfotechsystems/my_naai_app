@@ -56,11 +56,9 @@ const SplashLogoScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* backgroundColor removed: deprecated for edge-to-edge (API 35+);
-          container bg (#080A0A) shows behind the transparent status bar */}
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#080A0A" translucent />
       <Animated.Image
-        source={require('../assets/my_naai.png')}
+        source={require('../assets/my_naai_transparent.png')}
         style={[styles.logo, { opacity: fadeAnim }]}
         resizeMode="contain"
       />
@@ -78,7 +76,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: width * 0.7,
-    height: width * 0.7,
+    width: width * 0.62,
+    height: width * 0.62,
+    // vibrant: crisp white on dark, subtle glow lifts it from dull
+    shadowColor: '#E8B97E',
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
 });

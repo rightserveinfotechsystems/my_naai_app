@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -18,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { APP_THEME } from './shopTheme';
 import { toPoint, formatCoordinates, mapsUrl } from './geo';
+import { AppAlertModal, useAppAlertState } from '../components/AppAlertModal';
 
 // Optional WebView — may be unavailable if native rebuild hasn't run yet;
 // gracefully fall back to static map image instead of crashing checkout.
@@ -126,6 +126,7 @@ export function ShopMapPinPicker({ visible, initial, onConfirm, onClose }) {
   const [searching, setSearching] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [webError, setWebError] = useState(false);
+  const [alertState, showAlert, hideAlert, alertProps] = useAppAlertState();
 
   useEffect(() => {
     if (visible) {
@@ -156,16 +157,22 @@ export function ShopMapPinPicker({ visible, initial, onConfirm, onClose }) {
   const doSearch = async () => {
     const q = query.trim();
     if (q.length < 3) {
-      Alert.alert('Type more', 'Enter at least 3 characters — e.g. “Home, Manish Nagar, Nagpur” or “Office, Sitabuldi”.');
+      showAlert({
+        title: 'Type more',
+        message: 'Enter at least 3 characters — e.g. “Home, Manish Nagar, Nagpur” or “Office, Sitabuldi”.',
+        variant: 'warning',
+        icon: 'search-outline',
+        buttons: [{ text: 'OK', style: 'primary' }],
+      });
       return;
     }
     setSearching(true);
     try {
       const hits = await searchPlaces(q);
       setResults(hits);
-      if (hits.length === 0) Alert.alert('No results', 'No place found for that text. Try a broader query like “Nagpur” + area name.');
+      if (hits.length === 0) showAlert({ title: 'No results', message: 'No place found for that text. Try a broader query like “Nagpur” + area name.', variant: 'info', icon: 'search-outline', buttons: [{ text: 'OK', style: 'primary' }] });
     } catch (err) {
-      Alert.alert('Search failed', 'Could not search maps right now. Check internet and try again.');
+      showAlert({ title: 'Search failed', message: 'Could not search maps right now. Check internet and try again.', variant: 'error', buttons: [{ text: 'OK', style: 'primary' }] });
     } finally {
       setSearching(false);
     }
@@ -189,7 +196,10 @@ export function ShopMapPinPicker({ visible, initial, onConfirm, onClose }) {
   };
 
   const handleConfirm = () => {
-    if (!toPoint(pending)) return Alert.alert('Pick a pin', 'Move the pin on the map to exact spot.');
+    if (!toPoint(pending)) {
+      showAlert({ title: 'Pick a pin', message: 'Move the pin on the map to exact spot.', variant: 'warning', icon: 'location-outline', buttons: [{ text: 'OK', style: 'primary' }] });
+      return;
+    }
     onConfirm?.(pending);
     onClose?.();
   };
@@ -344,6 +354,7 @@ export function ShopMapPinPicker({ visible, initial, onConfirm, onClose }) {
             </View>
           </View>
         </KeyboardAvoidingView>
+        <AppAlertModal {...alertProps} />
       </View>
     </Modal>
   );
