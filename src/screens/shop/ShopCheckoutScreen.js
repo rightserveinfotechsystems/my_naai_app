@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Modal, FlatList, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, FlatList, Linking } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { cartTotals, cartCount, placeOrder } from '../../shop/shopOrders';
@@ -11,6 +11,7 @@ import { toPoint, getCurrentLocation, getCurrentLocationDiagnostic, formatCoordi
 import { STATE_OPTIONS, stateOptionsWith, normalizeStateName } from '../../shop/stateOptions';
 import { ShopMapPinPicker } from '../../shop/MapPinPicker';
 import { shopCopy, getShopSession, isShopGuest } from '../../shop/shopBuyer';
+import { AppAlertModal, useAppAlertState } from '../../components/AppAlertModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DeviceEventEmitter } from 'react-native';
 import { rzp_key } from '../../services/communication';
@@ -32,6 +33,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [copy, setCopy] = useState(shopCopy(null));
   const [session, setSession] = useState(null);
+  const [alertState, showAlert, hideAlert, alertProps] = useAppAlertState();
 
   useEffect(() => {
     (async () => {
@@ -87,19 +89,47 @@ const ShopCheckoutScreen = ({ navigation }) => {
         const code = result.code;
         if (code === 1) {
           if (result.neverAsk) {
-            Alert.alert('Location blocked', 'Location permission is blocked. Please enable it in Settings > Apps > My Naai > Permissions.', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Open Settings', onPress: () => Linking.openSettings?.() ?? Linking.openURL('app-settings:') },
-            ]);
+            showAlert({
+              title: 'Location blocked',
+              message: 'Location permission is blocked. Please enable it in Settings > Apps > My Naai > Permissions.',
+              variant: 'warning',
+              icon: 'location-outline',
+              buttons: [
+                { text: 'Cancel', style: 'ghost' },
+                { text: 'Open Settings', style: 'primary', icon: 'settings-outline', onPress: () => Linking.openSettings?.() ?? Linking.openURL('app-settings:') },
+              ],
+            });
           } else {
-            Alert.alert('Permission needed', 'My Naai needs location permission to set the delivery pin. Please allow it when prompted.');
+            showAlert({
+              title: 'Permission needed',
+              message: 'My Naai needs location permission to set the delivery pin. Please allow it when prompted.',
+              variant: 'warning',
+              icon: 'shield-checkmark-outline',
+              buttons: [{ text: 'OK', style: 'primary' }],
+            });
           }
         } else if (code === 2) {
-          Alert.alert('GPS disabled?', 'Could not get a position. Make sure GPS / Location is turned on, step outside or near a window, and try again. If it keeps failing, enter your pin manually — delivery can still be made to your address.');
+          showAlert({
+            title: 'GPS disabled?',
+            message: 'Could not get a position. Make sure GPS / Location is turned on, step outside or near a window, and try again. If it keeps failing, enter your pin manually — delivery can still be made to your address.',
+            variant: 'location',
+            buttons: [{ text: 'Got it', style: 'primary' }],
+          });
         } else if (code === 3) {
-          Alert.alert('Location timeout', 'Took too long to get a GPS fix. Try again in an open area with better signal. You can still place the order with your typed address.');
+          showAlert({
+            title: 'Location timeout',
+            message: 'Took too long to get a GPS fix. Try again in an open area with better signal. You can still place the order with your typed address.',
+            variant: 'warning',
+            icon: 'time-outline',
+            buttons: [{ text: 'OK', style: 'primary' }],
+          });
         } else {
-          Alert.alert('Location unavailable', result.message || 'Could not read this device’s location. Allow location access and try again.');
+          showAlert({
+            title: 'Location unavailable',
+            message: result.message || 'Could not read this device’s location. Allow location access and try again.',
+            variant: 'error',
+            buttons: [{ text: 'OK', style: 'primary' }],
+          });
         }
         return;
       }
@@ -117,7 +147,13 @@ const ShopCheckoutScreen = ({ navigation }) => {
     DeviceEventEmitter.emit('SHOP_ORDER_PLACED', order);
     setPlaced(order);
     setPayState('idle');
-    Alert.alert('Order placed', `Order ${order.id} placed successfully.`);
+    showAlert({
+      title: 'Order placed',
+      message: `Order ${order.id} placed successfully.`,
+      variant: 'success',
+      icon: 'checkmark-circle',
+      buttons: [{ text: 'Great!', style: 'primary' }],
+    });
     registerServerOrder(order).then(registered => { if (registered) clearServerCart().then(()=> DeviceEventEmitter.emit('SHOP_CART_UPDATED')); });
     return order;
   };
@@ -144,9 +180,23 @@ const ShopCheckoutScreen = ({ navigation }) => {
       setPayState('idle');
       const msg = error?.description || error?.message || '';
       if (String(msg).toLowerCase().includes('cancel') || error?.code === 0) {
-        Alert.alert('Payment cancelled', 'No amount was charged — your cart is still waiting.');
+        showAlert({
+          title: 'Payment cancelled',
+          message: 'No amount was charged — your cart is still waiting.',
+          variant: 'info',
+          icon: 'close-circle-outline',
+          buttons: [{ text: 'OK', style: 'primary' }],
+        });
       } else {
-        Alert.alert('Payment failed', msg || 'Payment could not be completed. Try again or choose Cash on Delivery.');
+        showAlert({
+          title: 'Payment failed',
+          message: msg || 'Payment could not be completed. Try again or choose Cash on Delivery.',
+          variant: 'error',
+          buttons: [
+            { text: 'Try again', style: 'ghost' },
+            { text: 'Choose COD', style: 'primary', onPress: () => setPayment('cod') },
+          ],
+        });
       }
     }
   };
@@ -154,35 +204,44 @@ const ShopCheckoutScreen = ({ navigation }) => {
   const confirmCodOrder = () => {
     const codExtra = settings?.codCharges > 0 ? ` (incl. ₹${settings.codCharges} COD fee)` : '';
     const locNote = deliveryPoint ? `\nPin: ${formatCoordinates(deliveryPoint)}` : '';
-    Alert.alert(
-      'Confirm cash on delivery?',
-      `You will pay ${formatCurrency(totals.total)}${codExtra} in cash when order arrives.\n\nDeliver to: ${address.name}, ${address.line1}, ${address.city} — ${address.pincode}${locNote}\n${cartCount(lines)} ${cartCount(lines)===1?'item':'items'} • Free cancellation until out for delivery.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
+    showAlert({
+      title: 'Confirm cash on delivery?',
+      message: `You will pay ${formatCurrency(totals.total)}${codExtra} in cash when order arrives.\n\nDeliver to: ${address.name}, ${address.line1}, ${address.city} — ${address.pincode}${locNote}\n${cartCount(lines)} ${cartCount(lines)===1?'item':'items'} • Free cancellation until out for delivery.`,
+      variant: 'payment',
+      icon: 'cash-outline',
+      buttons: [
+        { text: 'Cancel', style: 'ghost' },
         {
           text: `Place order • ${formatCurrency(totals.total)}`,
-          style: 'default',
+          style: 'primary',
+          icon: 'checkmark-circle',
           onPress: async () => {
             if (busy) return;
             setBusy(true);
             try { await placeCod(); } finally { setBusy(false); }
           },
         },
-      ]
-    );
+      ],
+    });
   };
   const submit = async () => {
     if (busy) return;
     if (isShopGuest(session)) {
-      return Alert.alert(copy.guestCheckoutTitle, `${copy.guestCheckoutLead}\n\n• ${copy.guestCheckoutPoints.join('\n• ')}`, [
-        { text: copy.guestCheckoutBack, style: 'cancel' },
-        { text: copy.guestCheckoutCta, onPress: () => { try { navigation.navigate('UserLogin'); } catch { Alert.alert('Sign in', 'Please sign in from the Account tab to place the order.'); } } },
-      ]);
+      return showAlert({
+        title: copy.guestCheckoutTitle,
+        message: `${copy.guestCheckoutLead}\n\n• ${copy.guestCheckoutPoints.join('\n• ')}`,
+        variant: 'info',
+        icon: 'person-circle-outline',
+        buttons: [
+          { text: copy.guestCheckoutBack, style: 'ghost' },
+          { text: copy.guestCheckoutCta, style: 'primary', icon: 'log-in-outline', onPress: () => { try { navigation.navigate('UserLogin'); } catch { showAlert({ title: 'Sign in', message: 'Please sign in from the Account tab to place the order.', variant: 'info', buttons: [{ text: 'OK', style: 'primary' }] }); } } },
+        ],
+      });
     }
     const problem = validate();
-    if (problem) return Alert.alert('Check address', problem);
-    if (lines.length === 0) return Alert.alert('Empty cart', 'Your cart is empty.');
-    if (payment === 'cod' && codLocked) return Alert.alert('COD not available', `Cash on delivery is only available for orders up to ${formatCurrency(settings.codThreshold)} — please pay online.`);
+    if (problem) return showAlert({ title: 'Check address', message: problem, variant: 'warning', icon: 'alert-circle-outline', buttons: [{ text: 'OK', style: 'primary' }] });
+    if (lines.length === 0) return showAlert({ title: 'Empty cart', message: 'Your cart is empty.', variant: 'info', icon: 'bag-outline', buttons: [{ text: 'OK', style: 'primary' }] });
+    if (payment === 'cod' && codLocked) return showAlert({ title: 'COD not available', message: `Cash on delivery is only available for orders up to ${formatCurrency(settings.codThreshold)} — please pay online.`, variant: 'warning', icon: 'cash-outline', buttons: [{ text: 'Pay online', style: 'primary', onPress: () => setPayment('online') }] });
     if (payment === 'cod') return confirmCodOrder();
     setBusy(true);
     try { await payOnline(); } finally { setBusy(false); }
@@ -204,6 +263,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
             <TouchableOpacity style={styles.secondaryBtn} onPress={goToShop}><Text style={styles.secondaryBtnText}>Continue shopping</Text></TouchableOpacity>
           </View>
         </ScrollView>
+        <AppAlertModal {...alertProps} />
       </SafeAreaView>
     );
   }
@@ -213,6 +273,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}><TouchableOpacity onPress={()=>navigation.goBack()} style={styles.headerBtn}><Ionicons name="arrow-back" size={18} color={APP_THEME.white}/></TouchableOpacity><Text style={styles.headerTitle}>Checkout</Text><View style={{width:34}}/></View>
         <View style={styles.empty}><Ionicons name="bag-outline" size={36} color={APP_THEME.muted}/><Text style={styles.emptyTitle}>Nothing to check out</Text><Text style={styles.emptySub}>Your cart is empty.</Text><TouchableOpacity style={styles.primaryBtn} onPress={goToShopFromEmpty}><Text style={styles.primaryBtnText}>Browse the shop</Text></TouchableOpacity></View>
+        <AppAlertModal {...alertProps} />
       </SafeAreaView>
     );
   }
@@ -339,6 +400,7 @@ const ShopCheckoutScreen = ({ navigation }) => {
         onClose={() => setPickerVisible(false)}
         onConfirm={(pt) => setAddress(prev => ({ ...prev, latitude: pt.latitude, longitude: pt.longitude }))}
       />
+      <AppAlertModal {...alertProps} />
     </SafeAreaView>
   );
 };
