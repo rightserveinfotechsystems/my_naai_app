@@ -60,7 +60,6 @@ export function ShopProductCard({ product, qty, onAdd, onSetQty, onOpen, style }
             <Ionicons name="image-outline" size={28} color={APP_THEME.muted} />
           </View>
         )}
-        <View style={styles.cardShade} pointerEvents="none" />
         {off > 0 && (
           <View style={styles.offBadge}>
             <Text style={styles.offBadgeText}>{off}% off</Text>
@@ -403,13 +402,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#101414',
   },
-  // Web: 34% height, linear 0 → rgba(6,9,8,.45)
-  cardShade: {
-    position: 'absolute',
-    left: 0, right: 0, bottom: 0,
-    height: '34%',
-    backgroundColor: 'rgba(6,9,8,0.45)',
-  },
+
   cardRating: {
     position: 'absolute',
     right: 9,

@@ -240,12 +240,36 @@ const ServicesScreen = () => {
     const btnColor = STATUS_COLORS[statusKey] || (isExpired ? '#6ED19E' : '#899191');
     const displayStatusLabel = STATUS_LABELS[statusKey] || (isExpired ? 'Completed' : 'Unknown');
 
+    // Resolve salon name/city robustly — backend has returned salonName under
+    // different keys (salon.salonName, salonDetails.salonName, etc.) across
+    // versions; fallback chain prevents blank card when primary key is missing.
+    const salonDisplayName =
+      item.salonName ||
+      item.salon?.salonName ||
+      item.salon?.name ||
+      item.salonDetails?.salonName ||
+      item.salonDetails?.name ||
+      item.salonData?.salonName ||
+      item.salonInfo?.salonName ||
+      item.shopName ||
+      item.salon?.salonName ||
+      '';
+    const salonDisplayCity =
+      item.salonCity ||
+      item.salon?.city ||
+      item.salon?.salonCity ||
+      item.salonDetails?.city ||
+      item.salonDetails?.salonCity ||
+      item.salonData?.city ||
+      item.city ||
+      '';
+
     return (
       <View style={styles.card}>
         <View style={styles.infoContainer}>
           <View style={styles.info}>
-            <Text allowFontScaling={false} style={styles.name}>{item.salonName}</Text>
-            <Text allowFontScaling={false} style={styles.address}>{item.salonCity}</Text>
+            <Text allowFontScaling={false} style={styles.name}>{salonDisplayName || 'Salon'}</Text>
+            <Text allowFontScaling={false} style={styles.address}>{salonDisplayCity}</Text>
 
             <View style={styles.barberRow}>
               <Ionicons name="person-outline" size={14} color="#B7BEBE" />
