@@ -297,7 +297,7 @@ const ShopScreen = ({ navigation }) => {
     <View style={styles.overlay}>
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.titleRow}>
-          <Text style={styles.title}>Shop</Text>
+          <Text allowFontScaling={false} style={styles.title}>Shop</Text>
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.navigate('ShopOrders')} activeOpacity={0.85}>
               <Ionicons name="receipt-outline" size={15} color={APP_THEME.white} />
@@ -310,7 +310,7 @@ const ShopScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
-        <Text style={styles.subtitle}>{copy.subtitle}</Text>
+        <Text allowFontScaling={false} style={styles.subtitle}>{copy.subtitle}</Text>
 
         <View style={styles.searchBar}>
           <Ionicons name="search" size={15} color={APP_THEME.muted} />
@@ -391,13 +391,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 22,
     fontWeight: '700',
-    marginBottom: 16,
     marginTop: 10,
     flex: 1,
   },
-  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
-  subtitle: { color: APP_THEME.muted, fontSize: 11, fontWeight: '500', marginTop: -12, marginBottom: 12 },
-  headerActions: { flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 16, marginTop: 10 },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 6 },
+  subtitle: { color: APP_THEME.muted, fontSize: 11, fontWeight: '500', marginTop: 4, marginBottom: 8 },
+  headerActions: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 10 },
   headerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -425,7 +424,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   searchInput: { flex: 1, color: APP_THEME.white, fontSize: 13, fontWeight: '500', paddingVertical: 0 },
-  filtersSection: { backgroundColor: APP_THEME.card, borderBottomWidth: 1, borderColor: APP_THEME.line, paddingHorizontal: 14, paddingVertical: 10, marginHorizontal: -14, marginTop: 10 },
+  filtersSection: { backgroundColor: APP_THEME.card, borderBottomWidth: 1, borderColor: APP_THEME.line, paddingHorizontal: 14, paddingVertical: 10, marginHorizontal: -14, marginTop: 6 },
   filtersGrid: { flexDirection: 'row', gap: 8 },
   selectWrap: { flex: 1, gap: 4 },
   selectLabel: { color: APP_THEME.muted, fontSize: 9, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase' },
