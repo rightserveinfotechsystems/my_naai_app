@@ -8,12 +8,13 @@ import {
   Alert,
   RefreshControl,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import io from 'socket.io-client'; // 👈 Import Socket.io Client
-import { communication, getServerUrl } from '../services/communication'; // 👈 Import getServerUrl
+import io from 'socket.io-client';
+import { communication, getServerUrl } from '../services/communication';
 
 const ServicesScreen = () => {
   const [salonList, setSalonList] = useState([]);
@@ -24,75 +25,45 @@ const ServicesScreen = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [userId, setUserId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
+  const [filter, setFilter] = useState('all');
 
-  /* ---------------- USER INFO ---------------- */
   const getUserInfo = async () => {
     try {
       const userData = await AsyncStorage.getItem('mynaaiUser');
       const parsed = JSON.parse(userData);
       const id = parsed?.userId;
-
       if (id) setUserId(id);
     } catch {
       Alert.alert('Error', 'Unable to load user');
     }
   };
 
-
-/* ---------------- 🎯 DIRECT USER SOCKET CONNECTION ---------------- */
   useEffect(() => {
     if (!userId) return;
-
     let socket = null;
-
     try {
-      socket = io(getServerUrl(), {
-        transports: ['websocket'],
-      });
-
+      socket = io(getServerUrl(), { transports: ['websocket'] });
       socket.on('connect', () => {
-        console.log('🟢 Socket connected in ServicesScreen:', socket.id);
-        
-        // 🎯 EMIT join_user so server puts this client into `user_${userId}` room
+        console.log('Socket connected in ServicesScreen:', socket.id);
         socket.emit('join_user', String(userId));
       });
-
-      // Targeted callback to handle booking updates
       const handleUserBookingUpdate = (data) => {
-        console.log('⚡ Received personal booking update on socket:', data);
+        console.log('Received personal booking update:', data);
         fetchBookings(userId, 1);
       };
-
-      // Listen for updates targeted at this user
       socket.on('booking_status_updated', handleUserBookingUpdate);
-      
-
     } catch (err) {
-      console.log('Socket connection error in ServicesScreen:', err);
+      console.log('Socket connection error:', err);
     }
-
-    return () => {
-      if (socket) {
-        console.log('🔴 Disconnecting socket from ServicesScreen');
-        socket.disconnect();
-      }
-    };
+    return () => { if (socket) socket.disconnect(); };
   }, [userId]);
 
-  /* ---------------- API CALL ---------------- */
   const fetchBookings = async (id, pageNo = 1, loadMore = false) => {
     try {
       loadMore ? setLoadingMore(true) : setLoading(true);
-
-      const response = await communication.bookedSalonList({
-        userId: id,
-        page: pageNo,
-        searchString: '',
-      });
-
+      const response = await communication.bookedSalonList({ userId: id, page: pageNo, searchString: '' });
       if (response?.status === 'SUCCESS') {
         const data = response.data || [];
-
         setSalonList(prev => (loadMore ? [...prev, ...data] : data));
         setHasMore(data.length >= 10);
         setPage(pageNo);
@@ -110,214 +81,137 @@ const ServicesScreen = () => {
   };
 
   const handleCancelBooking = (bookingRequestId) => {
-    Alert.alert(
-      "Cancel Booking",
-      "Are you sure you want to cancel this booking?",
-      [
-        { text: "No", style: "cancel" },
-        {
-          text: "Yes",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setCancellingId(bookingRequestId);
-
-              // Optimistic remove
-              setSalonList(prev =>
-                prev.filter(item => item.bookingId !== bookingRequestId)
-              );
-
-              const response = await communication.bookingRequestCancel(bookingRequestId);
-
-              if (response?.status !== "SUCCESS") {
-                fetchBookings(userId, 1);
-              }
-            } catch (e) {
-              Alert.alert("Error", e.message);
-              fetchBookings(userId, 1);
-            } finally {
-              setCancellingId(null);
-            }
-          },
+    Alert.alert('Cancel Booking', 'Are you sure you want to cancel this booking?', [
+      { text: 'No', style: 'cancel' },
+      {
+        text: 'Yes', style: 'destructive',
+        onPress: async () => {
+          try {
+            setCancellingId(bookingRequestId);
+            setSalonList(prev => prev.filter(item => item.bookingId !== bookingRequestId));
+            const response = await communication.bookingRequestCancel(bookingRequestId);
+            if (response?.status !== 'SUCCESS') fetchBookings(userId, 1);
+          } catch (e) {
+            Alert.alert('Error', e.message);
+            fetchBookings(userId, 1);
+          } finally { setCancellingId(null); }
         },
-      ]
-    );
+      },
+    ]);
   };
 
-  useEffect(() => {
-    getUserInfo();
-  }, []);
+  useEffect(() => { getUserInfo(); }, []);
+  useEffect(() => { if (userId) fetchBookings(userId, 1); }, [userId]);
 
-  useEffect(() => {
-    if (userId) {
-      fetchBookings(userId, 1);
-    }
-  }, [userId]);
-
-  /* ---------------- LOAD MORE & REFRESH ---------------- */
   const handleLoadMore = () => {
     if (loading || loadingMore || !hasMore || !userId || salonList.length === 0) return;
     fetchBookings(userId, page + 1, true);
   };
-
   const onRefresh = () => {
-    if (!userId) {
-      setRefreshing(false);
-      return;
-    }
-    setRefreshing(true);
-    setPage(1);
-    fetchBookings(userId, 1);
+    if (!userId) { setRefreshing(false); return; }
+    setRefreshing(true); setPage(1); fetchBookings(userId, 1);
   };
 
-  const STATUS_COLORS = {
-    pending: '#E8B97E',
-    confirmed: '#6ED19E',
-    completed: '#E8B97E',
-    cancelled: '#F27B74',
-  };
-
-  const STATUS_LABELS = {
-    pending: "Pending",
-    confirmed: "Confirmed",
-    completed: "Completed",
-    cancelled: "Cancelled",
-  };
-
-  /* ---------------- RENDER ITEM ---------------- */
-  const renderItem = ({ item }) => {
-    const formatDateReadable = (dateStr) => {
-      if (!dateStr) return '';
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-    };
-
-    const formatTime = (time) => {
-      if (!time) return '';
-      const [h, m] = time.split(':');
-      const date = new Date();
-      date.setHours(Number(h), Number(m));
-      return date.toLocaleTimeString('en-IN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      });
-    };
-
-    const isBookingPassed = () => {
-      if (!item.bookingDate) return false;
-
+  // ── Web parity: getBookingStatus + colors/labels ──
+  const getBookingStatus = (item) => {
+    const passed = (() => {
+      if (!item?.bookingDate) return false;
       try {
-        const rawDateStr = typeof item.bookingDate === 'string'
-          ? item.bookingDate.split('T')[0]
-          : new Date(item.bookingDate).toISOString().split('T')[0];
+        const raw = typeof item.bookingDate === 'string' ? item.bookingDate.split('T')[0] : new Date(item.bookingDate).toISOString().split('T')[0];
+        const [y,m,d] = raw.split('-').map(Number);
+        let h=0, mm=0;
+        if (item.bookingTime) { const p=item.bookingTime.trim().split(':'); h=parseInt(p[0],10)||0; mm=parseInt(p[1],10)||0; }
+        return Date.now() >= new Date(y,m-1,d,h,mm,0).getTime();
+      } catch { return false; }
+    })();
+    const key = passed ? 'completed' : String(item?.status || 'pending').toLowerCase();
+    const label = key === 'confirmed' ? 'Confirmed' : key === 'completed' ? 'Completed' : key === 'cancelled' ? 'Cancelled' : 'Waiting for salon';
+    return { key, label };
+  };
 
-        const [year, month, day] = rawDateStr.split('-').map(Number);
-        
-        let hours = 0;
-        let minutes = 0;
+  const STATUS_PILL = {
+    pending: { bg: 'rgba(232,185,126,.11)', color: '#E8B97E' },
+    confirmed: { bg: 'rgba(110,209,158,.11)', color: '#6ED19E' },
+    completed: { bg: 'rgba(232,185,126,.09)', color: '#D5B485' },
+    cancelled: { bg: 'rgba(242,123,116,.10)', color: '#F27B74' },
+  };
 
-        if (item.bookingTime) {
-          const timeParts = item.bookingTime.trim().split(':');
-          hours = parseInt(timeParts[0], 10) || 0;
-          minutes = parseInt(timeParts[1], 10) || 0;
-        }
+  const allCount = salonList.length;
+  const waitingCount = salonList.filter(i => getBookingStatus(i).key === 'pending').length;
+  const filtered = salonList.filter(item => filter === 'all' || getBookingStatus(item).key === filter);
 
-        const bookingDateTime = new Date(year, month - 1, day, hours, minutes, 0);
-        return Date.now() >= bookingDateTime.getTime();
-      } catch (e) {
-        return false;
-      }
+  const renderItem = ({ item }) => {
+    const formatMonth = (d) => !d ? '' : new Date(d).toLocaleDateString('en-IN', { month: 'short' });
+    const formatDay = (d) => !d ? '' : String(new Date(d).getDate());
+    const formatWeekday = (d) => !d ? '' : new Date(d).toLocaleDateString('en-IN', { weekday: 'short' });
+    const formatTime = (t) => {
+      if (!t) return '';
+      const [h,m] = t.split(':'); const dt=new Date(); dt.setHours(Number(h),Number(m));
+      return dt.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
     };
 
-    const isExpired = isBookingPassed();
-    const statusKey = isExpired ? 'completed' : item.status?.toLowerCase();
-    
-    const btnColor = STATUS_COLORS[statusKey] || (isExpired ? '#6ED19E' : '#899191');
-    const displayStatusLabel = STATUS_LABELS[statusKey] || (isExpired ? 'Completed' : 'Unknown');
+    const status = getBookingStatus(item);
+    const pill = STATUS_PILL[status.key] || STATUS_PILL.pending;
 
-    // Resolve salon name/city robustly — backend has returned salonName under
-    // different keys (salon.salonName, salonDetails.salonName, etc.) across
-    // versions; fallback chain prevents blank card when primary key is missing.
-    const salonDisplayName =
-      item.salonName ||
-      item.salon?.salonName ||
-      item.salon?.name ||
-      item.salonDetails?.salonName ||
-      item.salonDetails?.name ||
-      item.salonData?.salonName ||
-      item.salonInfo?.salonName ||
-      item.shopName ||
-      item.salon?.salonName ||
-      '';
-    const salonDisplayCity =
-      item.salonCity ||
-      item.salon?.city ||
-      item.salon?.salonCity ||
-      item.salonDetails?.city ||
-      item.salonDetails?.salonCity ||
-      item.salonData?.city ||
-      item.city ||
-      '';
+    const salonDisplayName = item.salonName || item.salon?.salonName || item.salon?.name || item.salonDetails?.salonName || item.salonDetails?.name || item.salonData?.salonName || item.salonInfo?.salonName || item.shopName || '';
+    const salonDisplayCity = item.salonCity || item.salon?.city || item.salon?.salonCity || item.salonDetails?.city || item.city || '';
 
+    const isPending = status.key === 'pending';
+    const canCancel = !['completed','cancelled'].includes(status.key);
+
+    // Calendar rail: month uppercase, day number, weekday
     return (
-      <View style={styles.card}>
-        <View style={styles.infoContainer}>
-          <View style={styles.info}>
-            <Text allowFontScaling={false} style={styles.name}>{salonDisplayName || 'Salon'}</Text>
-            <Text allowFontScaling={false} style={styles.address}>{salonDisplayCity}</Text>
-
-            <View style={styles.barberRow}>
-              <Ionicons name="person-outline" size={14} color="#B7BEBE" />
-              <Text allowFontScaling={false} style={styles.barberText}>
-                Barber: {item.barberName || 'N/A'}
-              </Text>
+      <View style={styles.bookingCard}>
+        <View style={styles.bookingCalendar}>
+          <Text allowFontScaling={false} style={styles.calMonth}>{formatMonth(item.bookingDate).toUpperCase()}</Text>
+          <Text allowFontScaling={false} style={styles.calDay}>{formatDay(item.bookingDate)}</Text>
+          <Text allowFontScaling={false} style={styles.calWeek}>{formatWeekday(item.bookingDate)}</Text>
+        </View>
+        <View style={styles.bookingMain}>
+          <View style={styles.titleRow}>
+            <View style={{ flex:1, minWidth:0 }}>
+              <Text allowFontScaling={false} style={styles.bookingLabel}>APPOINTMENT</Text>
+              <Text allowFontScaling={false} style={styles.salonName} numberOfLines={1}>{salonDisplayName || 'My Naai salon'}</Text>
+              <Text allowFontScaling={false} style={styles.salonCity} numberOfLines={1}>{salonDisplayCity || 'Nearby'}</Text>
             </View>
-            <View style={styles.barberRow}>
-              <Ionicons name="cut-outline" size={14} color="#B7BEBE" />
-              <Text allowFontScaling={false} style={styles.barberText}>
-                Service: {item.serviceName || 'N/A'}
-              </Text>
-            </View>
-
-            <View style={styles.dateRow}>
-              <Ionicons name="calendar-outline" size={14} color="#E8B97E" />
-              <Text allowFontScaling={false} style={styles.dateText}>
-                {formatDateReadable(item.bookingDate)} - {formatTime(item.bookingTime)}
-              </Text>
+            <View style={[styles.statusPill, { backgroundColor: pill.bg }]}>
+              <View style={[styles.statusDot, { backgroundColor: pill.color }]} />
+              <Text allowFontScaling={false} style={[styles.statusText, { color: pill.color }]}>{status.label}</Text>
             </View>
           </View>
 
-          <View style={styles.rightSection}>
-            <View style={[styles.statusBadge, { backgroundColor: btnColor }]}>
-              <Text allowFontScaling={false} style={styles.statusBadgeText}>
-                {displayStatusLabel}
-              </Text>
+          <View style={styles.detailsGrid}>
+            <View style={styles.detailRow}>
+              <Ionicons name="person-outline" size={14} color="#E8B97E" />
+              <Text allowFontScaling={false} style={styles.detailText} numberOfLines={1}>{item.barberName || 'Any specialist'}</Text>
             </View>
-
-            {!isExpired && ["pending", "confirmed"].includes(item.status?.toLowerCase()) && (
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => handleCancelBooking(item.bookingId)}
-                disabled={cancellingId === item.bookingId}
-              >
-                {cancellingId === item.bookingId ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <>
-                    <Ionicons name="close-circle-outline" size={14} color="#fff" />
-                    <Text allowFontScaling={false} style={[styles.cancelBtnText, { marginLeft: 4 }]}>
-                      Cancel
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            )}
+            <View style={styles.detailRow}>
+              <Ionicons name="cut-outline" size={14} color="#E8B97E" />
+              <Text allowFontScaling={false} style={styles.detailText} numberOfLines={1}>{item.serviceName || item.services || 'Salon service'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Ionicons name="time-outline" size={14} color="#E8B97E" />
+              <Text allowFontScaling={false} style={styles.detailText} numberOfLines={1}>{formatTime(item.bookingTime)}</Text>
+            </View>
           </View>
+
+          {isPending && (
+            <View style={styles.waitingNote}>
+              <Ionicons name="time-outline" size={13} color="#E8B97E" />
+              <Text allowFontScaling={false} style={styles.waitingNoteText}>Sent to the salon — waiting for their action. We will alert you when they respond.</Text>
+            </View>
+          )}
+
+          {canCancel && (
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => handleCancelBooking(item.bookingId)} disabled={cancellingId === item.bookingId} hitSlop={{ top:12,bottom:12,left:10,right:10 }}>
+              {cancellingId === item.bookingId ? <ActivityIndicator size="small" color="#F27B74" /> : (
+                <>
+                  <Ionicons name="close" size={14} color="#F27B74" />
+                  <Text allowFontScaling={false} style={styles.cancelText}>Cancel booking</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -326,51 +220,60 @@ const ServicesScreen = () => {
   const EmptyState = () => (
     <View style={styles.empty}>
       <Ionicons name="calendar-outline" size={60} color="#E8B97E" />
-      <Text allowFontScaling={false} style={styles.emptyText}>No bookings found</Text>
+      <Text allowFontScaling={false} style={styles.emptyTitle}>No bookings yet</Text>
+      <Text allowFontScaling={false} style={styles.emptyText}>Your next good hair day is only a few taps away.</Text>
     </View>
   );
-
   const Skeleton = () => <View style={styles.skeletonCard} />;
+
+  const tabs = [
+    { id:'all', label:'All', count: allCount },
+    { id:'confirmed', label:'Confirmed' },
+    { id:'pending', label:'Pending' },
+    { id:'completed', label:'Completed' },
+  ];
 
   return (
     <View style={styles.overlay}>
-      <SafeAreaView style={styles.container}>
-        <Text allowFontScaling={false} style={styles.title}>My Bookings</Text>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <Text allowFontScaling={false} style={styles.title}>My bookings</Text>
+          <Text allowFontScaling={false} style={styles.subtitle}>Keep every appointment in view.</Text>
+        </View>
+
+        {/* Tabs — web .booking-tabs */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs} style={styles.tabsWrap}>
+          {tabs.map(t => (
+            <TouchableOpacity key={t.id} style={[styles.tab, filter===t.id && styles.tabActive]} onPress={()=>setFilter(t.id)}>
+              <Text allowFontScaling={false} style={[styles.tabText, filter===t.id && styles.tabTextActive]}>{t.label}{t.id==='all' ? `  ${t.count}` : ''}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {!loading && waitingCount > 0 && (
+          <View style={styles.waitingBanner}>
+            <Ionicons name="time-outline" size={16} color="#E8B97E" style={{ marginTop:1 }} />
+            <View style={{ flex:1 }}>
+              <Text allowFontScaling={false} style={styles.waitingBannerTitle}>Waiting for the salon to accept.</Text>
+              <Text allowFontScaling={false} style={styles.waitingBannerText}>{waitingCount===1 ? 'Your booking request has been sent' : `${waitingCount} booking requests have been sent`} — the salon will accept it or suggest another time, and you will get an alert either way.</Text>
+            </View>
+          </View>
+        )}
 
         {loading ? (
-          <>
-            <Skeleton />
-            <Skeleton />
-            <Skeleton />
-            <Skeleton />
-            <Skeleton />
-            <Skeleton />
-          </>
+          <><Skeleton /><Skeleton /><Skeleton /><Skeleton /></>
         ) : (
           <FlatList
-            data={salonList}
-            keyExtractor={(item, index) => `${item.bookingId || item.id}-${index}`}
+            data={filtered}
+            keyExtractor={(item,index)=> `${item.bookingId || item.id}-${index}`}
             renderItem={renderItem}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor="#E8B97E"
-              />
-            }
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E8B97E" />}
             ListEmptyComponent={<EmptyState />}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
-            ListFooterComponent={
-              loadingMore && (
-                <ActivityIndicator
-                  size="small"
-                  color="#E8B97E"
-                  style={{ marginVertical: 20 }}
-                />
-              )
-            }
+            ListFooterComponent={loadingMore && <ActivityIndicator size="small" color="#E8B97E" style={{ marginVertical:20 }} />}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
           />
         )}
       </SafeAreaView>
@@ -381,123 +284,46 @@ const ServicesScreen = () => {
 export default ServicesScreen;
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: '#080A0A',
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-  },
-  title: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 16,
-  },
-  card: {
-    flexDirection: 'row',
-    backgroundColor: '#171B1B',
-    borderRadius: 20,
-    marginBottom: 16,
-    overflow: 'hidden',
-    elevation: 2,
-  },
-  infoContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-  info: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  name: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-    textTransform: "capitalize",
-  },
-  address: {
-    color: '#B7BEBE',
-    fontSize: 12,
-    marginVertical: 4,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  dateText: {
-    color: '#E8B97E',
-    fontSize: 12,
-    marginLeft: 4,
-  },
-  barberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 1,
-  },
-  barberText: {
-    color: '#B7BEBE',
-    fontSize: 12,
-    marginLeft: 6,
-  },
-  empty: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 80,
-  },
-  emptyText: {
-    color: '#899191',
-    fontSize: 14,
-    marginTop: 10,
-  },
-  skeletonCard: {
-    height: 110,
-    backgroundColor: '#1C2121',
-    borderRadius: 20,
-    marginBottom: 16,
-    opacity: 0.6,
-  },
-  rightSection: {
-    width: 110,
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  statusBadge: {
-    width: 90,
-    paddingVertical: 7,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statusBadgeText: {
-    color: '#000000',
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    textAlign: 'center',
-  },
-  cancelBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-    backgroundColor: '#F27B74',
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderRadius: 20,
-    minWidth: 80,
-  },
-  /* Web .btn-danger uses dark ink #190909 on the red background. */
-  cancelBtnText: {
-    color: '#190909',
-    fontSize: 12,
-    fontWeight: '700',
-  },
+  overlay: { flex:1, backgroundColor:'#080A0A' },
+  container: { flex:1, paddingHorizontal:14, paddingTop:10 },
+  header: { marginBottom: 2 },
+  title: { color:'#fff', fontSize:22, fontWeight:'700', letterSpacing:-0.3 },
+  subtitle: { color:'#899191', fontSize:11.5, marginTop:2 },
+  tabsWrap: { flexGrow:0, flexShrink:0, marginTop:14, marginBottom:12 },
+  tabs: { gap:6, paddingBottom:4 },
+  tab: { minHeight:32, paddingHorizontal:11, borderWidth:1, borderColor:'rgba(255,255,255,0.08)', borderRadius:20, backgroundColor:'#171B1B', justifyContent:'center', alignItems:'center' },
+  tabActive: { backgroundColor:'#E8B97E', borderColor:'#E8B97E' },
+  tabText: { color:'#B7BEBE', fontSize:10, fontWeight:'700' },
+  tabTextActive: { color:'#111' },
+
+  waitingBanner: { flexDirection:'row', alignItems:'flex-start', gap:10, marginBottom:14, padding:12, borderWidth:1, borderColor:'rgba(232,185,126,.34)', borderRadius:14, backgroundColor:'rgba(232,185,126,.08)' },
+  waitingBannerTitle: { color:'#fff', fontSize:12.5, fontWeight:'700' },
+  waitingBannerText: { color:'#D8DFDE', fontSize:11.5, lineHeight:17, marginTop:2 },
+
+  // Card — web .booking-card 143px min, radius 18, line border, bg card
+  bookingCard: { flexDirection:'row', minHeight:143, overflow:'hidden', borderWidth:1, borderColor:'rgba(255,255,255,0.08)', borderRadius:18, backgroundColor:'#171B1B', marginBottom:12 },
+  bookingCalendar: { width:61, flexShrink:0, flexDirection:'column', alignItems:'center', justifyContent:'center', borderRightWidth:1, borderColor:'rgba(255,255,255,0.08)', backgroundColor:'rgba(232,185,126,0.045)', paddingVertical:10 },
+  calMonth: { color:'#E8B97E', fontSize:10, fontWeight:'700', textTransform:'uppercase', letterSpacing:0.3 },
+  calDay: { color:'#fff', fontSize:26, fontWeight:'700', lineHeight:28, marginTop:4, marginBottom:2 },
+  calWeek: { color:'#899191', fontSize:10, fontWeight:'500' },
+  bookingMain: { flex:1, minWidth:0, padding:14 },
+  titleRow: { flexDirection:'row', alignItems:'flex-start', justifyContent:'space-between', gap:8 },
+  bookingLabel: { color:'#E8B97E', fontSize:8, fontWeight:'700', letterSpacing:1.1 },
+  salonName: { color:'#fff', fontSize:15, fontWeight:'700', marginTop:5, marginBottom:2 },
+  salonCity: { color:'#899191', fontSize:11 },
+  statusPill: { flexDirection:'row', alignItems:'center', gap:6, paddingHorizontal:9, paddingVertical:6, borderRadius:20 },
+  statusDot: { width:6, height:6, borderRadius:3 },
+  statusText: { fontSize:10, fontWeight:'700', textTransform:'uppercase', letterSpacing:0.5 },
+  detailsGrid: { gap:5, marginTop:12 },
+  detailRow: { flexDirection:'row', alignItems:'center', gap:6, minWidth:0 },
+  detailText: { flex:1, color:'#B7BEBE', fontSize:11, fontWeight:'500' },
+  waitingNote: { flexDirection:'row', alignItems:'center', gap:6, marginTop:9 },
+  waitingNoteText: { flex:1, color:'#E8B97E', fontSize:10.5, lineHeight:15 },
+  cancelBtn: { flexDirection:'row', alignItems:'center', gap:5, marginTop:12, alignSelf:'flex-start' },
+  cancelText: { color:'#F27B74', fontSize:10, fontWeight:'700' },
+
+  empty: { alignItems:'center', justifyContent:'center', marginTop:60, paddingHorizontal:20 },
+  emptyTitle: { color:'#fff', fontSize:16, fontWeight:'700', marginTop:12 },
+  emptyText: { color:'#899191', fontSize:12, marginTop:7, textAlign:'center', lineHeight:16 },
+  skeletonCard: { height:135, backgroundColor:'#1C2121', borderRadius:18, marginBottom:12, opacity:0.6 },
 });
