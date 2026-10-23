@@ -32,7 +32,16 @@ export function AppAlertModal({
   buttons = [],
   dismissOnBackdrop = true,
 }) {
-  const insets = useSafeAreaInsets();
+  let insets = { top: 0, bottom: 0, left: 0, right: 0 };
+  try {
+    // useSafeAreaInsets throws if not inside SafeAreaProvider (e.g. during tests or mis-nesting)
+    // GlobalAlertProvider is now inside SafeAreaProvider, but keep guard for safety
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const ctx = useSafeAreaInsets();
+    if (ctx) insets = ctx;
+  } catch {
+    insets = { top: 0, bottom: 0, left: 0, right: 0 };
+  }
 
   const variantMap = {
     default: { icon: 'information-circle', color: APP_THEME.gold, bg: APP_THEME.goldWash },

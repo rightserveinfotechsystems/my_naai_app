@@ -636,9 +636,9 @@ export default function App() {
   }
 
   return (
-    <NotificationProvider userId={userId} userType={userType}>
-      <GlobalAlertProvider>
-        <SafeAreaProvider>
+    <SafeAreaProvider>
+      <NotificationProvider userId={userId} userType={userType}>
+        <GlobalAlertProvider>
           <NavigationContainer 
             key={isLoggedIn ? 'app' : 'auth'} 
             ref={navigationRef}
@@ -650,8 +650,8 @@ export default function App() {
               <AuthStack onLoginSuccess={type => { setUserType(type); setIsLoggedIn(true); }} />
             )}
           </NavigationContainer>
-        </SafeAreaProvider>
-      </GlobalAlertProvider>
-    </NotificationProvider>
+        </GlobalAlertProvider>
+      </NotificationProvider>
+    </SafeAreaProvider>
   );
 }
