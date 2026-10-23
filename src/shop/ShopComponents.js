@@ -36,24 +36,30 @@ export function ShopQuantityControl({ qty, onAdd, onSet, disabled = false, small
   );
 }
 
-// ── Product card — exact web parity (ShopScreen.jsx) ──
-// Photo (25/22 but slightly taller 1:1 per request), name 2-lines, salon, price+MRP, full-width ADD ↔ stepper.
-// Rating rides on the photo as translucent pill; discount badge top-left; shade behind badges.
-// Image uses cover (not contain) on dark #101414 so product fills frame like web.
+// ── Product card — web parity (ShopScreen.jsx + styles.css) ──
+// Web `.shop-card-media` mobile: aspect 1/1, bg #101414, backdrop blur16/saturate1.15
+// inset -18% behind, image contain + 6px padding, shade 34% .45, badge #23b45c,
+// rating pill rgba(8,12,11,.66), body clamp2 min-height 2.7em, price row, ADD/stepper 1.5px.
+// Adapted to mobile: gold #E8B97E for ADD wash (web green) to keep app theme, 2-up grid.
 export function ShopProductCard({ product, qty, onAdd, onSetQty, onOpen, style }) {
   const off = discountPercent(product);
   const imageUri = product.image ? getFileUrl(product.image) : null;
   return (
     <View style={[styles.card, !product.available && styles.cardOutOfStock, style]}>
       <TouchableOpacity style={styles.cardMedia} onPress={() => onOpen?.(product)} activeOpacity={0.92}>
+        {/* backdrop blurred copy fills bands where contain leaves empty space — matches web */}
         {imageUri ? (
-          <Image source={{ uri: imageUri }} style={styles.cardImage} resizeMode="cover" />
+          <Image source={{ uri: imageUri }} style={styles.cardBackdrop} blurRadius={16} />
+        ) : null}
+        {imageUri ? (
+          <View style={styles.cardImageWrap}>
+            <Image source={{ uri: imageUri }} style={styles.cardImage} resizeMode="contain" />
+          </View>
         ) : (
           <View style={styles.cardImagePlaceholder}>
             <Ionicons name="image-outline" size={28} color={APP_THEME.muted} />
           </View>
         )}
-        {/* soft shade behind badges so % off & rating legible on white & dark shots */}
         <View style={styles.cardShade} pointerEvents="none" />
         {off > 0 && (
           <View style={styles.offBadge}>
@@ -286,6 +292,7 @@ export function LocationPreview({ value, title = 'Delivery location', caption = 
 
 const styles = StyleSheet.create({
   // ── Quantity control — web parity: full-width ADD ↔ bordered stepper ──
+  // web: 1.5px var(--shop-green) with wash rgba(35,180,92,.16); app keeps gold wash
   addButton: {
     flex: 1,
     flexDirection: 'row',
@@ -335,12 +342,12 @@ const styles = StyleSheet.create({
   stepperQty: { flex: 1, color: APP_THEME.white, fontWeight: '800', fontSize: 13, textAlign: 'center', textAlignVertical: 'center', lineHeight: 32 },
   stepperQtyLarge: { fontSize: 15, lineHeight: 44 },
 
-  // ---- Product card — exact web parity (16px radius, 25/22 → 1:1 slightly taller) ----
+  // ---- Product card — web parity (mobile breakpoint) ----
   card: {
-    backgroundColor: '#171b1b', // web --card
+    backgroundColor: '#171b1b',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)', // web --line
+    borderColor: 'rgba(255,255,255,0.08)',
     overflow: 'hidden',
     width: '100%',
     flexDirection: 'column',
@@ -351,33 +358,57 @@ const styles = StyleSheet.create({
     top: 9,
     left: 9,
     zIndex: 2,
-    backgroundColor: '#23b45c', // web --shop-green kept for badge legibility; gold alternative: APP_THEME.gold
+    backgroundColor: '#23b45c',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
   },
   offBadgeText: { color: '#04160b', fontSize: 9.5, fontWeight: '800', letterSpacing: 0.3 },
-  // Media — slightly taller than web's 25/22 (1.136) → use 1.05 (~5% taller) per request
+  // Web mobile: aspect 1/1, bg #101414, overflow hidden
   cardMedia: {
     width: '100%',
-    aspectRatio: 1.05,
+    aspectRatio: 1,
     backgroundColor: '#101414',
     overflow: 'hidden',
     position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // Blurred copy fills letterbox bands — web: inset -18%, blur16, opacity .95, saturate 1.15
+  cardBackdrop: {
+    position: 'absolute',
+    top: '-18%',
+    left: '-18%',
+    right: '-18%',
+    bottom: '-18%',
+    opacity: 0.95,
+  },
+  cardImageWrap: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    right: 6,
+    bottom: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cardImage: { width: '100%', height: '100%' },
   cardImagePlaceholder: {
-    flex: 1,
-    width: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#101414',
   },
+  // Web: 34% height, linear 0 → rgba(6,9,8,.45)
   cardShade: {
     position: 'absolute',
     left: 0, right: 0, bottom: 0,
-    height: '46%',
-    backgroundColor: 'rgba(6,9,8,0.55)',
+    height: '34%',
+    backgroundColor: 'rgba(6,9,8,0.45)',
   },
   cardRating: {
     position: 'absolute',
@@ -405,12 +436,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stockVeilText: { color: '#B7BEBE', fontSize: 10, fontWeight: '700' },
-  cardBody: { paddingTop: 10, paddingHorizontal: 11, paddingBottom: 11, gap: 3, backgroundColor: '#171b1b', flex: 1, flexDirection: 'column' },
-  cardName: { color: APP_THEME.white, fontSize: 13, fontWeight: '650', lineHeight: 17.5, minHeight: 35, letterSpacing: -0.1 },
-  cardMeta: { color: APP_THEME.muted, fontSize: 9.5, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase' },
-  cardPriceRow: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: 6, marginTop: 'auto', paddingTop: 7 },
-  cardPrice: { color: APP_THEME.white, fontWeight: '800', fontSize: 15 },
-  cardMrp: { color: APP_THEME.muted, fontSize: 11, textDecorationLine: 'line-through' },
+  // Web mobile: padding 8 9 9, gap 3, h3 12.5/1.35 clamp2, salon 8.5 uppercase, price 13.5
+  cardBody: { paddingTop: 8, paddingHorizontal: 9, paddingBottom: 9, gap: 3, backgroundColor: '#171b1b', flex: 1, flexDirection: 'column' },
+  cardName: { color: APP_THEME.white, fontSize: 12.5, fontWeight: '650', lineHeight: 16.5, minHeight: 33, letterSpacing: -0.1 },
+  cardMeta: { color: APP_THEME.muted, fontSize: 8.5, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase' },
+  cardPriceRow: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: 6, marginTop: 'auto', paddingTop: 6 },
+  cardPrice: { color: APP_THEME.white, fontWeight: '800', fontSize: 13.5 },
+  cardMrp: { color: APP_THEME.muted, fontSize: 10, textDecorationLine: 'line-through' },
   cardAction: { marginTop: 7, flexDirection: 'row' },
 
   cartBar: {
@@ -496,7 +528,7 @@ const styles = StyleSheet.create({
   emptyActionText: { color: APP_THEME.bg, fontWeight: '800', fontSize: 12 },
 
   skeleton: { borderColor: APP_THEME.line, backgroundColor: APP_THEME.card },
-  skeletonImage: { height: 132, aspectRatio: 1.05, backgroundColor: '#202525' },
+  skeletonImage: { height: 132, aspectRatio: 1, backgroundColor: '#202525' },
   skeletonLines: { padding: 11, gap: 6 },
   skeletonLine: { height: 8, backgroundColor: APP_THEME.line, borderRadius: 5 },
 });
